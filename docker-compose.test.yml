@@ -1,0 +1,39 @@
+version: '3.9'
+
+networks:
+  my_network:
+    driver: bridge
+
+services:
+  flask-app:
+    build: .
+    container_name: flask-app
+    ports:
+      - "8081:8081"
+    depends_on:
+      - memcached
+    environment:
+      - FLASK_ENV=development
+    networks:
+      - my_network
+    volumes:
+      - .:/app  # Mount current directory for development
+
+  memcached:
+    image: memcached:latest
+    container_name: memcached
+    ports:
+      - "11211:11211"
+    networks:
+      - my_network
+
+  test:
+    build: .
+    container_name: flask-tests
+    depends_on:
+      - flask-app
+    networks:
+      - my_network
+    volumes:
+      - .:/app
+    entrypoint: ["pytest"]

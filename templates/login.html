@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff; /* Light blue background */
+            color: #333; /* Dark text color */
+            padding: 20px;
+        }
+        h1 {
+            color: #1e90ff; /* Blue color for the heading */
+        }
+        form {
+            background-color: #e6f7ff; /* Light blue background for the form */
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #1e90ff; /* Blue color for labels */
+        }
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #1e90ff;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #1e90ff; /* Blue button background */
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0b78d1; /* Darker blue when hovering */
+        }
+        a {
+            color: #1e90ff; /* Blue color for the link */
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+<h1>Login</h1>
+<form method="POST">
+    <p><label for="username">Username</label><input type="text" name="username" required></p>
+    <p><label for="password">Password</label><input type="password" name="password" required></p>
+    <p><button type="submit">Login</button></p>
+</form>
+<p>Don't have an account? <a href="{{ url_for('register') }}">Register here</a></p>
+</body>
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memcached App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #cce7ff; /* Light blue background */
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #4caf50; /* Green text for the title */
+            text-align: center;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        input, button {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+        button {
+            background-color: #4caf50; /* Green button */
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .logout-btn {
+            background-color: #f44336; /* Red button */
+            margin-top: 10px;
+        }
+        .logout-btn:hover {
+            background-color: #e6362c;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e8f5e9; /* Light green result background */
+            border-left: 5px solid #4caf50;
+            color: #4caf50;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Memcached Key-Value Store</h1>
+    <form action="/set" method="POST">
+        <h2>Set a Key</h2>
+        <input type="text" name="key" placeholder="Key" required>
+        <input type="text" name="value" placeholder="Value" required>
+        <input type="number" name="expiry" placeholder="Expiry (seconds, optional)">
+        <button type="submit">Set Key</button>
+    </form>
+
+    <form action="/get" method="POST">
+        <h2>Get a Key</h2>
+        <input type="text" name="key" placeholder="Key" required>
+        <button type="submit">Get Key</button>
+    </form>
+
+    <!-- Logout button -->
+    <form action="/logout" method="POST">
+        <button type="submit" class="logout-btn">Logout</button>
+    </form>
+
+    {% if result %}
+    <div class="result">
+        <strong>{{ result }}</strong>
+    </div>
+    {% endif %}
+</div>
+</body>
+</html>

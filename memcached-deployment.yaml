@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: memcached-deployment
+  labels:
+    app: memcached
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: memcached
+  template:
+    metadata:
+      labels:
+        app: memcached
+    spec:
+      containers:
+        - name: memcached
+          image: memcached:latest
+          ports:
+            - containerPort: 11211
+          volumeMounts:
+            - name: memcached-storage
+              mountPath: /data
+      volumes:
+        - name: memcached-storage
+          persistentVolumeClaim:
+            claimName: memcached-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: memcached-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+#  storageClassName: nfs-client
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: memcached-service
+spec:
+  selector:
+    app: memcached
+  ports:
+    - protocol: TCP
+      port: 11211
+      targetPort: 11211
+  type: ClusterIP  # Internal access only

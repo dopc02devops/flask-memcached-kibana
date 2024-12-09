@@ -1,0 +1,127 @@
+###################################
+Rolling Deployment
+###################################
+How it works: Updates are deployed incrementally to a subset of servers until the entire 
+environment is updated.
+Benefits:
+No downtime if done carefully.
+Progressive rollout reduces risk.
+Challenges:
+Rollback can be complex.
+Temporary state mismatches can occur between old and new versions.
+
+Rolling Deployment YAML
+This manifest demonstrates how to create a Deployment resource in Kubernetes with a rolling 
+update strategy.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app
+  labels:
+    app: my-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: my-app
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers:
+      - name: my-app-container
+        image: my-app:latest # Replace with your image
+        ports:
+        - containerPort: 80
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 10
+
+
+Key Features
+Strategy:
+maxUnavailable: 1: At most, one pod can be unavailable during the update.
+maxSurge: 1: At most, one extra pod (beyond the desired replicas) can be created during the 
+update.
+Readiness Probe: Ensures traffic is only routed to healthy pods.
+
+Jenkinsfile for Rolling Deployment
+This Jenkinsfile outlines how to implement a CI/CD pipeline for rolling deployment using 
+Kubernetes and Jenkins.
+
+pipeline {
+    agent any
+    environment {
+        KUBE_CONFIG = credentials('kubeconfig') // Replace with your Kubernetes credential ID
+    }
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git branch: 'main', url: 'https://github.com/your-repo.git'
+            }
+        }
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    def appImage = "my-app:${env.BUILD_NUMBER}"
+                    sh "docker build -t my-docker-registry.com/${appImage} ."
+                    sh "docker push my-docker-registry.com/${appImage}"
+                }
+            }
+        }
+        stage('Update Kubernetes Deployment') {
+            steps {
+                script {
+                    def appImage = "my-docker-registry.com/my-app:${env.BUILD_NUMBER}"
+                    sh """
+                    kubectl set image deployment/my-app my-app-container=${appImage} --kubeconfig=${env.KUBE_CONFIG}
+                    kubectl rollout status deployment/my-app --kubeconfig=${env.KUBE_CONFIG}
+                    """
+                }
+            }
+        }
+    }
+    post {
+        success {
+            echo 'Deployment successful!'
+        }
+        failure {
+            echo 'Deployment failed.'
+        }
+    }
+}
+
+
+Key Points
+Docker Build and Push:
+
+Builds a Docker image and pushes it to a registry.
+Uses env.BUILD_NUMBER to tag images uniquely for each build.
+Kubernetes Update:
+
+kubectl set image: Updates the container image for the deployment.
+kubectl rollout status: Ensures the rollout completes successfully.
+Credentials:
+
+The KUBE_CONFIG environment variable uses Jenkins credentials to access the Kubernetes cluster.
+Steps to Set Up
+Kubernetes Cluster: Ensure you have a running Kubernetes cluster.
+Docker Registry: Set up a Docker registry to host your application images.
+Jenkins:
+Install plugins: Docker, Kubernetes CLI, Git.
+Add credentials for Kubernetes (KUBE_CONFIG) and Docker Registry.
+Test Deployment: Trigger the pipeline and verify the deployment rollout.
+
+
+
+

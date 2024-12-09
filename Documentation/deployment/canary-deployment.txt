@@ -1,0 +1,184 @@
+
+###################################
+Canary Deployment
+###################################
+
+How it works: The new version is released to a small subset of users first (the "canary"). 
+If stable, it is gradually rolled out to all users.
+Benefits:
+Early feedback from real users.
+Limits the impact of issues to a smaller audience.
+Challenges: Requires monitoring and traffic-routing mechanisms.
+
+###################################
+Kubernetes YAML
+###################################
+This setup involves:
+
+Two deployments: stable (current version) and canary (new version).
+A service and ingress configuration to split traffic between the two deployments.
+
+# Stable Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app-stable
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: my-app
+      version: stable
+  template:
+    metadata:
+      labels:
+        app: my-app
+        version: stable
+    spec:
+      containers:
+      - name: my-app
+        image: my-app:v1.0
+        ports:
+        - containerPort: 80
+
+---
+
+# Canary Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app-canary
+spec:
+  replicas: 1  # Start with 1 replica for canary
+  selector:
+    matchLabels:
+      app: my-app
+      version: canary
+  template:
+    metadata:
+      labels:
+        app: my-app
+        version: canary
+    spec:
+      containers:
+      - name: my-app
+        image: my-app:v1.1  # New version
+        ports:
+        - containerPort: 80
+
+
+
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-app-service
+spec:
+  selector:
+    app: my-app
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+
+
+Ingress for Traffic Splitting (Optional)
+Use an ingress controller (e.g., NGINX) to route a percentage of traffic.
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: my-app-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/canary: "true"
+    nginx.ingress.kubernetes.io/canary-weight: "20"  # 20% of traffic to canary
+spec:
+  rules:
+  - host: my-app.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: my-app-service
+            port:
+              number: 80
+
+
+2. Jenkinsfile for Canary Deployment
+This pipeline automates the Canary Deployment process, gradually increasing traffic to the canary version based on success.
+
+
+pipeline {
+    agent any
+    environment {
+        KUBE_CONFIG = credentials('kubeconfig') // Your Kubernetes credentials
+    }
+    stages {
+        stage('Build') {
+            steps {
+                echo 'Building the application...'
+                sh 'docker build -t my-app:v1.1 .'
+            }
+        }
+        stage('Deploy Canary') {
+            steps {
+                echo 'Deploying Canary version...'
+                sh '''
+                kubectl apply -f canary-deployment.yaml
+                '''
+            }
+        }
+        stage('Test Canary') {
+            steps {
+                echo 'Testing Canary version...'
+                sh '''
+                # Add your tests, e.g., smoke tests or health checks
+                curl http://canary.my-app-service
+                '''
+            }
+        }
+        stage('Increase Canary Traffic') {
+            steps {
+                echo 'Increasing Canary traffic...'
+                sh '''
+                # Example: Adjust Ingress or LoadBalancer to increase canary traffic
+                kubectl patch ingress my-app-ingress -p '{"metadata":{"annotations":{"nginx.ingress.kubernetes.io/canary-weight":"50"}}}'
+                '''
+            }
+        }
+        stage('Promote Canary to Stable') {
+            steps {
+                echo 'Promoting Canary to Stable...'
+                sh '''
+                kubectl scale deployment my-app-stable --replicas=0
+                kubectl scale deployment my-app-canary --replicas=3
+                kubectl patch ingress my-app-ingress -p '{"metadata":{"annotations":{"nginx.ingress.kubernetes.io/canary":"false"}}}'
+                '''
+            }
+        }
+    }
+    post {
+        failure {
+            echo 'Deployment failed. Rolling back...'
+            sh '''
+            kubectl delete deployment my-app-canary
+            '''
+        }
+    }
+}
+
+
+Key Points:
+Traffic Splitting:
+
+Use ingress controllers like NGINX or Istio for precise traffic control.
+Gradually increase traffic to Canary by modifying weights (e.g., canary-weight in annotations).
+Testing:
+
+Perform robust testing during the Canary phase to ensure the new version meets expectations.
+Rollback:
+
+Roll back by scaling down the Canary deployment or re-routing traffic entirely to the Stable version.
+Would you like help with a specific aspect of Canary Deployment or further customization?
