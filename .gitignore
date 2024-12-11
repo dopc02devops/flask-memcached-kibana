@@ -3,3 +3,4 @@
 venv
 *.log
 *.tmp
+account-info.txt
