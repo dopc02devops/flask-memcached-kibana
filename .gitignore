@@ -7,4 +7,5 @@ venv
 *.tfstate
 *.backup
 *.terraform
+*.info
 account-info.txt

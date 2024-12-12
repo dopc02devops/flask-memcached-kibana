@@ -8,7 +8,7 @@ provider "aws" {
 }
 
 provider "aws" {
-  alias  = "assumed"
+  alias  = "default"
   region = "eu-west-2"
   assume_role {
     role_arn = env.role_arn
@@ -154,45 +154,6 @@ resource "aws_eip" "nat" {
 
 data "aws_availability_zones" "available" {}
 
-#####################
-# Variables
-#####################
-
-variable "vpc_name" {
-  description = "Name for the VPC"
-  type        = string
-  default     = "main-vpc"
-}
-
-variable "igw_name" {
-  description = "Name for the Internet Gateway"
-  type        = string
-  default     = "main-igw"
-}
-
-variable "public_subnet_name" {
-  description = "Name prefix for public subnets"
-  type        = string
-  default     = "public-subnet"
-}
-
-variable "private_subnet_name" {
-  description = "Name prefix for private subnets"
-  type        = string
-  default     = "private-subnet"
-}
-
-variable "public_route_table_name" {
-  description = "Name for the public route table"
-  type        = string
-  default     = "public-route-table"
-}
-
-variable "private_route_table_name" {
-  description = "Name for the private route table"
-  type        = string
-  default     = "private-route-table"
-}
 
 #########################
 # Outputs
