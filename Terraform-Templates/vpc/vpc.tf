@@ -166,16 +166,50 @@ resource "random_string" "bucket_name" {
 
 ########################################
 # S3 bucket
+# aws s3 rm s3://terraform-9i2qxtqtbzhsbh5a --recursive
 ########################################
 resource "aws_s3_bucket" "backend_bucket" {
   bucket        = "terraform-${random_string.bucket_name.result}"
-  acl           = "private"
-  force_destroy = true
+#   acl           = "public-read"
+  force_destroy = true # Ensure no accidental deletion of objects
+
+#   lifecycle {
+#        prevent_destroy = true   # Prevent bucket deletion
+#            }
 
   tags = {
     Name        = "terraform-${random_string.bucket_name.result}"
   }
 }
+
+resource "aws_s3_bucket_policy" "public_policy" {
+  bucket = aws_s3_bucket.backend_bucket.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect    = "Allow"
+        Principal = "*"
+        Action    = "s3:GetObject"
+        Resource  = "${aws_s3_bucket.backend_bucket.arn}/*"
+      }
+    ]
+  })
+  depends_on = [aws_s3_bucket.backend_bucket]
+}
+
+resource "aws_s3_bucket_public_access_block" "public_access_block" {
+  bucket = aws_s3_bucket.backend_bucket.id
+
+  block_public_acls       = true   # Allow private ACLs, but block public ACLs
+  block_public_policy     = false  # Allow public bucket policies
+  ignore_public_acls      = true   # Ignore public ACLs, ensure access is controlled via bucket policy
+  restrict_public_buckets = true   # Restrict public access to the bucket
+
+  depends_on = [aws_s3_bucket.backend_bucket]
+}
+
 #########################
 # Outputs
 #########################

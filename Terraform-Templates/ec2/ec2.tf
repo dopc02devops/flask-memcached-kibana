@@ -17,7 +17,7 @@ provider "aws" {
 resource "aws_instance" "public_instance" {
   ami             = var.ami_id
   instance_type   = "t2.micro"
-  subnet_id       = var.public_subnet_id
+  subnet_id       = data.terraform_remote_state.vpc.outputs.public_subnets[0]
   associate_public_ip_address = true
   tags = {
     Name = "Master-Node"
@@ -40,7 +40,7 @@ resource "aws_instance" "public_instance" {
 resource "aws_instance" "private_instance_1" {
   ami             = var.ami_id
   instance_type   = "t2.micro"
-  subnet_id       = var.private_subnet_ids[0]
+  subnet_id       = data.terraform_remote_state.vpc.outputs.private_subnets[0]
   associate_public_ip_address = false
   tags = {
     Name = "Worker-Node-01"
@@ -61,7 +61,7 @@ resource "aws_instance" "private_instance_1" {
 resource "aws_instance" "private_instance_2" {
   ami             = var.ami_id
   instance_type   = "t2.micro"
-  subnet_id       = var.private_subnet_ids[1]
+  subnet_id       = data.terraform_remote_state.vpc.outputs.private_subnets[1]
   associate_public_ip_address = false
   tags = {
     Name = "Worker-Node-02"
@@ -85,7 +85,7 @@ resource "aws_instance" "private_instance_2" {
 resource "aws_security_group" "allow_ssh_http_https" {
   name        = "allow_ssh_http_https"
   description = "Allow SSH, HTTP, and HTTPS inbound traffic"
-  vpc_id      = var.vpc_id
+  vpc_id      = data.terraform_remote_state.vpc.outputs.vpc_id
 
   ingress {
     from_port   = 22
@@ -120,7 +120,7 @@ resource "aws_security_group" "allow_ssh_http_https" {
 resource "aws_security_group" "allow_private_sg" {
   name        = "allow_private_sg"
   description = "Allow internal traffic for private instances"
-  vpc_id      = var.vpc_id
+  vpc_id      = data.terraform_remote_state.vpc.outputs.vpc_id
 
   ingress {
     from_port   = 80
@@ -136,6 +136,23 @@ resource "aws_security_group" "allow_private_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
+
+
+########################################
+# Get data from backend
+########################################
+
+# Get the VPC ID from the remote state
+data "terraform_remote_state" "vpc" {
+  backend = "s3"
+
+  config = {
+    bucket = "terraform-qe33fdtgs86ltdhsiuyyu"
+    key    = "vpc/terraform.tfstate"
+    region = "eu-west-2"
+  }
+}
+
 
 ########################################
 # Output EC2 IP Addresses
