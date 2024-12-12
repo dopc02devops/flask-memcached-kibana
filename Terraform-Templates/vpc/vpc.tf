@@ -154,10 +154,35 @@ resource "aws_eip" "nat" {
 
 data "aws_availability_zones" "available" {}
 
+########################################
+# Generate a random string for the
+# bucket name
+########################################
+resource "random_string" "bucket_name" {
+  length  = 16  # Adjust length as needed
+  special = false  # Set to true if you want special characters
+  upper   = false  # Set to true if you want uppercase characters
+}
 
+########################################
+# S3 bucket
+########################################
+resource "aws_s3_bucket" "backend_bucket" {
+  bucket        = "terraform-${random_string.bucket_name.result}"
+  acl           = "private"
+  force_destroy = true
+
+  tags = {
+    Name        = "terraform-${random_string.bucket_name.result}"
+  }
+}
 #########################
 # Outputs
 #########################
+
+output "bucket_name" {
+  value = aws_s3_bucket.backend_bucket.bucket
+}
 
 output "vpc_id" {
   value       = aws_vpc.main.id

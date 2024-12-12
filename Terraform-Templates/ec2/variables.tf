@@ -5,7 +5,7 @@
 variable "vpc_id" {
   description = "VPC ID"
   type        = string
-  default= "vpc-07a0925c8e88ca855"
+  default= "vpc-026934bcaa0b06df1"
 }
 
 variable "ami_id" {
@@ -17,14 +17,15 @@ variable "ami_id" {
 variable "public_subnet_id" {
   description = "Public Subnet ID"
   type        = string
-  default= "subnet-09d3589ce8cdd5897"
+  default= "subnet-049f47be570c47c25"
 }
 
 variable "private_subnet_ids" {
   description = "List of Private Subnet IDs"
   type        = list(string)
   default= [
-             "subnet-040a1187353f16d75",
-             "subnet-03fc913aedf19d22b",
+             "subnet-0b0c271b7020daadc",
+             "subnet-0421fe8cb80592ed8",
            ]
+
 }
