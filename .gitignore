@@ -3,4 +3,8 @@
 venv
 *.log
 *.tmp
+*.hcl
+*.tfstate
+*.backup
+*.terraform
 account-info.txt
