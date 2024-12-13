@@ -11,10 +11,10 @@ on:
         description: 'The pytest tag to run tests with'
         required: false
 jobs:
-  install-dependencies:
+  install-pytest:
     runs-on: ubuntu-latest
     container:
-      image: ubuntu:24.04
+      image: ubuntu:20.04
     steps:
       - name: Install dependencies
         run: |
@@ -22,21 +22,34 @@ jobs:
           apt-get install -y python3-pip curl docker.io
           pip install pytest
 
+  install-docker-compose:
+    needs: [install-pytest]
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:20.04
+    steps:
       - name: Install Docker Compose
         run: |
           curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           chmod +x /usr/local/bin/docker-compose
-  test:
-    needs: [install-dependencies]
+
+  checkout-repo:
+    needs: [install-docker-compose]
     runs-on: ubuntu-latest
     container:
-      image: ubuntu:24.04
+      image: ubuntu:20.04
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
           ref: ${{ inputs.branch }}
 
+  test:
+    needs: [checkout-repo]
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:20.04
+    steps:
       - name: Run Docker Compose for Testing
         run: |
           # Run pytest with the specified tag if provided
