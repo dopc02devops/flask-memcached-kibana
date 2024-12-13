@@ -1,0 +1,30 @@
+
+
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::908027384199:root"
+            },
+            "Action": "sts:AssumeRole",
+            "Condition": {
+                "IpAddress": {
+                    "aws:SourceIp": "203.0.113.0/24"
+                }
+            }
+        }
+    ]
+}
+
+
+- Principal: { }
+    This indicates the entity allowed to assume the role.
+    Here, the Principal is an AWS account with the ARN arn:aws:iam::908027384199:root.
+    This means that the root user or any user in the specified AWS account can assume this role.
+- Action: "sts:AssumeRole"`
+    This defines the action allowed.
+    sts:AssumeRole is an AWS Security Token Service (STS) action that allows the specified principal to assume
+    the role described by this policy.
+- Someone must assume this role

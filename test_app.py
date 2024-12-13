@@ -8,11 +8,14 @@ def client():
     with app.test_client() as client:
         yield client
 
+@pytest.mark.home
 def test_home(client):
     """Test the home page."""
     response = client.get('/')
     assert response.status_code == 200
 
+@pytest.mark.auth
+@pytest.mark.registration
 def test_register(client):
     """Test user registration."""
     response = client.post('/register', data={
@@ -22,6 +25,8 @@ def test_register(client):
     })
     assert b'Your account has been created!' in response.data
 
+@pytest.mark.auth
+@pytest.mark.login
 def test_login(client):
     """Test user login."""
     # First, register a user
