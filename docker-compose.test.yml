@@ -1,4 +1,3 @@
-version: '3.9'
 
 networks:
   my_network:
@@ -6,18 +5,23 @@ networks:
 
 services:
   flask-app:
-    build: .
+    build:
+      context: ./src
     container_name: flask-app
     ports:
-      - "8081:8081"
+      - "8095:8095"
     depends_on:
       - memcached
     environment:
       - FLASK_ENV=development
+      - OPERATING_SYSTEM=docker-compose
+      - MEMCACHED_HOST=memcached
     networks:
       - my_network
+    links:
+      - memcached
     volumes:
-      - .:/app  # Mount current directory for development
+      - ./src:/app  # Mount current directory for development
 
   memcached:
     image: memcached:latest
@@ -28,12 +32,15 @@ services:
       - my_network
 
   test:
-    build: .
+    build:
+      context: ./tests
     container_name: flask-tests
     depends_on:
       - flask-app
     networks:
       - my_network
     volumes:
-      - .:/app
-    entrypoint: ["pytest"]
+      - ./tests:/app
+    environment:
+      - TEST_TAG=${TEST_TAG:-""}  # Optional environment variable for pytest tag
+    entrypoint: ["pytest", "-m", "${TEST_TAG}"]  # Run tests with tag if provided

@@ -7,6 +7,8 @@ Install
 - brew install  memcached
 - start service
 - memcached -d -m 64 -p 11211 -u memcache
+- pip install -r requirements.txt
+- source venv/bin/activate
 
 
 ############################
