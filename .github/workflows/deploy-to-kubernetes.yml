@@ -22,7 +22,7 @@ jobs:
           apt-get update
           apt-get install -y python3-pip curl docker.io
           pip install pytest
-          pip install -r requirements.txt
+          pip install -r app/requirements.txt
 
       - name: Checkout repository
         uses: actions/checkout@v3
