@@ -22,7 +22,7 @@ services:
     links:
       - memcached
     volumes:
-      - .:/app  # Mount current directory for development
+      - ./src:/app  # Mount current directory for development
 
   memcached:
     image: memcached:latest
@@ -42,10 +42,10 @@ services:
     networks:
       - my_network
     volumes:
-      - .:/app
+      - ./src:/app
     links:
       - flask-app
     environment:
       - TEST_TAG=${TEST_TAG:-""}
-    entrypoint: ["pytest", "-m", "${TEST_TAG}", "--maxfail=5", "--disable-warnings", "/src"]
+    entrypoint: ["pytest", "-m", "${TEST_TAG}", "--maxfail=5", "--disable-warnings"]
 
