@@ -47,5 +47,5 @@ services:
       - flask-app
     environment:
       - TEST_TAG=${TEST_TAG:-""}
-    entrypoint: ["pytest", "-m", "${TEST_TAG}", "--maxfail=5", "--disable-warnings", "/app/test_app.py"]
+    entrypoint: ["pytest", "-m", "${TEST_TAG}", "--maxfail=5", "--disable-warnings", "/app"]
 
