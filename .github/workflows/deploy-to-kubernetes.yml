@@ -22,13 +22,12 @@ jobs:
           apt-get update
           apt-get install -y python3-pip curl docker.io
           pip install pytest
-          pip install -r app/requirements.txt
+          pip install pytest requests
 
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
           ref: ${{ inputs.branch }}
-
 
       - name: Prepare pytest environment
         run: |
