@@ -10,9 +10,8 @@ on:
       your_tag:
         description: 'The pytest tag to run tests with'
         required: false
-
 jobs:
-  test:
+  install-dependencies:
     runs-on: ubuntu-latest
     container:
       image: ubuntu:20.04 # Specify the Docker image to use
@@ -27,7 +26,12 @@ jobs:
         run: |
           curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           chmod +x /usr/local/bin/docker-compose
-
+  test:
+    needs: [install-dependencies]
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:20.04 # Specify the Docker image to use
+    steps:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
@@ -37,21 +41,28 @@ jobs:
         run: |
           # Run pytest with the specified tag if provided
           if [ -n "${{ inputs.your_tag }}" ]; then
-            docker-compose -f docker-compose.test.yml run --rm test-app pytest -m "${TEST_TAG}"
+            TEST_TAG="${inputs.your_tag}" docker-compose -f docker-compose.test.yml run --rm test-app --abort-on-container-exit
+
           else
-            docker-compose -f docker-compose.test.yml run --rm test-app pytest
+            docker-compose -f docker-compose.test.yml run --rm test-app --abort-on-container-exit
           fi
 
+  vulnerability-scan:
+    needs: [test]
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:20.04 # Specify the Docker image to use
+    steps:
       - name: Scan Dockerfile for Vulnerabilities
         run: |
           curl -fsSL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
           trivy config --severity HIGH,CRITICAL Dockerfile
 
   deploy:
-    needs: [test]
+    needs: [vulnerability-scan]
     runs-on: ubuntu-latest
     container:
-      image: ubuntu:20.04 # Specify the Docker image to use
+      image: ubuntu:20.04
     steps:
       - name: Install dependencies
         run: |
