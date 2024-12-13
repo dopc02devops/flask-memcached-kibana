@@ -37,9 +37,9 @@ jobs:
         run: |
           # Run pytest with the specified tag if provided
           if [ -n "${{ inputs.your_tag }}" ]; then
-            docker-compose -f docker-compose.test.yml run --build test-app pytest -m "${TEST_TAG}" --abort-on-container-exit
+            docker-compose -f docker-compose.test.yml run --rm test-app pytest -m "${TEST_TAG}"
           else
-            docker-compose -f docker-compose.test.yml run --build test-app pytest --abort-on-container-exit
+            docker-compose -f docker-compose.test.yml run --rm test-app pytest
           fi
 
       - name: Scan Dockerfile for Vulnerabilities
