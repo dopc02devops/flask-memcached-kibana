@@ -22,7 +22,7 @@ services:
     links:
       - memcached
     volumes:
-      - ./src:/app  # Mount current directory for development
+      - .:/app  # Mount current directory for development
 
   memcached:
     image: memcached:latest
@@ -42,7 +42,7 @@ services:
     networks:
       - my_network
     volumes:
-      - ./src:/app
+      - .:/app
     links:
       - flask-app
     environment:
