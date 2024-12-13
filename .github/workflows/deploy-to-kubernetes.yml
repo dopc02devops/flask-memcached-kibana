@@ -41,7 +41,7 @@ jobs:
         run: |
           pytest --collect-only
 
-      - name: Print the current working directory
+      - name: Print the current working directory before
         run: |
           pwd
           ls -la
@@ -54,6 +54,12 @@ jobs:
           else
           docker-compose -f docker-compose.test.yml up --build test-app
           fi
+
+      - name: Print the current working directory after
+        run: |
+          pwd
+          ls -la
+          find . -name "test_app.py"
 
   vulnerability-scan:
     needs: [test]

@@ -47,5 +47,5 @@ services:
       - flask-app
     environment:
       - TEST_TAG=${TEST_TAG:-""}
-    entrypoint: ["pytest", "-m", "${TEST_TAG}", "--maxfail=5", "--disable-warnings", "flask-memcached/flask-memcached"]
+    entrypoint: ["pytest", "-m", "${TEST_TAG}", "--maxfail=5", "--disable-warnings"]
 
