@@ -46,5 +46,6 @@ services:
     links:
       - flask-app
     environment:
-      - TEST_TAG=${TEST_TAG:-""}  # Optional environment variable for pytest tag
-    entrypoint: ["pytest", "-m", "${TEST_TAG}"]  # Run tests with tag if provided
+      - TEST_TAG=${TEST_TAG:-""}
+    entrypoint: ["pytest", "-m", "${TEST_TAG}", "--maxfail=5", "--disable-warnings"]
+
