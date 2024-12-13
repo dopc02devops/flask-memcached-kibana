@@ -1,9 +1,7 @@
 from flask import Flask, request, render_template, redirect, url_for, flash, session
 from werkzeug.security import generate_password_hash, check_password_hash
-from pymemcache.client import base
 from logger import logger
 import os
-from memcached_docker import *
 from connection import ConnectionManager
 
 

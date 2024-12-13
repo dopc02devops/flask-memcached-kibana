@@ -36,3 +36,8 @@ Trouble shooting
 - docker inspect f0a4e7e8ac76e0e6044240c8140106962c359a49571ec3879469050b968b45dd | grep "IPAddress"
 - docker inspect f0a4e7e8ac76e0e6044240c8140106962c359a49571ec3879469050b968b45dd | grep "NetworkMode"
 -  docker logs f0a4e7e8ac76e0e6044240c8140106962c359a49571ec3879469050b968b45dd# flask-memcached
+
+
+
+TEST_TAG="home" docker-compose -f docker-compose.test.yml run --rm test-app
+TEST_TAG="home" docker-compose -f docker-compose.test.yml run --rm test-app /bin/bash

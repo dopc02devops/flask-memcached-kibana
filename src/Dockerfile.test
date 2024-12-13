@@ -1,6 +1,9 @@
 # Use a lightweight Python image for testing
 FROM python:3.9-slim
 
+# Install curl and other necessary packages
+RUN apt-get update && apt-get install -y curl && apt-get clean
+
 # Set the working directory
 WORKDIR /app
 
@@ -15,6 +18,3 @@ COPY . /app
 
 # Set the Flask app for testing (in-memory testing, no server started)
 ENV FLASK_ENV=testing
-
-# Set the entrypoint to run pytest tests when the container starts
-ENTRYPOINT ["pytest", "--maxfail=5", "--disable-warnings", "-v"]

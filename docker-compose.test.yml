@@ -7,6 +7,7 @@ services:
   flask-app:
     build:
       context: ./src
+      dockerfile: Dockerfile.app
     container_name: flask-app
     ports:
       - "8095:8095"
@@ -31,16 +32,19 @@ services:
     networks:
       - my_network
 
-  test:
+  test-app:
     build:
-      context: ./tests
+      context: ./src
+      dockerfile: Dockerfile.test
     container_name: flask-tests
     depends_on:
       - flask-app
     networks:
       - my_network
     volumes:
-      - ./tests:/app
+      - ./src:/app
+    links:
+      - flask-app
     environment:
       - TEST_TAG=${TEST_TAG:-""}  # Optional environment variable for pytest tag
     entrypoint: ["pytest", "-m", "${TEST_TAG}"]  # Run tests with tag if provided
