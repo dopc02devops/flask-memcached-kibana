@@ -10,7 +10,6 @@ on:
       your_tag:
         description: 'The pytest tag to run tests with'
         required: false
-
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -24,11 +23,15 @@ jobs:
           pip install pytest
           pip install pytest requests
 
+      - name: Install Docker Compose
+        run: |
+          curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          chmod +x /usr/local/bin/docker-compose
+
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
           ref: ${{ inputs.branch }}
-
       - name: Prepare pytest environment
         run: |
           mkdir -p /app/.pytest_cache
@@ -43,16 +46,16 @@ jobs:
         run: |
           # Run pytest with the specified tag if provided
           if [ -n "${{ inputs.your_tag }}" ]; then
-            TEST_TAG="${{ inputs.your_tag }}" docker-compose -f docker-compose.test.yml run --rm test-app
+          TEST_TAG="${{ inputs.your_tag }}" docker-compose -f docker-compose.test.yml run --rm test-app
           else
-            docker-compose -f docker-compose.test.yml run --rm test-app
+          docker-compose -f docker-compose.test.yml run --rm test-app
           fi
 
   vulnerability-scan:
     needs: [test]
     runs-on: ubuntu-latest
     container:
-      image: ubuntu:20.04
+      image: ubuntu:20.04 # Specify the Docker image to use
     steps:
       - name: Scan Dockerfile for Vulnerabilities
         run: |
