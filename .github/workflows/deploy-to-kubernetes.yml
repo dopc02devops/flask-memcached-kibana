@@ -11,7 +11,7 @@ on:
         description: 'The pytest tag to run tests with'
         required: false
 jobs:
-  install-pytest:
+  install-dependencies:
     runs-on: ubuntu-latest
     container:
       image: ubuntu:20.04
@@ -22,19 +22,13 @@ jobs:
           apt-get install -y python3-pip curl docker.io
           pip install pytest
 
-  install-docker-compose:
-    needs: [install-pytest]
-    runs-on: ubuntu-latest
-    container:
-      image: ubuntu:20.04
-    steps:
       - name: Install Docker Compose
         run: |
           curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           chmod +x /usr/local/bin/docker-compose
 
-  checkout-repo:
-    needs: [install-docker-compose]
+  test:
+    needs: [install-dependencies]
     runs-on: ubuntu-latest
     container:
       image: ubuntu:20.04
@@ -44,12 +38,6 @@ jobs:
         with:
           ref: ${{ inputs.branch }}
 
-  test:
-    needs: [checkout-repo]
-    runs-on: ubuntu-latest
-    container:
-      image: ubuntu:20.04
-    steps:
       - name: Run Docker Compose for Testing
         run: |
           # Run pytest with the specified tag if provided
