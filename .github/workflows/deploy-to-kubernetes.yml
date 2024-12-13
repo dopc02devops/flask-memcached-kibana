@@ -23,6 +23,11 @@ jobs:
           apt-get install -y python3-pip curl docker.io
           pip install pytest
 
+      - name: Install Docker Compose
+        run: |
+          curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          chmod +x /usr/local/bin/docker-compose
+
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
