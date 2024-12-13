@@ -14,7 +14,7 @@ jobs:
   install-dependencies:
     runs-on: ubuntu-latest
     container:
-      image: ubuntu:20.04 # Specify the Docker image to use
+      image: ubuntu:24.04
     steps:
       - name: Install dependencies
         run: |
@@ -30,7 +30,7 @@ jobs:
     needs: [install-dependencies]
     runs-on: ubuntu-latest
     container:
-      image: ubuntu:20.04 # Specify the Docker image to use
+      image: ubuntu:24.04
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -41,10 +41,9 @@ jobs:
         run: |
           # Run pytest with the specified tag if provided
           if [ -n "${{ inputs.your_tag }}" ]; then
-            TEST_TAG="${inputs.your_tag}" docker-compose -f docker-compose.test.yml run --rm test-app --abort-on-container-exit
-
+          TEST_TAG="${{ inputs.your_tag }}" docker-compose -f docker-compose.test.yml run --rm test-app --abort-on-container-exit
           else
-            docker-compose -f docker-compose.test.yml run --rm test-app --abort-on-container-exit
+          docker-compose -f docker-compose.test.yml run --rm test-app --abort-on-container-exit
           fi
 
   vulnerability-scan:
