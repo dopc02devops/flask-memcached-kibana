@@ -44,6 +44,8 @@ jobs:
       - name: Print the current working directory
         run: |
           pwd
+          ls -la
+          find . -name "test_app.py"
 
       - name: Run Docker Compose for Testing
         run: |
