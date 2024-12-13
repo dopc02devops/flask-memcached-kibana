@@ -1,13 +1,6 @@
 # Use a lightweight Python image for testing
 FROM python:3.9-slim
 
-# Prevents .pyc files.
-# Ensures logs are flushed immediately.
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    KUBECTL_VERSION=v1.28.0 \
-    HELM_VERSION=v3.12.3
-
 # Install curl and other necessary packages
 RUN apt-get update && apt-get install -y curl && apt-get clean
 
@@ -25,9 +18,3 @@ COPY . /app
 
 # Set the Flask app for testing (in-memory testing, no server started)
 ENV FLASK_ENV=testing
-
-# Create non-root user
-RUN useradd -u 5678 -m appuser && chown -R appuser /app
-
-# Switch to the non-root user
-USER appuser
