@@ -11,7 +11,7 @@ on:
         description: 'The pytest tag to run tests with'
         required: false
 jobs:
-  install-dependencies:
+  test:
     runs-on: ubuntu-latest
     container:
       image: ubuntu:20.04
@@ -27,12 +27,6 @@ jobs:
           curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           chmod +x /usr/local/bin/docker-compose
 
-  test:
-    needs: [install-dependencies]
-    runs-on: ubuntu-latest
-    container:
-      image: ubuntu:20.04
-    steps:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
