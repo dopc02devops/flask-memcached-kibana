@@ -17,17 +17,20 @@ jobs:
     container:
       image: ubuntu:20.04
     steps:
-      - name: Install-dependencies
-        run: |
-          apt-get update
-          apt-get install -y python3-pip curl docker.io
-          pip install pytest requests pylint
-      - name: Upload-Artefacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: artefacts-file
-          path: /app/docker-compose.test.yml
-          retention-days: 5
+      - name: Debug file existence
+        run: ls -R /app/  # List files in /app and subdirectories
+
+  #      - name: Install-dependencies
+#        run: |
+#          apt-get update
+#          apt-get install -y python3-pip curl docker.io
+#          pip install pytest requests pylint
+#      - name: Upload-Artefacts
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: artefacts-file
+#          path: /app/docker-compose.test.yml
+#          retention-days: 5
 
   Install-Docker-Compose:
     needs: [Install-dependencies]
