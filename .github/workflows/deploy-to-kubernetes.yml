@@ -17,20 +17,17 @@ jobs:
     container:
       image: ubuntu:20.04
     steps:
-      - name: Debug file existence
-        run: pwd
-
-  #      - name: Install-dependencies
-#        run: |
-#          apt-get update
-#          apt-get install -y python3-pip curl docker.io
-#          pip install pytest requests pylint
-#      - name: Upload-Artefacts
-#        uses: actions/upload-artifact@v3
-#        with:
-#          name: artefacts-file
-#          path: /app/docker-compose.test.yml
-#          retention-days: 5
+      - name: Install-dependencies
+        run: |
+          apt-get update
+          apt-get install -y python3-pip curl docker.io
+          pip install pytest requests pylint
+      - name: Upload-Artefacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: artefacts-file
+          path: $__GITHUB_WORKSPACE/app/docker-compose.test.yml
+          retention-days: 5
 
   Install-Docker-Compose:
     needs: [Install-dependencies]
@@ -48,7 +45,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: artefacts-file
-          path: /app/docker-compose.test.yml
+          path: $__GITHUB_WORKSPACE/app/docker-compose.test.yml
           retention-days: 5
 
   Checkout-repository:
@@ -67,7 +64,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: artefacts-file
-          path: /app/docker-compose.test.yml
+          path: $__GITHUB_WORKSPACE/app/docker-compose.test.yml
           retention-days: 5
 
   Prepare-and-Test-Discovery:
@@ -89,7 +86,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: artefacts-file
-          path: /app/docker-compose.test.yml
+          path: $__GITHUB_WORKSPACE/app/docker-compose.test.yml
           retention-days: 5
 
   Testing:
@@ -111,7 +108,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: artefacts-file
-          path: /app/docker-compose.test.yml
+          path: $__GITHUB_WORKSPACE/app/docker-compose.test.yml
           retention-days: 5
 
   vulnerability-scan:
