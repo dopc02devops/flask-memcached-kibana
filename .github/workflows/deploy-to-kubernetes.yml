@@ -11,13 +11,11 @@ on:
         description: 'The pytest tag to run tests with'
         required: false
 
-default:
-  container:
-    image: ubuntu:20.04 # Same container used for all stages
-
 jobs:
   Install dependencies:
     runs-on: ubuntu-latest
+    container:
+      image: ubuntu:20.04
     steps:
       - name: Install dependencies
         run: |
@@ -25,42 +23,89 @@ jobs:
           apt-get install -y python3-pip curl docker.io
           pip install pytest
           pip install pytest requests
+      - name: Upload test artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-artifacts
+          path: |
+            ./docker-compose.test.yml
 
   Install Docker Compose:
     needs: [Install dependencies]
     runs-on: ubuntu-latest
+    container:
+      image: ubuntu:20.04
     steps:
+      - name: Download test artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: test-artifacts
       - name: Install Docker Compose
         run: |
           curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           chmod +x /usr/local/bin/docker-compose
+      - name: Upload test artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-artifacts
+          path: |
+            ./docker-compose.test.yml
 
   Checkout repository:
     needs: [Install Docker Compose]
     runs-on: ubuntu-latest
+    container:
+      image: ubuntu:20.04
     steps:
+      - name: Download test artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: test-artifacts
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
           ref: ${{ inputs.branch }}
+      - name: Upload test artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-artifacts
+          path: |
+            ./docker-compose.test.yml
 
   Prepare and Test Discovery:
     needs: [Checkout repository]
     runs-on: ubuntu-latest
+    container:
+      image: ubuntu:20.04
     steps:
+      - name: Download test artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: test-artifacts
       - name: Prepare pytest environment
         run: |
           mkdir -p /app/.pytest_cache
           chmod -R u+w /app/.pytest_cache
-
       - name: Debug Test Discovery
         run: |
           pytest --collect-only
+      - name: Upload test artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-artifacts
+          path: |
+            ./docker-compose.test.yml
 
   Testing:
     needs: [Prepare and Test Discovery]
     runs-on: ubuntu-latest
+    container:
+      image: ubuntu:20.04
     steps:
+      - name: Download test artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: test-artifacts
       - name: Run Docker Compose for Testing
         run: |
           if [ -n "${{ inputs.your_tag }}" ]; then
@@ -68,15 +113,31 @@ jobs:
           else
           docker-compose -f docker-compose.test.yml up --build test-app
           fi
+      - name: Upload test artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-artifacts
+          path: |
+            ./docker-compose.test.yml
 
   vulnerability-scan:
     needs: [Testing]
     runs-on: ubuntu-latest
     steps:
+      - name: Download test artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: test-artifacts
       - name: Scan Dockerfile for Vulnerabilities
         run: |
           curl -fsSL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
           trivy config --severity HIGH,CRITICAL Dockerfile
+      - name: Upload test artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-artifacts
+          path: |
+            ./docker-compose.test.yml
 
   deploy:
     needs: [vulnerability-scan]
