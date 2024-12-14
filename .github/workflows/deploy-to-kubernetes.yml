@@ -17,48 +17,48 @@ jobs:
     container:
       image: ubuntu:20.04
     steps:
-      - name: Install dependencies
+      - name: Install-dependencies
         run: |
           apt-get update
           apt-get install -y python3-pip curl docker.io
           pip install pytest requests pylint
-      - name: Upload docker-compose file as artifact
+      - name: Upload-Artefacts
         uses: actions/upload-artifact@v3
         with:
           name: docker-compose-file
           path: ./docker-compose.test.yml
 
   Install Docker Compose:
-    needs: Install dependencies
+    needs: Install-dependencies
     runs-on: ubuntu-latest
     steps:
-      - name: Download docker-compose file
+      - name: Download-Artefacts
         uses: actions/download-artifact@v3
         with:
           name: docker-compose-file
-      - name: Install Docker Compose
+      - name: Install-Docker-Compose
         run: |
           curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           chmod +x /usr/local/bin/docker-compose
-      - name: Upload docker-compose file again
+      - name: Upload-Artefacts-again
         uses: actions/upload-artifact@v3
         with:
           name: docker-compose-file
           path: ./docker-compose.test.yml
 
   Checkout repository:
-    needs: Install Docker Compose
+    needs: Install-Docker-Compose
     runs-on: ubuntu-latest
     steps:
-      - name: Download docker-compose file
+      - name: Download-Artefacts
         uses: actions/download-artifact@v3
         with:
           name: docker-compose-file
-      - name: Checkout repository
+      - name: Checkout-repository
         uses: actions/checkout@v3
         with:
           ref: ${{ inputs.branch }}
-      - name: Upload docker-compose file again
+      - name: Upload-Artefacts
         uses: actions/upload-artifact@v3
         with:
           name: docker-compose-file
@@ -68,7 +68,7 @@ jobs:
     needs: Checkout repository
     runs-on: ubuntu-latest
     steps:
-      - name: Download docker-compose file
+      - name: Download-Artefacts
         uses: actions/download-artifact@v3
         with:
           name: docker-compose-file
@@ -76,10 +76,10 @@ jobs:
         run: |
           mkdir -p /app/.pytest_cache
           chmod -R u+w /app/.pytest_cache
-      - name: Debug Test Discovery
+      - name: Debug-Test-Discovery
         run: |
           pytest --collect-only
-      - name: Upload docker-compose file again
+      - name: Upload-Artefacts
         uses: actions/upload-artifact@v3
         with:
           name: docker-compose-file
@@ -89,18 +89,18 @@ jobs:
     needs: Prepare and Test Discovery
     runs-on: ubuntu-latest
     steps:
-      - name: Download docker-compose file
+      - name: Download-Artefacts
         uses: actions/download-artifact@v3
         with:
           name: docker-compose-file
-      - name: Run Docker Compose for Testing
+      - name: Run-Docker-Compose-for-Testing
         run: |
           if [ -n "${{ inputs.your_tag }}" ]; then
             TEST_TAG="${{ inputs.your_tag }}" docker-compose -f docker-compose.test.yml up --build test-app
           else
             docker-compose -f docker-compose.test.yml up --build test-app
           fi
-      - name: Upload docker-compose file again
+      - name: Upload-Artefacts
         uses: actions/upload-artifact@v3
         with:
           name: docker-compose-file
@@ -110,11 +110,11 @@ jobs:
     needs: Testing
     runs-on: ubuntu-latest
     steps:
-      - name: Download docker-compose file
+      - name: Download-Artefacts
         uses: actions/download-artifact@v3
         with:
           name: docker-compose-file
-      - name: Install Trivy
+      - name: Install-Trivy
         run: |
           curl -fsSL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
       - name: Scan Dockerfile for Vulnerabilities
@@ -130,10 +130,6 @@ jobs:
     needs: vulnerability-scan
     runs-on: ubuntu-latest
     steps:
-      - name: Download docker-compose file
-        uses: actions/download-artifact@v3
-        with:
-          name: docker-compose-file
       - name: Install dependencies (kubectl, Docker)
         run: |
           apt-get update
