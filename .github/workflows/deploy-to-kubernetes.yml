@@ -18,7 +18,7 @@ jobs:
       image: ubuntu:20.04
     steps:
       - name: Debug file existence
-        run: ls -R /app/  # List files in /app and subdirectories
+        run: pwd
 
   #      - name: Install-dependencies
 #        run: |
