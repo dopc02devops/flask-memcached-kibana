@@ -21,8 +21,6 @@ services:
       - my_network
     links:
       - memcached
-    volumes:
-      - ./src:/app  # Mount current directory for development
 
   memcached:
     image: memcached:latest
