@@ -36,7 +36,7 @@ jobs:
           chmod +x /usr/local/bin/docker-compose
 
   Checkout repository:
-    needs: [Install dependencies]
+    needs: [Install Docker Compose]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
