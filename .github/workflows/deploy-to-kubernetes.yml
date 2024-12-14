@@ -26,7 +26,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: artefacts-file
-          path: ./docker-compose.test.yml
+          path: /app/docker-compose.test.yml
+          retention-days: 5
 
   Install-Docker-Compose:
     needs: [Install-dependencies]
@@ -44,7 +45,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: artefacts-file
-          path: ./docker-compose.test.yml
+          path: /app/docker-compose.test.yml
+          retention-days: 5
 
   Checkout-repository:
     needs: [Install-Docker-Compose]
@@ -62,7 +64,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: artefacts-file
-          path: ./docker-compose.test.yml
+          path: /app/docker-compose.test.yml
+          retention-days: 5
 
   Prepare-and-Test-Discovery:
     needs: [Checkout-repository]
@@ -83,7 +86,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: artefacts-file
-          path: ./docker-compose.test.yml
+          path: /app/docker-compose.test.yml
+          retention-days: 5
 
   Testing:
     needs: [Prepare-and-Test-Discovery]
@@ -104,7 +108,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: artefacts-file
-          path: ./docker-compose.test.yml
+          path: /app/docker-compose.test.yml
+          retention-days: 5
 
   vulnerability-scan:
     needs: [Testing]
