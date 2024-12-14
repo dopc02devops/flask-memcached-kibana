@@ -65,7 +65,7 @@ jobs:
           path: ./docker-compose.test.yml
 
   Prepare-and-Test-Discovery:
-    needs: Checkout repository
+    needs: Checkout-repository
     runs-on: ubuntu-latest
     steps:
       - name: Download-Artefacts
@@ -86,7 +86,7 @@ jobs:
           path: ./docker-compose.test.yml
 
   Testing:
-    needs: Prepare and Test Discovery
+    needs: Prepare-and-Test-Discovery
     runs-on: ubuntu-latest
     steps:
       - name: Download-Artefacts
