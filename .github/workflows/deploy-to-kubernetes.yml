@@ -21,67 +21,57 @@ jobs:
         run: |
           apt-get update
           apt-get install -y python3-pip curl docker.io
-          pip install pytest
-          pip install pytest requests
-      - name: Upload test artifacts
+          pip install pytest requests pylint
+      - name: Upload docker-compose file as artifact
         uses: actions/upload-artifact@v3
         with:
-          name: test-artifacts
-          path: |
-            ./docker-compose.test.yml
+          name: docker-compose-file
+          path: ./docker-compose.test.yml
 
   Install Docker Compose:
-    needs: [Install dependencies]
+    needs: Install dependencies
     runs-on: ubuntu-latest
-    container:
-      image: ubuntu:20.04
     steps:
-      - name: Download test artifacts
+      - name: Download docker-compose file
         uses: actions/download-artifact@v3
         with:
-          name: test-artifacts
+          name: docker-compose-file
       - name: Install Docker Compose
         run: |
           curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           chmod +x /usr/local/bin/docker-compose
-      - name: Upload test artifacts
+      - name: Upload docker-compose file again
         uses: actions/upload-artifact@v3
         with:
-          name: test-artifacts
-          path: |
-            ./docker-compose.test.yml
+          name: docker-compose-file
+          path: ./docker-compose.test.yml
 
   Checkout repository:
-    needs: [Install Docker Compose]
+    needs: Install Docker Compose
     runs-on: ubuntu-latest
-    container:
-      image: ubuntu:20.04
     steps:
-      - name: Download test artifacts
+      - name: Download docker-compose file
         uses: actions/download-artifact@v3
         with:
-          name: test-artifacts
+          name: docker-compose-file
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
           ref: ${{ inputs.branch }}
-      - name: Upload test artifacts
+      - name: Upload docker-compose file again
         uses: actions/upload-artifact@v3
         with:
-          name: test-artifacts
-          path: |
-            ./docker-compose.test.yml
+          name: docker-compose-file
+          path: ./docker-compose.test.yml
 
   Prepare and Test Discovery:
-    needs: [Checkout repository]
+    needs: Checkout repository
     runs-on: ubuntu-latest
-    container:
-      image: ubuntu:20.04
     steps:
-      - name: Download test artifacts
+      - name: Download docker-compose file
         uses: actions/download-artifact@v3
         with:
-          name: test-artifacts
+          name: docker-compose-file
       - name: Prepare pytest environment
         run: |
           mkdir -p /app/.pytest_cache
@@ -89,63 +79,62 @@ jobs:
       - name: Debug Test Discovery
         run: |
           pytest --collect-only
-      - name: Upload test artifacts
+      - name: Upload docker-compose file again
         uses: actions/upload-artifact@v3
         with:
-          name: test-artifacts
-          path: |
-            ./docker-compose.test.yml
+          name: docker-compose-file
+          path: ./docker-compose.test.yml
 
   Testing:
-    needs: [Prepare and Test Discovery]
+    needs: Prepare and Test Discovery
     runs-on: ubuntu-latest
-    container:
-      image: ubuntu:20.04
     steps:
-      - name: Download test artifacts
+      - name: Download docker-compose file
         uses: actions/download-artifact@v3
         with:
-          name: test-artifacts
+          name: docker-compose-file
       - name: Run Docker Compose for Testing
         run: |
           if [ -n "${{ inputs.your_tag }}" ]; then
-          TEST_TAG="${{ inputs.your_tag }}" docker-compose -f docker-compose.test.yml up --build test-app
+            TEST_TAG="${{ inputs.your_tag }}" docker-compose -f docker-compose.test.yml up --build test-app
           else
-          docker-compose -f docker-compose.test.yml up --build test-app
+            docker-compose -f docker-compose.test.yml up --build test-app
           fi
-      - name: Upload test artifacts
+      - name: Upload docker-compose file again
         uses: actions/upload-artifact@v3
         with:
-          name: test-artifacts
-          path: |
-            ./docker-compose.test.yml
+          name: docker-compose-file
+          path: ./docker-compose.test.yml
 
   vulnerability-scan:
-    needs: [Testing]
+    needs: Testing
     runs-on: ubuntu-latest
     steps:
-      - name: Download test artifacts
+      - name: Download docker-compose file
         uses: actions/download-artifact@v3
         with:
-          name: test-artifacts
-      - name: Scan Dockerfile for Vulnerabilities
+          name: docker-compose-file
+      - name: Install Trivy
         run: |
           curl -fsSL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
+      - name: Scan Dockerfile for Vulnerabilities
+        run: |
           trivy config --severity HIGH,CRITICAL Dockerfile
-      - name: Upload test artifacts
+      - name: Upload docker-compose file again
         uses: actions/upload-artifact@v3
         with:
-          name: test-artifacts
-          path: |
-            ./docker-compose.test.yml
+          name: docker-compose-file
+          path: ./docker-compose.test.yml
 
   deploy:
-    needs: [vulnerability-scan]
+    needs: vulnerability-scan
     runs-on: ubuntu-latest
-    container:
-      image: ubuntu:20.04
     steps:
-      - name: Install dependencies
+      - name: Download docker-compose file
+        uses: actions/download-artifact@v3
+        with:
+          name: docker-compose-file
+      - name: Install dependencies (kubectl, Docker)
         run: |
           apt-get update
           apt-get install -y python3-pip docker.io curl
@@ -157,7 +146,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          ref: ${{ inputs.branch }}  # Use the branch input directly
+          ref: ${{ inputs.branch }}
 
       - name: Run Pylint
         run: |
@@ -194,7 +183,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Deploy to Production
+      - name: Deploy to Production (Kubernetes)
         if: ${{ inputs.branch == 'release' }}
         run: |
           kubectl apply -f k8s/production-deployment.yaml
