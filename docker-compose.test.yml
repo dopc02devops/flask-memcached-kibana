@@ -21,6 +21,11 @@ services:
       - my_network
     links:
       - memcached
+#    volumes:
+#      - ./src:/app  Mount current directory for development
+#     /app is the working directory inside the container.
+#     ./src folder contains your code locally.
+#     You can easily debug with this, make changes on the fly why the container is running
 
   memcached:
     image: memcached:latest

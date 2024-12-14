@@ -10,11 +10,14 @@ on:
       your_tag:
         description: 'The pytest tag to run tests with'
         required: false
+
+default:
+  container:
+    image: ubuntu:20.04 # Same container used for all stages
+
 jobs:
-  test:
+  Install dependencies:
     runs-on: ubuntu-latest
-    container:
-      image: ubuntu:20.04
     steps:
       - name: Install dependencies
         run: |
@@ -23,15 +26,28 @@ jobs:
           pip install pytest
           pip install pytest requests
 
+  Install Docker Compose:
+    needs: [Install dependencies]
+    runs-on: ubuntu-latest
+    steps:
       - name: Install Docker Compose
         run: |
           curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           chmod +x /usr/local/bin/docker-compose
 
+  Checkout repository:
+    needs: [Install dependencies]
+    runs-on: ubuntu-latest
+    steps:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
           ref: ${{ inputs.branch }}
+
+  Prepare and Test Discovery:
+    needs: [Checkout repository]
+    runs-on: ubuntu-latest
+    steps:
       - name: Prepare pytest environment
         run: |
           mkdir -p /app/.pytest_cache
@@ -41,12 +57,10 @@ jobs:
         run: |
           pytest --collect-only
 
-      - name: Print the current working directory before
-        run: |
-          pwd
-          ls -la
-          find . -name "test_app.py"
-
+  Testing:
+    needs: [Prepare and Test Discovery]
+    runs-on: ubuntu-latest
+    steps:
       - name: Run Docker Compose for Testing
         run: |
           if [ -n "${{ inputs.your_tag }}" ]; then
@@ -55,17 +69,9 @@ jobs:
           docker-compose -f docker-compose.test.yml up --build test-app
           fi
 
-      - name: Print the current working directory after
-        run: |
-          pwd
-          ls -la
-          find . -name "test_app.py"
-
   vulnerability-scan:
-    needs: [test]
+    needs: [Testing]
     runs-on: ubuntu-latest
-    container:
-      image: ubuntu:20.04 # Specify the Docker image to use
     steps:
       - name: Scan Dockerfile for Vulnerabilities
         run: |
