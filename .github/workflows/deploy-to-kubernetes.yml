@@ -23,7 +23,7 @@ jobs:
           apt-get install -y python3-pip curl docker.io
           pip install pytest requests pylint
       - name: Upload-Artefacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: artefacts-file
           path: ./docker-compose.test.yml
@@ -33,7 +33,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download-Artefacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: artefacts-file
       - name: Install-Docker-Compose
@@ -41,7 +41,7 @@ jobs:
           curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           chmod +x /usr/local/bin/docker-compose
       - name: Upload-Artefacts-again
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: artefacts-file
           path: ./docker-compose.test.yml
@@ -51,15 +51,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download-Artefacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: artefacts-file
       - name: Checkout-repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ inputs.branch }}
       - name: Upload-Artefacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: artefacts-file
           path: ./docker-compose.test.yml
@@ -69,7 +69,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download-Artefacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: artefacts-file
       - name: Prepare pytest environment
@@ -80,7 +80,7 @@ jobs:
         run: |
           pytest --collect-only
       - name: Upload-Artefacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: artefacts-file
           path: ./docker-compose.test.yml
@@ -90,7 +90,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download-Artefacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: artefacts-file
       - name: Run-Docker-Compose-for-Testing
@@ -101,7 +101,7 @@ jobs:
             docker-compose -f docker-compose.test.yml up --build test-app
           fi
       - name: Upload-Artefacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: artefacts-file
           path: ./docker-compose.test.yml
@@ -111,7 +111,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download-Artefacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: artefacts-file
       - name: Install-Trivy
@@ -120,11 +120,6 @@ jobs:
       - name: Scan Dockerfile for Vulnerabilities
         run: |
           trivy config --severity HIGH,CRITICAL Dockerfile
-      - name: Upload docker-compose file again
-        uses: actions/upload-artifact@v3
-        with:
-          name: artefacts-file
-          path: ./docker-compose.test.yml
 
   deploy:
     needs: vulnerability-scan
@@ -140,7 +135,7 @@ jobs:
           apt-get update && apt-get install -y kubectl
 
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ inputs.branch }}
 
@@ -162,7 +157,7 @@ jobs:
           docker-compose -f docker-compose.yml up -d
 
       - name: Manual Approval for Staging Environment
-        uses: hmarr/auto-approve-action@v3
+        uses: hmarr/auto-approve-action@v4
         with:
           require: true
         env:
@@ -173,7 +168,7 @@ jobs:
           docker-compose -f docker-compose.yml up -d
 
       - name: Manual Approval for Production Environment
-        uses: hmarr/auto-approve-action@v3
+        uses: hmarr/auto-approve-action@v4
         with:
           require: true
         env:
