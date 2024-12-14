@@ -12,7 +12,7 @@ on:
         required: false
 
 jobs:
-  Install dependencies:
+  Install-dependencies:
     runs-on: ubuntu-latest
     container:
       image: ubuntu:20.04
@@ -28,7 +28,7 @@ jobs:
           name: docker-compose-file
           path: ./docker-compose.test.yml
 
-  Install Docker Compose:
+  Install-Docker-Compose:
     needs: Install-dependencies
     runs-on: ubuntu-latest
     steps:
@@ -46,7 +46,7 @@ jobs:
           name: docker-compose-file
           path: ./docker-compose.test.yml
 
-  Checkout repository:
+  Checkout-repository:
     needs: Install-Docker-Compose
     runs-on: ubuntu-latest
     steps:
@@ -64,7 +64,7 @@ jobs:
           name: docker-compose-file
           path: ./docker-compose.test.yml
 
-  Prepare and Test Discovery:
+  Prepare-and-Test-Discovery:
     needs: Checkout repository
     runs-on: ubuntu-latest
     steps:
