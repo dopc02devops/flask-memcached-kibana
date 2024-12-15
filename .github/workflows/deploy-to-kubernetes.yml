@@ -82,8 +82,8 @@ jobs:
           name: artefacts-file
       - name: Prepare pytest environment
         run: |
-          mkdir -p /app/.pytest_cache
-          chmod -R u+w /app/.pytest_cache
+          sudo mkdir -p /app/.pytest_cache
+          sudo chmod -R u+w /app/.pytest_cache
       - name: Debug-Test-Discovery
         run: |
           pytest --collect-only
