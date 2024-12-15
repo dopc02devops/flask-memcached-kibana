@@ -58,8 +58,6 @@ jobs:
           docker cp flask-tests:/app/report.xml ./report.xml
           docker cp flask-tests:/app/Dockerfile.app ./Dockerfile.app
           docker cp flask-tests:/app/Dockerfile.test ./Dockerfile.test
-          docker cp flask-tests:/app/ ./
-          ls -la ./app
 
       - name: Upload XML Report Artifact
         uses: actions/upload-artifact@v3
@@ -68,11 +66,6 @@ jobs:
           path: ./report.xml
           retention-days: 1
 
-
-  Trivy-scan:
-    needs: [Test]
-    runs-on: ubuntu-latest
-    steps:
       - name: Install Trivy
         run: |
           set -e
