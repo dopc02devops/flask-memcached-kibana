@@ -57,7 +57,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: xml-report
-          path: /app/report.xml
+          path: /home/runner/work/flask-memcached/flask-memcached/app/report.xml
           retention-days: 1
 
 
@@ -75,11 +75,11 @@ jobs:
       - name: Trivy Scan Dockerfile.app
         run: |
           set -e
-          sudo trivy config --severity HIGH,CRITICAL Dockerfile.app
+          sudo trivy config --severity HIGH,CRITICAL app/Dockerfile.app
       - name: Trivy Scan Dockerfile.test
         run: |
           set -e
-          sudo trivy config --severity HIGH,CRITICAL Dockerfile.test
+          sudo trivy config --severity HIGH,CRITICAL app/Dockerfile.test
 
   deploy:
     needs: [Trivy-scan]
