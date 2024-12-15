@@ -58,6 +58,7 @@ jobs:
           docker cp flask-tests:/app/report.xml ./report.xml
           docker cp flask-tests:/app/Dockerfile.app ./Dockerfile.app
           docker cp flask-tests:/app/Dockerfile.test ./Dockerfile.test
+          docker exec flask-tests ls -al /app
 
       - name: Upload XML Report Artifact
         uses: actions/upload-artifact@v3
