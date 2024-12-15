@@ -77,11 +77,6 @@ jobs:
           # Save as an output for other steps if needed
           echo "mount-path=$MOUNT_PATH" >> $GITHUB_ENV
 
-      # Example of printing the path
-      - name: Print Volume Mount Path
-        run:
-          echo "The Docker volume is mounted at: ${{ env.mount-path }}"
-
 
   Trivy-scan:
     needs: [Test]
