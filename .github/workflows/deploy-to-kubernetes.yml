@@ -30,7 +30,7 @@ jobs:
           chmod -R u+w /app/.pytest_cache
       - name: Debug-Test-Discovery
         run: |
-          pytest --collect-only
+          pytest app/ --collect-only
 
   Install-Docker-Compose-And-Test:
     needs: [Install-Dependencies-and-Discover-tests]
