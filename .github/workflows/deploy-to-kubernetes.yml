@@ -52,6 +52,8 @@ jobs:
           fi
           find . -name "report.xml" -print
           pwd
+          ls -ls
+          find . -name "report.xml" -type f
 
       - name: Upload XML Report Artifact
         uses: actions/upload-artifact@v3
@@ -75,11 +77,12 @@ jobs:
       - name: Trivy Scan Dockerfile.app
         run: |
           set -e
-          sudo trivy config --severity HIGH,CRITICAL app/Dockerfile.app
+          find . -name "Dockerfile.app" -type f
+          sudo trivy config --severity HIGH,CRITICAL /home/runner/work/flask-memcached/flask-memcached/app/Dockerfile.app
       - name: Trivy Scan Dockerfile.test
         run: |
           set -e
-          sudo trivy config --severity HIGH,CRITICAL app/Dockerfile.test
+          sudo trivy config --severity HIGH,CRITICAL /home/runner/work/flask-memcached/flask-memcached/app/Dockerfile.test
 
   deploy:
     needs: [Trivy-scan]
