@@ -58,20 +58,13 @@ jobs:
           path: test-app/report.xml
           retention-days: 1
 
-      - name: Upload html report Artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: html-report
-          path: test-app/report.html
-          retention-days: 5
-
   vulnerability-scan:
     needs: [Install-Docker-Compose-And-Test]
     runs-on: ubuntu-latest
     steps:
       - name: Install Trivy
         run: |
-          sudo set -e
+          set -e
           sudo apt-get update
           sudo apt-get install -y wget
           sudo wget https://github.com/aquasecurity/trivy/releases/download/v0.29.1/trivy_0.29.1_Linux-64bit.deb
