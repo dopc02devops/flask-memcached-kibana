@@ -41,10 +41,10 @@ jobs:
     container:
       image: ubuntu:20.04
     steps:
-      - - name: Download-Artefacts
-          uses: actions/download-artifact@v3
-          with:
-            name: pytest-artefacts
+      - name: Download-Artefacts
+        uses: actions/download-artifact@v3
+        with:
+          name: pytest-artefacts
       - name: Discover tests
         run: pytest --collect-only
       - name: List installed packages
