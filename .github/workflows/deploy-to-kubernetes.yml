@@ -24,10 +24,13 @@ jobs:
           apt-get update
           apt-get install -y python3-pip curl docker.io
           pip install pytest requests pylint
-      - name: Discover tests
-        run: pytest --collect-only
-      - name: List installed packages
-        run: pip freeze
+      - name: Prepare pytest environment
+        run: |
+          mkdir -p /app/.pytest_cache
+          chmod -R u+w /app/.pytest_cache
+      - name: Debug-Test-Discovery
+        run: |
+          pytest --collect-only
 
   Install-Docker-Compose-And-Test:
     needs: [Install-Dependencies-and-Discover-tests]
