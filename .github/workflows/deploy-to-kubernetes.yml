@@ -42,7 +42,7 @@ jobs:
         with:
           ref: ${{ inputs.branch }}
 
-      - name: Run Tests and Upload XML Report
+      - name: Run Docker Compose and Prepare Report
         run: |
           set -e
           if [ -n "${{ inputs.your_tag }}" ]; then
@@ -50,12 +50,16 @@ jobs:
           else
             docker-compose -f docker-compose.test.yml up --build test-app
           fi
-          find . -name "report.xml" -exec cp {} app/report.xml \;
+          REPORT_PATH=$(find . -name "report.xml" -print -quit)
+          echo "REPORT_PATH=$REPORT_PATH" >> $GITHUB_ENV
+
+      - name: Upload XML Report Artifact
         uses: actions/upload-artifact@v3
         with:
           name: xml-report
-          path: app/report.xml
+          path: ${{ env.REPORT_PATH }}
           retention-days: 1
+
 
   Trivy-scan:
     needs: [Test]
