@@ -83,7 +83,7 @@ jobs:
           sudo trivy config --severity HIGH,CRITICAL ./Dockerfile.test
 
   deploy:
-    needs: [Trivy-scan]
+    needs: [Test]
     runs-on: ubuntu-latest
     steps:
       - name: Install dependencies (kubectl, Docker)
