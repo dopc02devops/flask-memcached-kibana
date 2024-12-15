@@ -72,30 +72,8 @@ jobs:
           path: output/artefacts.txt
           retention-days: 5
 
-  Prepare-and-Test-Discovery:
-    needs: [Checkout-repository]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download-Artefacts
-        uses: actions/download-artifact@v3
-        with:
-          name: artefacts-file
-      - name: Prepare pytest environment
-        run: |
-          sudo mkdir -p /app/.pytest_cache
-          sudo chmod -R u+w /app/.pytest_cache
-      - name: Debug-Test-Discovery
-        run: |
-          pytest --collect-only
-      - name: Upload-Artefacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: artefacts-file
-          path: output/artefacts.txt
-          retention-days: 5
-
   Testing:
-    needs: [Prepare-and-Test-Discovery]
+    needs: [Checkout-repository]
     runs-on: ubuntu-latest
     steps:
       - name: Download-Artefacts
