@@ -19,70 +19,68 @@ jobs:
     container:
       image: ubuntu:20.04
     steps:
-      - name: Install-dependencies
+      - name: Install dependencies
         run: |
+          set -e
           apt-get update
           apt-get install -y python3-pip curl docker.io
           pip install pytest requests pylint
 
   Install-Docker-Compose-And-Test:
-  needs: [Install-Dependencies]
-  runs-on: ubuntu-latest
-  steps:
-    - name: Install-Docker-Compose
-      run: |
-        curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-        chmod +x /usr/local/bin/docker-compose
+    needs: [Install-Dependencies]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Docker Compose
+        run: |
+          set -e
+          curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          chmod +x /usr/local/bin/docker-compose
 
-    - name: Checkout-repository
-      uses: actions/checkout@v4
-      with:
-        ref: ${{ inputs.branch }}
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
 
-    - name: Run-Docker-Compose-for-Testing
-      run: |
-        if [ -n "${{ inputs.your_tag }}" ]; then
-          TEST_TAG="${{ inputs.your_tag }}" docker-compose -f docker-compose.test.yml up --build -d test-app
-        else
-          docker-compose -f docker-compose.test.yml up --build -d test-app 
-        fi
-        docker-compose exec test-app pytest --junitxml=/app/test-report.xml
-        docker-compose down  # Shut down the container
+      - name: Run Docker Compose for Testing
+        run: |
+          set -e
+          if [ -n "${{ inputs.your_tag }}" ]; then
+            TEST_TAG="${{ inputs.your_tag }}" docker-compose -f docker-compose.test.yml up --build -d test-app
+          else
+            docker-compose -f docker-compose.test.yml up --build -d test-app
+          fi
+          docker-compose exec test-app pytest --junitxml=/app/test-report.xml || exit 1
+          docker-compose down
 
-    - name: Upload Test Report Artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: pytest-report
-        path: test-app/test-report.xml
-        retention-days: 1
+      - name: Upload Test Report Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: pytest-report
+          path: test-app/test-report.xml
+          retention-days: 1
 
-    - name: Upload Additional Artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: pytest-artefacts
-        path: artefacts
-        retention-days: 5
-
-
+      - name: Upload Additional Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: pytest-artefacts
+          path: artefacts
+          retention-days: 5
 
   vulnerability-scan:
     needs: [Install-Docker-Compose-And-Test]
     runs-on: ubuntu-latest
     steps:
-      - name: Install curl
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y curl
       - name: Install Trivy
         run: |
-          # Install Trivy
-          sudo apt-get update
-          sudo apt-get install -y wget
+          set -e
+          apt-get update
+          apt-get install -y wget
           wget https://github.com/aquasecurity/trivy/releases/download/v0.29.1/trivy_0.29.1_Linux-64bit.deb
-          sudo dpkg -i trivy_0.29.1_Linux-64bit.deb
+          dpkg -i trivy_0.29.1_Linux-64bit.deb
 
       - name: Run Trivy Config Scan
         run: |
+          set -e
           trivy config --severity HIGH,CRITICAL Dockerfile
 
   deploy:
@@ -91,6 +89,7 @@ jobs:
     steps:
       - name: Install dependencies (kubectl, Docker)
         run: |
+          set -e
           apt-get update
           apt-get install -y python3-pip docker.io curl
           pip install pylint
@@ -105,19 +104,23 @@ jobs:
 
       - name: Run Pylint
         run: |
+          set -e
           pylint **/*.py
 
       - name: Build Docker image
         run: |
+          set -e
           docker build -t ${{ secrets.DOCKER_USERNAME }}/my-app:${{ inputs.branch }} .
 
       - name: Push Docker image to Docker Hub
         run: |
+          set -e
           echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
           docker push ${{ secrets.DOCKER_USERNAME }}/my-app:${{ inputs.branch }}
 
       - name: Deploy to Test Environment
         run: |
+          set -e
           docker-compose -f docker-compose.yml up -d
 
       - name: Manual Approval for Staging Environment
@@ -129,6 +132,7 @@ jobs:
 
       - name: Deploy to Staging Environment
         run: |
+          set -e
           docker-compose -f docker-compose.yml up -d
 
       - name: Manual Approval for Production Environment
@@ -141,8 +145,10 @@ jobs:
       - name: Deploy to Production (Kubernetes)
         if: ${{ inputs.branch == 'release' }}
         run: |
+          set -e
           kubectl apply -f k8s/production-deployment.yaml
 
       - name: Verify Deployment
         run: |
+          set -e
           kubectl rollout status deployment/memcached-deployment
