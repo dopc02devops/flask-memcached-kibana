@@ -26,7 +26,7 @@ jobs:
           apt-get install -y python3-pip curl docker.io
           pip install pytest requests pylint
 
-  Install-Docker-Compose-And-Test:
+  Test:
     needs: [Install-Dependencies]
     runs-on: ubuntu-latest
     steps:
@@ -42,7 +42,7 @@ jobs:
         with:
           ref: ${{ inputs.branch }}
 
-      - name: Run Docker Compose for Testing
+      - name: Run Tests and Upload XML Report
         run: |
           set -e
           if [ -n "${{ inputs.your_tag }}" ]; then
@@ -50,16 +50,15 @@ jobs:
           else
             docker-compose -f docker-compose.test.yml up --build test-app
           fi
-
-      - name: Upload xml Report Artifact
+          find . -name "report.xml" -exec cp {} app/report.xml \;
         uses: actions/upload-artifact@v3
         with:
           name: xml-report
-          path: /app/report.xml
+          path: app/report.xml
           retention-days: 1
 
-  vulnerability-scan:
-    needs: [Install-Docker-Compose-And-Test]
+  Trivy-scan:
+    needs: [Test]
     runs-on: ubuntu-latest
     steps:
       - name: Install Trivy
@@ -69,14 +68,17 @@ jobs:
           sudo apt-get install -y wget
           sudo wget https://github.com/aquasecurity/trivy/releases/download/v0.29.1/trivy_0.29.1_Linux-64bit.deb
           sudo dpkg -i trivy_0.29.1_Linux-64bit.deb
-
-      - name: Run Trivy Config Scan
+      - name: Trivy Scan Dockerfile.app
         run: |
           set -e
-          sudo trivy config --severity HIGH,CRITICAL Dockerfile
+          sudo trivy config --severity HIGH,CRITICAL Dockerfile.app
+      - name: Trivy Scan Dockerfile.test
+        run: |
+          set -e
+          sudo trivy config --severity HIGH,CRITICAL Dockerfile.test
 
   deploy:
-    needs: [vulnerability-scan]
+    needs: [Trivy-scan]
     runs-on: ubuntu-latest
     steps:
       - name: Install dependencies (kubectl, Docker)
