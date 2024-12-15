@@ -25,13 +25,24 @@ jobs:
           apt-get install -y python3-pip curl docker.io
           pip install pytest requests pylint
 
+      # Create the artefacts folder
+      - name: Create artefacts folder
+        run: mkdir -p artefacts
+
+      # Add sample files to the artefacts folder (for demonstration)
+      - name: Add files to artefacts folder
+        run: |
+          echo "Dependencies installed" > artefacts/dependencies.txt
+          echo "pytest version: $(pytest --version)" >> artefacts/dependencies.txt
+          echo "requests version: $(python -c 'import requests; print(requests.__version__)')" >> artefacts/dependencies.txt
+          echo "pylint version: $(pylint --version)" >> artefacts/dependencies.txt
+
       - name: Upload-Artefacts
         uses: actions/upload-artifact@v3
         with:
-          name: pytest-artefacts
-          path: app/
+          name: build-artefacts
+          path: artefacts
           retention-days: 5
-          overwrite: true
 
   Discover-tests:
     needs: [Install-dependencies]
@@ -42,7 +53,7 @@ jobs:
       - name: Download-Artefacts
         uses: actions/download-artifact@v3
         with:
-          name: pytest-artefacts
+          name: build-artefacts
       - name: Discover tests
         run: pytest --collect-only
       - name: List installed packages
