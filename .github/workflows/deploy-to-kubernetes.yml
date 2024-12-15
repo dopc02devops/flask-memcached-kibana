@@ -55,7 +55,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: xml-report
-          path: test-app/report.xml
+          path: /app/report.xml
           retention-days: 1
 
   vulnerability-scan:
@@ -72,7 +72,7 @@ jobs:
 
       - name: Run Trivy Config Scan
         run: |
-          sudo set -e
+          set -e
           sudo trivy config --severity HIGH,CRITICAL Dockerfile
 
   deploy:
