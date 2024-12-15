@@ -24,14 +24,12 @@ jobs:
           apt-get update
           apt-get install -y python3-pip curl docker.io
           pip install pytest requests pylint
-      - name: Create Output Directory
-        run: mkdir -p output
 
       - name: Upload-Artefacts
         uses: actions/upload-artifact@v3
         with:
           name: pytest-artefacts
-          path: output
+          path: app/
           retention-days: 5
           overwrite: true
 
