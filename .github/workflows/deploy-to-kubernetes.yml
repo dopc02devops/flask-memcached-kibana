@@ -12,22 +12,16 @@ on:
         required: false
 
 jobs:
-  artefact-path:
+      
+  Install-dependencies:
     runs-on: ubuntu-latest
     container:
       image: ubuntu:20.04
     steps:
-      - name: Run Tests
+      - name: Create-output-dir
         run: |
           mkdir -p output
           echo "artefacts output" > output/artefacts.txt
-      
-  Install-dependencies:
-    needs: [artefact-path]
-    runs-on: ubuntu-latest
-    container:
-      image: ubuntu:20.04
-    steps:
       - name: Install-dependencies
         run: |
           apt-get update
