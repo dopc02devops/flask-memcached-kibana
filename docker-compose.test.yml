@@ -1,8 +1,4 @@
 
-networks:
-  my_network:
-    driver: bridge
-
 services:
   flask-app:
     build:
@@ -46,7 +42,17 @@ services:
       - my_network
     links:
       - flask-app
+    volumes:
+      - app_volume:/app
     environment:
       - TEST_TAG=${TEST_TAG:-""}
     entrypoint: ["pytest", "-m", "${TEST_TAG}", "--maxfail=5", "--disable-warnings", "--junitxml=report.xml"]
 
+
+networks:
+  my_network:
+    driver: bridge
+
+volumes:
+  app_volume:
+    external: true

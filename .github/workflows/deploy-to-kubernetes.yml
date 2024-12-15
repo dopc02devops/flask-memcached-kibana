@@ -45,22 +45,42 @@ jobs:
       - name: Run Docker Compose and Prepare Report
         run: |
           set -e
+          docker volume create app_volume
           if [ -n "${{ inputs.your_tag }}" ]; then
             TEST_TAG="${{ inputs.your_tag }}" docker-compose -f docker-compose.test.yml up --build test-app
           else
             docker-compose -f docker-compose.test.yml up --build test-app
           fi
-          find . -name "report.xml" -print
-          pwd
-          ls -ls /home/runner/work/flask-memcached/flask-memcached/src
-          find . -name "report.xml" -type f
+          
+          docker cp flask-app:/app/report.xml ./report.xml
 
       - name: Upload XML Report Artifact
         uses: actions/upload-artifact@v3
         with:
           name: xml-report
-          path: /home/runner/work/flask-memcached/flask-memcached/src/app/report.xml
+          path: /var/lib/docker/volumes/my_external_volume/_data/report.xml
           retention-days: 1
+
+      - name: Upload XML Report Artifactssss
+        uses: actions/upload-artifact@v3
+        with:
+          name: xml-reportsss
+          path: ./report.xml
+          retention-days: 1
+
+      - name: Get volume mount path
+        run: |
+          VOLUME_NAME="app_volume"
+          MOUNT_PATH=$(docker volume inspect $VOLUME_NAME --format '{{ .Mountpoint }}')
+          echo "Volume Mount Path: $MOUNT_PATH"
+          
+          # Save as an output for other steps if needed
+          echo "mount-path=$MOUNT_PATH" >> $GITHUB_ENV
+
+      # Example of printing the path
+      - name: Print Volume Mount Path
+        run:
+          echo "The Docker volume is mounted at: ${{ env.mount-path }}"
 
 
   Trivy-scan:
@@ -77,12 +97,11 @@ jobs:
       - name: Trivy Scan Dockerfile.app
         run: |
           set -e
-          find . -name "Dockerfile.app" -type f
-          sudo trivy config --severity HIGH,CRITICAL /home/runner/work/flask-memcached/flask-memcached/src/Dockerfile.app
+          sudo trivy config --severity HIGH,CRITICAL /var/lib/docker/volumes/my_external_volume/_data/Dockerfile.app
       - name: Trivy Scan Dockerfile.test
         run: |
           set -e
-          sudo trivy config --severity HIGH,CRITICAL /home/runner/work/flask-memcached/flask-memcached/src/Dockerfile.test
+          sudo trivy config --severity HIGH,CRITICAL /var/lib/docker/volumes/my_external_volume/_data/Dockerfile.test
 
   deploy:
     needs: [Trivy-scan]
