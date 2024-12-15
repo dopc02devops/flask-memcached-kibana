@@ -53,20 +53,26 @@ jobs:
           fi
           
           docker cp flask-tests:/app/report.xml ./report.xml
-
-      - name: Upload XML Report Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: xml-report
-          path: /var/lib/docker/volumes/my_external_volume/_data/report.xml
-          retention-days: 1
-
       - name: Upload XML Report Artifactssss
         uses: actions/upload-artifact@v3
         with:
           name: xml-reportsss
           path: ./report.xml
           retention-days: 1
+
+      - name: Fix permissions
+        run: |
+          sudo chmod -R 755 /var/lib/docker/volumes/app_volume/_data
+          sudo chmod 644 /var/lib/docker/volumes/app_volume/_data/report.xml
+
+      - name: Upload XML Report Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: xml-report
+          path: /var/lib/docker/volumes/app_volume/_data/report.xml
+          retention-days: 1
+
+
 
       - name: Get volume mount path
         run: |
