@@ -45,43 +45,26 @@ jobs:
       - name: Run Docker Compose and Prepare Report
         run: |
           set -e
+          # Create docker volume
           docker volume create app_volume
+          
           if [ -n "${{ inputs.your_tag }}" ]; then
             TEST_TAG="${{ inputs.your_tag }}" docker-compose -f docker-compose.test.yml up --build test-app
           else
             docker-compose -f docker-compose.test.yml up --build test-app
           fi
           
+          # Copy files from flask-test to localhost
           docker cp flask-tests:/app/report.xml ./report.xml
-      - name: Upload XML Report Artifactssss
-        uses: actions/upload-artifact@v3
-        with:
-          name: xml-reportsss
-          path: ./report.xml
-          retention-days: 1
-
-      - name: Fix permissions
-        run: |
-          sudo chmod -R 755 /var/lib/docker/volumes/app_volume/_data
-          sudo chmod 644 /var/lib/docker/volumes/app_volume/_data/report.xml
+          docker cp flask-tests:/app/Dockerfile.app ./Dockerfile.app
+          docker cp flask-tests:/app/Dockerfile.test ./Dockerfile.test
 
       - name: Upload XML Report Artifact
         uses: actions/upload-artifact@v3
         with:
           name: xml-report
-          path: /var/lib/docker/volumes/app_volume/_data/report.xml
+          path: ./report.xml
           retention-days: 1
-
-
-
-      - name: Get volume mount path
-        run: |
-          VOLUME_NAME="app_volume"
-          MOUNT_PATH=$(docker volume inspect $VOLUME_NAME --format '{{ .Mountpoint }}')
-          echo "Volume Mount Path: $MOUNT_PATH"
-          
-          # Save as an output for other steps if needed
-          echo "mount-path=$MOUNT_PATH" >> $GITHUB_ENV
 
 
   Trivy-scan:
@@ -98,11 +81,11 @@ jobs:
       - name: Trivy Scan Dockerfile.app
         run: |
           set -e
-          sudo trivy config --severity HIGH,CRITICAL /var/lib/docker/volumes/my_external_volume/_data/Dockerfile.app
+          sudo trivy config --severity HIGH,CRITICAL ./Dockerfile.app
       - name: Trivy Scan Dockerfile.test
         run: |
           set -e
-          sudo trivy config --severity HIGH,CRITICAL /var/lib/docker/volumes/my_external_volume/_data/Dockerfile.test
+          sudo trivy config --severity HIGH,CRITICAL ./Dockerfile.test
 
   deploy:
     needs: [Trivy-scan]
