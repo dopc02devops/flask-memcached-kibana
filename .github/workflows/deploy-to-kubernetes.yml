@@ -71,16 +71,16 @@ jobs:
     steps:
       - name: Install Trivy
         run: |
-          set -e
-          apt-get update
-          apt-get install -y wget
-          wget https://github.com/aquasecurity/trivy/releases/download/v0.29.1/trivy_0.29.1_Linux-64bit.deb
-          dpkg -i trivy_0.29.1_Linux-64bit.deb
+          sudo set -e
+          sudo apt-get update
+          sudo apt-get install -y wget
+          sudo wget https://github.com/aquasecurity/trivy/releases/download/v0.29.1/trivy_0.29.1_Linux-64bit.deb
+          sudo dpkg -i trivy_0.29.1_Linux-64bit.deb
 
       - name: Run Trivy Config Scan
         run: |
-          set -e
-          trivy config --severity HIGH,CRITICAL Dockerfile
+          sudo set -e
+          sudo trivy config --severity HIGH,CRITICAL Dockerfile
 
   deploy:
     needs: [vulnerability-scan]
