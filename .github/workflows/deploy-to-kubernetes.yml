@@ -14,7 +14,7 @@ on:
 
 jobs:
 
-  Install-Dependencies-and-Discover-tests:
+  Install-Dependencies:
     runs-on: ubuntu-latest
     container:
       image: ubuntu:20.04
@@ -24,16 +24,9 @@ jobs:
           apt-get update
           apt-get install -y python3-pip curl docker.io
           pip install pytest requests pylint
-      - name: Prepare pytest environment
-        run: |
-          mkdir -p /app/.pytest_cache
-          chmod -R u+w /app/.pytest_cache
-      - name: Debug-Test-Discovery
-        run: |
-          pytest app/ --collect-only
 
   Install-Docker-Compose-And-Test:
-    needs: [Install-Dependencies-and-Discover-tests]
+    needs: [Install-Dependencies]
     runs-on: ubuntu-latest
     steps:
       - name: Install-Docker-Compose
