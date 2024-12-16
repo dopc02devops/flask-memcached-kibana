@@ -108,6 +108,22 @@ resource "aws_security_group" "allow_ssh_http_https" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  # For kubernetes dashboard
+  ingress {
+    from_port   = 8001
+    to_port     = 8001
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # For workers to join master
+  ingress {
+    from_port   = 6443
+    to_port     = 6443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0

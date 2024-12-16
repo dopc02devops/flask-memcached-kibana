@@ -29,8 +29,6 @@ jobs:
   Test:
     needs: [Install-Dependencies]
     runs-on: ubuntu-latest
-    container:
-      image: ubuntu:20.04
     steps:
       - name: Install Docker Compose
         run: |
@@ -95,8 +93,6 @@ jobs:
   deploy:
     needs: [Test]
     runs-on: ubuntu-latest
-    container:
-      image: ubuntu:20.04
     steps:
       - name: Install dependencies (kubectl, Docker)
         run: |
