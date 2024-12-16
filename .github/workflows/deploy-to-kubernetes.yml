@@ -7,10 +7,14 @@ on:
         description: 'Select the branch to deploy'
         required: true
         default: 'main'
-      your_tag:
+      pytest_tag:
         description: 'The pytest tag to run tests with'
         required: false
         default: 'home'
+      release_tag:
+        description: 'Specify the release tag for the Docker image'
+        required: false
+        default: 'latest'
 
 jobs:
   Install-Dependencies:
@@ -61,8 +65,8 @@ jobs:
           docker volume create app_volume
           pip install pytest-html
           
-          if [ -n "${{ inputs.your_tag }}" ]; then
-            TEST_TAG="${{ inputs.your_tag }}" docker-compose -f docker-compose.test.yml up --build test-app
+          if [ -n "${{ inputs.pytest_tag }}" ]; then
+            TEST_TAG="${{ inputs.pytest_tag }}" docker-compose -f docker-compose.test.yml up --build test-app
           else
             docker-compose -f docker-compose.test.yml up --build test-app
           fi
@@ -165,13 +169,13 @@ jobs:
       - name: Build Docker image
         run: |
           set -e
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/my-app:${{ inputs.branch }} .
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/python-memcached:${{ inputs.release_tag }} .
 
       - name: Push Docker image to Docker Hub
         run: |
           set -e
           echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-          docker push ${{ secrets.DOCKER_USERNAME }}/my-app:${{ inputs.branch }}
+          docker push ${{ secrets.DOCKER_USERNAME }}/python-memcached:${{ inputs.release_tag }}
 
       - name: Deploy to Test Environment
         run: |
