@@ -12,6 +12,18 @@ on:
         required: false
         default: 'home'
 
+cache:
+  key: "${CI_COMMIT_REF_SLUG}"
+  paths:
+    - .venv/
+    - .tox/
+    - .nox/
+    - .docker/cache/
+    - .pip/
+    - ~/.cache/pip/
+  policy: push
+  expire_in: 1 day
+
 jobs:
 
   Install-Dependencies:
@@ -101,7 +113,7 @@ jobs:
           sudo apt-get autoremove
           sudo apt-get clean
           sudo apt-get update
-          sudo curl -sSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+          sudo curl -sSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
           sudo echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" >> /etc/apt/sources.list.d/kubernetes.list
           sudo apt-get update && sudo apt-get install -y kubectl
           
