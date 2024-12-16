@@ -9,3 +9,5 @@ venv
 *.terraform
 *.info
 account-info.txt
+/.pytest_cache/
+/.Ds_Store

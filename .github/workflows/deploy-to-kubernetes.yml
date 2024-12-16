@@ -29,6 +29,8 @@ jobs:
   Test:
     needs: [Install-Dependencies]
     runs-on: ubuntu-latest
+    container:
+      image: ubuntu:20.04
     steps:
       - name: Install Docker Compose
         run: |
@@ -93,20 +95,22 @@ jobs:
   deploy:
     needs: [Test]
     runs-on: ubuntu-latest
+    container:
+      image: ubuntu:20.04
     steps:
       - name: Install dependencies (kubectl, Docker)
         run: |
           set -e
-          apt-get update
-          apt-get install -y python3-pip docker.io curl
+          sudo apt-get update
+          sudo apt-get install -y python3-pip docker.io curl
           pip install pylint
-          curl -sSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
-          echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" >> /etc/apt/sources.list.d/kubernetes.list
+          sudo curl -sSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+          sudo echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" >> /etc/apt/sources.list.d/kubernetes.list
           sudo apt-get update && sudo apt-get install -y kubectl
           
           # Check kubectl installed
-          kubectl version --client
-          which kubectl
+          sudo kubectl version --client
+          sudo which kubectl
 
       - name: Checkout repository
         uses: actions/checkout@v4
