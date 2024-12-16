@@ -110,17 +110,23 @@ jobs:
       - name: Install dependencies (kubectl, Docker)
         run: |
           set -e
-          sudo apt-get purge containerd containerd.io
-          sudo apt-get autoremove
-          sudo apt-get clean
-          sudo apt-get update
-          sudo curl -sSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
-          sudo echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" >> /etc/apt/sources.list.d/kubernetes.list
-          sudo apt-get update && sudo apt-get install -y kubectl
+          # Purge any existing containerd installation to avoid conflicts
+          sudo apt-get purge -y containerd containerd.io
+          sudo apt-get autoremove -y
+          sudo apt-get clean -y
+          sudo apt-get update -y
           
-          #Check kubectl installed
-          sudo kubectl version --client
-          sudo which kubectl
+          # Add Kubernetes APT repository with root privileges
+          sudo curl -sSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+          echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+          
+          # Update package lists and install kubectl
+          sudo apt-get update -y
+          sudo apt-get install -y kubectl
+          
+          # Check kubectl installation
+          kubectl version --client
+          which kubectl
 
       - name: Checkout repository
         uses: actions/checkout@v4
