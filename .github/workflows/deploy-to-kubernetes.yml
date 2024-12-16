@@ -12,25 +12,26 @@ on:
         required: false
         default: 'home'
 
-cache:
-  key: "${CI_COMMIT_REF_SLUG}"
-  paths:
-    - .venv/
-    - .tox/
-    - .nox/
-    - .docker/cache/
-    - .pip/
-    - ~/.cache/pip/
-  policy: push
-  expire_in: 1 day
-
 jobs:
-
   Install-Dependencies:
     runs-on: ubuntu-latest
     container:
       image: ubuntu:20.04
     steps:
+      - name: Cache Python dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            .venv/
+            .tox/
+            .nox/
+            .docker/cache/
+            .pip/
+            ~/.cache/pip/
+          key: ${{ runner.os }}-python-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-python-
+
       - name: Install dependencies
         run: |
           set -e
