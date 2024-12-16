@@ -169,7 +169,7 @@ jobs:
       - name: Build Docker image
         run: |
           set -e
-          ls -la pwd
+          pwd
           docker build -t ${{ secrets.DOCKER_USERNAME }}/python-memcached:${{ inputs.release_tag }} ./src/Dockerfile.app
 
       - name: Push Docker image to Docker Hub
