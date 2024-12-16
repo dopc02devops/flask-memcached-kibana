@@ -1,6 +1,4 @@
 
-
-
 - Add hosts in file
 - Configure ansible.cfg file
 - ./Ansible/create_ec2_user.yaml
@@ -10,9 +8,16 @@
     - Login to master node and run below commands
       - kubectl get nodes
       - kubectl get all -A
-- install nfs-server
+- Install nfs-server
     - ./Ansible/install_nfs_server.yaml
     - ./Ansible/install_nfs_provisioner.yaml
     - Check if exist on file system
        - ls -l /k8mount
        - df -h /k8mount
+- Create dashboard
+    - Ansible/install_dashboard.yaml
+    - Run command on shell (localhost)
+    - ssh -L 8001:127.0.0.1:8001 kube_user@master_ip
+    kubectl proxy
+    - Navigate to the dashboard page from a web browser on your local machine
+    - http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/
