@@ -115,18 +115,19 @@ jobs:
           sudo apt-get autoremove -y
           sudo apt-get clean -y
           sudo apt-get update -y
-          
-          # Add Kubernetes APT repository with root privileges
+
+          # Add Kubernetes APT repository for Ubuntu 20.04 (Focal Fossa)
           sudo curl -sSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
-          echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
-          
+          echo "deb https://apt.kubernetes.io/ kubernetes-focal main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
           # Update package lists and install kubectl
           sudo apt-get update -y
           sudo apt-get install -y kubectl
-          
+
           # Check kubectl installation
           kubectl version --client
           which kubectl
+
 
       - name: Checkout repository
         uses: actions/checkout@v4
