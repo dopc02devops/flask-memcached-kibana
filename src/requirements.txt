@@ -12,3 +12,4 @@ Flask-Login==0.6.2
 Flask-WTF==1.1.1
 pytest
 requests
+pytest-html
