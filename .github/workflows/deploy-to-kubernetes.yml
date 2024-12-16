@@ -171,7 +171,8 @@ jobs:
           set -e
           pwd
           ls -la /home/runner/work/flask-memcached/flask-memcached/src
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/python-memcached:${{ inputs.release_tag }} -f ./src/Dockerfile.app .
+          cd src
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/python-memcached:${{ inputs.release_tag }} -f ./Dockerfile.app .
 
       - name: Push Docker image to Docker Hub
         run: |
