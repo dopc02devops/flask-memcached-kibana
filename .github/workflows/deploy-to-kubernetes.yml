@@ -107,26 +107,54 @@ jobs:
     needs: [Test]
     runs-on: ubuntu-latest
     steps:
-      - name: Install dependencies (kubectl, Docker)
+      - name: Install dependencies (kubectl, Docker, containerd, k3s)
         run: |
           set -e
-          # Purge any existing containerd installation to avoid conflicts
-          sudo apt-get purge -y containerd containerd.io
-          sudo apt-get autoremove -y
-          sudo apt-get clean -y
-          sudo apt-get update -y
-
-          # Add Kubernetes APT repository for Ubuntu 20.04 (Focal Fossa)
-          sudo curl -sSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
-          echo "deb https://apt.kubernetes.io/ kubernetes-focal main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
-
-          # Update package lists and install kubectl
-          sudo apt-get update -y
-          sudo apt-get install -y kubectl
-
-          # Check kubectl installation
-          kubectl version --client
-          which kubectl
+          
+          ##################################
+          # Install APT Transport
+          ##################################
+          sudo apt-get update && sudo apt-get install -y apt-transport-https curl gnupg2 lsb-release sudo
+          
+          ##################################
+          # Install Docker
+          ##################################
+          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo tee /etc/apt/keyrings/docker-apt-keyring.asc
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker-apt-keyring.asc] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list
+          sudo apt-get update
+          sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+          
+          ##################################
+          # Install Kubernetes
+          ##################################
+          sudo mkdir -p /etc/apt/keyrings
+          curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.31/deb/Release.key | sudo tee /etc/apt/keyrings/kubernetes-apt-keyring.asc
+          echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.asc] https://pkgs.k8s.io/core:/stable:/v1.31/deb/ /" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+          sudo apt-get update
+          sudo apt-get install -y kubelet
+          
+          ##################################
+          # Install containerd
+          ##################################
+          sudo apt-get install -y containerd.io
+          sudo mkdir -p /etc/containerd
+          sudo /usr/bin/containerd config default > /etc/containerd/config.toml
+          sudo sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml
+          sudo systemctl enable containerd
+          sudo systemctl restart containerd
+          
+          ##################################
+          # Install K3s (Lightweight Kubernetes)
+          ##################################
+          curl -sfL https://get.k3s.io | sudo sh -
+          
+          ##################################
+          # Verification
+          ##################################
+          docker --version
+          kubelet --version
+          containerd --version
+          k3s --version
 
 
       - name: Checkout repository
