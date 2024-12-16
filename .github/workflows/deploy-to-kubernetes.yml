@@ -102,7 +102,11 @@ jobs:
           pip install pylint
           curl -sSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
           echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" >> /etc/apt/sources.list.d/kubernetes.list
-          apt-get update && apt-get install -y kubectl
+          sudo apt-get update && apt-get install -y kubectl
+          
+          # Check kubectl installed
+          kubectl version --client
+          which kubectl
 
       - name: Checkout repository
         uses: actions/checkout@v4
