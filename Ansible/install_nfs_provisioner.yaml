@@ -1,0 +1,62 @@
+#!/usr/bin/env -S ansible-playbook -K
+# NOTE: Don't provide the playbook filename in the shebang. It is added automatically.
+---
+
+- name: Install NFS provider playbook
+  hosts: master
+  remote_user: kube_user
+  become: yes
+
+  tasks:
+
+    ##################################
+    # Updates
+    ##################################
+    - name: Updates
+      apt:
+        update_cache: yes
+
+    ##################################
+    # Add Helm signing key
+    ##################################
+    - name: Download and add Helm signing key
+      ansible.builtin.shell: |
+        curl https://baltocdn.com/helm/signing.asc | sudo apt-key add -
+        apt-get install apt-transport-https --yes
+        echo "deb https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
+        apt-get update
+        apt-get install helm
+    ##################################
+    # Add nfs-provider
+    ##################################
+    - name: Add NFS Subdir External Provisioner Helm repo
+      command: helm repo add nfs-subdir-external-provisioner https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner/
+      register: helm_repo_add_result
+      failed_when: "'Error' in helm_repo_add_result.stderr"
+
+    - name: Update Helm repositories
+      command: helm repo update
+      register: helm_repo_update_result
+      failed_when: "'Error' in helm_repo_update_result.stderr"
+
+    - name: Create storagenfs namespace
+      become: no
+      command: kubectl create ns storagenfs
+      ignore_errors: yes
+
+    ##################################
+    # Install nfs-provider
+    ##################################
+    - name: Install NFS Subdir External Provisioner
+      become: no
+      shell: |
+        helm install nfs-subdir-external-provisioner nfs-subdir-external-provisioner/nfs-subdir-external-provisioner \
+          --set nfs.server=206.189.122.101 \
+          --set nfs.path=/k8mount \
+          --set storageClass.onDelete=true -n storagenfs
+      register: helm_install_result
+      failed_when: "'Error' in helm_install_result.stderr and 'AlreadyExists' not in helm_install_result.stderr"
+
+    - name: Show NFS provisioner status
+      debug:
+        msg: "{{ helm_install_result }}"
