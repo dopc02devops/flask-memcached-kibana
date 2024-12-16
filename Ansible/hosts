@@ -1,0 +1,7 @@
+
+[master]
+kube_master ansible_host=206.189.122.101
+
+[worker]
+kube_worker1 ansible_host=165.227.231.62
+kube_worker2 ansible_host=104.248.170.156
