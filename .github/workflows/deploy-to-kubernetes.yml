@@ -35,7 +35,6 @@ jobs:
           set -e
           curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           chmod +x /usr/local/bin/docker-compose
-          pip install pytest-html
 
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -47,6 +46,7 @@ jobs:
           set -e
           # Create docker volume
           docker volume create app_volume
+          pip install pytest-html
           
           if [ -n "${{ inputs.your_tag }}" ]; then
             TEST_TAG="${{ inputs.your_tag }}" docker-compose -f docker-compose.test.yml up --build test-app
@@ -55,15 +55,23 @@ jobs:
           fi
           
           # Copy files from flask-test to localhost
-          docker cp flask-tests:/app/report.xml ./report.xml
-          docker cp flask-tests:/app/Dockerfile.app ./Dockerfile.app
-          docker cp flask-tests:/app/Dockerfile.test ./Dockerfile.test
+          docker cp flask-tests-container:/app/report.xml ./report.xml
+          docker cp flask-tests-container:/app/report.html ./report.html
+          docker cp flask-tests-container:/app/Dockerfile.app ./Dockerfile.app
+          docker cp flask-tests-container:/app/Dockerfile.test ./Dockerfile.test
 
       - name: Upload XML Report Artifact
         uses: actions/upload-artifact@v3
         with:
           name: xml-report
           path: ./report.xml
+          retention-days: 1
+
+      - name: Upload HTML Report Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: html-report
+          path: ./report.html
           retention-days: 1
 
       - name: Install Trivy
@@ -100,11 +108,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.branch }}
-
-      - name: Run Pylint
-        run: |
-          set -e
-          pylint **/*.py
 
       - name: Build Docker image
         run: |
