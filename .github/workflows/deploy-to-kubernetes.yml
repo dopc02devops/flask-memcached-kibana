@@ -17,200 +17,154 @@ on:
         default: 'latest'
 
 jobs:
-  Install-Dependencies:
+#  Install-Dependencies:
+#    runs-on: ubuntu-latest
+#    container:
+#      image: ubuntu:20.04
+#    steps:
+#      - name: Cache Python dependencies
+#        uses: actions/cache@v3
+#        with:
+#          path: |
+#            .venv/
+#            .tox/
+#            .nox/
+#            .docker/cache/
+#            .pip/
+#            ~/.cache/pip/
+#          key: ${{ runner.os }}-python-${{ hashFiles('**/requirements.txt') }}
+#          restore-keys: |
+#            ${{ runner.os }}-python-
+#
+#      - name: Install dependencies
+#        run: |
+#          set -e
+#          apt-get update
+#          apt-get install -y python3-pip curl docker.io
+#          pip install pytest requests pylint
+#
+#  Test:
+#    needs: [Install-Dependencies]
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Install Docker Compose
+#        run: |
+#          set -e
+#          curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+#          chmod +x /usr/local/bin/docker-compose
+#
+#      - name: Checkout repository
+#        uses: actions/checkout@v4
+#        with:
+#          ref: ${{ inputs.branch }}
+#
+#      - name: Run Docker Compose and Prepare Report
+#        run: |
+#          set -e
+#          # Create docker volume
+#          docker volume create app_volume
+#          pip install pytest-html
+#
+#          if [ -n "${{ inputs.pytest_tag }}" ]; then
+#            TEST_TAG="${{ inputs.pytest_tag }}" docker-compose -f docker-compose.test.yml up --build test-app
+#          else
+#            docker-compose -f docker-compose.test.yml up --build test-app
+#          fi
+#
+#          # Copy files from flask-test to localhost
+#          docker cp flask-tests-container:/app/report.xml ./report.xml
+#          docker cp flask-tests-container:/app/report.html ./report.html
+#          docker cp flask-tests-container:/app/Dockerfile.app ./Dockerfile.app
+#          docker cp flask-tests-container:/app/Dockerfile.test ./Dockerfile.test
+#
+#      - name: Upload XML Report Artifact
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: xml-report
+#          path: ./report.xml
+#          retention-days: 1
+#
+#      - name: Upload HTML Report Artifact
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: html-report
+#          path: ./report.html
+#          retention-days: 1
+#
+#      - name: Install Trivy
+#        run: |
+#          set -e
+#          sudo apt-get update
+#          sudo apt-get install -y wget
+#          sudo wget https://github.com/aquasecurity/trivy/releases/download/v0.29.1/trivy_0.29.1_Linux-64bit.deb
+#          sudo dpkg -i trivy_0.29.1_Linux-64bit.deb
+#      - name: Trivy Scan Dockerfile.app
+#        run: |
+#          set -e
+#          sudo trivy config --severity HIGH,CRITICAL ./Dockerfile.app
+#      - name: Trivy Scan Dockerfile.test
+#        run: |
+#          set -e
+#          sudo trivy config --severity HIGH,CRITICAL ./Dockerfile.test
+#
+#  Build-docker-image:
+#    needs: [Test]
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout repository
+#        uses: actions/checkout@v4
+#        with:
+#          ref: ${{ inputs.branch }}
+#      - name: Build Docker image
+#        run: |
+#          set -e
+#          pwd
+#          ls -la /home/runner/work/flask-memcached/flask-memcached/src
+#          cd src
+#          docker build -t ${{ secrets.DOCKER_USERNAME }}/python-memcached:${{ inputs.release_tag }} -f ./Dockerfile.app .
+#      - name: Push Docker image to Docker Hub
+#        run: |
+#          set -e
+#          echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+#          docker push ${{ secrets.DOCKER_USERNAME }}/python-memcached:${{ inputs.release_tag }}
+  Deploy-to-test-env:
+    #needs: [Build-docker-image]
     runs-on: ubuntu-latest
-    container:
-      image: ubuntu:20.04
+    env:
+      REMOTE_USER: "kube_user"   # SSH user
     steps:
-      - name: Cache Python dependencies
-        uses: actions/cache@v3
+      # Set up Python and install Ansible
+      - name: Set up Ansible
+        uses: actions/setup-python@v4
         with:
-          path: |
-            .venv/
-            .tox/
-            .nox/
-            .docker/cache/
-            .pip/
-            ~/.cache/pip/
-          key: ${{ runner.os }}-python-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-python-
-
-      - name: Install dependencies
+          python-version: '3.8'
+      - name: Install Ansible
         run: |
-          set -e
-          apt-get update
-          apt-get install -y python3-pip curl docker.io
-          pip install pytest requests pylint
+          python -m pip install --upgrade pip
+          pip install ansible
 
-  Test:
-    needs: [Install-Dependencies]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Install Docker Compose
+      # Create Ansible Hosts File
+      - name: Create Ansible Hosts File
         run: |
-          set -e
-          curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-          chmod +x /usr/local/bin/docker-compose
+          echo "[gcp-instance]
+          ${{vars.UBUNTU_GCP}} ansible_user=${{vars.REMOTE_USER}} ansible_ssh_private_key_file=~/.ssh/id_gcp_key" > hosts
 
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.branch }}
-
-      - name: Run Docker Compose and Prepare Report
+      # Create Ansible Configuration
+      - name: Create Ansible Configuration
         run: |
-          set -e
-          # Create docker volume
-          docker volume create app_volume
-          pip install pytest-html
+          echo "[defaults]
+          inventory = hosts
+          timeout = 30
+          host_key_checking = False
+          stdout_callback = yaml
           
-          if [ -n "${{ inputs.pytest_tag }}" ]; then
-            TEST_TAG="${{ inputs.pytest_tag }}" docker-compose -f docker-compose.test.yml up --build test-app
-          else
-            docker-compose -f docker-compose.test.yml up --build test-app
-          fi
-          
-          # Copy files from flask-test to localhost
-          docker cp flask-tests-container:/app/report.xml ./report.xml
-          docker cp flask-tests-container:/app/report.html ./report.html
-          docker cp flask-tests-container:/app/Dockerfile.app ./Dockerfile.app
-          docker cp flask-tests-container:/app/Dockerfile.test ./Dockerfile.test
+          [ssh_connection]
+          pipelining = True" > ansible.cfg
 
-      - name: Upload XML Report Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: xml-report
-          path: ./report.xml
-          retention-days: 1
-
-      - name: Upload HTML Report Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: html-report
-          path: ./report.html
-          retention-days: 1
-
-      - name: Install Trivy
-        run: |
-          set -e
-          sudo apt-get update
-          sudo apt-get install -y wget
-          sudo wget https://github.com/aquasecurity/trivy/releases/download/v0.29.1/trivy_0.29.1_Linux-64bit.deb
-          sudo dpkg -i trivy_0.29.1_Linux-64bit.deb
-      - name: Trivy Scan Dockerfile.app
-        run: |
-          set -e
-          sudo trivy config --severity HIGH,CRITICAL ./Dockerfile.app
-      - name: Trivy Scan Dockerfile.test
-        run: |
-          set -e
-          sudo trivy config --severity HIGH,CRITICAL ./Dockerfile.test
-
-  deploy:
-    needs: [Test]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Install dependencies (kubectl, Docker, containerd, k3s)
-        run: |
-          set -e
-          
-          ##################################
-          # Install APT Transport
-          ##################################
-          sudo apt-get update && sudo apt-get install -y apt-transport-https curl gnupg2 lsb-release sudo
-          
-          ##################################
-          # Install Docker
-          ##################################
-          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo tee /etc/apt/keyrings/docker-apt-keyring.asc
-          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker-apt-keyring.asc] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list
-          sudo apt-get update
-          sudo apt-get install -y docker-ce docker-ce-cli containerd.io
-          
-          ##################################
-          # Install Kubernetes
-          ##################################
-          sudo mkdir -p /etc/apt/keyrings
-          curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.31/deb/Release.key | sudo tee /etc/apt/keyrings/kubernetes-apt-keyring.asc
-          echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.asc] https://pkgs.k8s.io/core:/stable:/v1.31/deb/ /" | sudo tee /etc/apt/sources.list.d/kubernetes.list
-          sudo apt-get update
-          sudo apt-get install -y kubelet
-          
-          ##################################
-          # Install containerd
-          ##################################
-          sudo apt-get install -y containerd.io
-          sudo mkdir -p /etc/containerd
-          sudo /usr/bin/containerd config default > sudo tee /etc/containerd/config.toml
-          sudo sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml
-          sudo systemctl enable containerd
-          sudo systemctl restart containerd
-          
-          ##################################
-          # Install K3s (Lightweight Kubernetes)
-          ##################################
-          curl -sfL https://get.k3s.io | sudo sh -
-          
-          ##################################
-          # Verification
-          ##################################
-          docker --version
-          kubelet --version
-          containerd --version
-          k3s --version
-
-
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.branch }}
-
-      - name: Build Docker image
-        run: |
-          set -e
-          pwd
-          ls -la /home/runner/work/flask-memcached/flask-memcached/src
-          cd src
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/python-memcached:${{ inputs.release_tag }} -f ./Dockerfile.app .
-
-      - name: Push Docker image to Docker Hub
-        run: |
-          set -e
-          echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-          docker push ${{ secrets.DOCKER_USERNAME }}/python-memcached:${{ inputs.release_tag }}
-
-      - name: Deploy to Test Environment
-        run: |
-          set -e
-          docker-compose -f docker-compose.yml up -d
-
-      - name: Manual Approval for Staging Environment
-        uses: hmarr/auto-approve-action@v4
-        with:
-          require: true
+      # Run Ansible Playbook
+      - name: Run Ansible Playbook
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Deploy to Staging Environment
+          ANSIBLE_HOST_KEY_CHECKING: "False"
         run: |
-          set -e
-          docker-compose -f docker-compose.yml up -d
+          ansible-playbook deploy.yml
 
-      - name: Manual Approval for Production Environment
-        uses: hmarr/auto-approve-action@v4
-        with:
-          require: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Deploy to Production (Kubernetes)
-        if: ${{ inputs.branch == 'release' }}
-        run: |
-          set -e
-          kubectl apply -f k8s/production-deployment.yaml
-
-      - name: Verify Deployment
-        run: |
-          set -e
-          kubectl rollout status deployment/memcached-deployment
