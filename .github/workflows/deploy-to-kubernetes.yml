@@ -131,7 +131,7 @@ jobs:
     #needs: [Build-docker-image]
     runs-on: ubuntu-latest
     env:
-      REMOTE_USER: "kube_user"   # SSH user
+      KUBE_USER: kube_user
     steps:
       # Set up Python and install Ansible
       - name: Set up Ansible
@@ -148,7 +148,6 @@ jobs:
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           SSH_PASSPHRASE: ${{ secrets.SSH_PASSPHRASE }}
-          KUBE_USER: kube_user
         run: |
           set -e  # Exit on any error
       
