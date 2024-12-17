@@ -151,10 +151,23 @@ jobs:
           chmod 600 ~/.ssh/id_gcp_key  # Ensure proper permissions on the SSH key
 
       # Create Ansible Hosts File
-      - name: Create Ansible Hosts File
+      - name: Create Ansible Hosts File and Add SSH Key
         run: |
+          # Start the ssh-agent
+          eval $(ssh-agent -s)
+          
+          # Add the SSH key to the agent with the passphrase
+          echo "${{ secrets.SSH_PASSPHRASE }}" | ssh-add ~/.ssh/id_gcp_key
+          
+          # Create the Ansible hosts file
           echo "[all]
           ${{ vars.UBUNTU_GCP }} ansible_user=${{ vars.REMOTE_USER }} ansible_ssh_private_key_file=~/.ssh/id_gcp_key" > hosts
+          
+          # Add a message regarding the SSH connection
+          echo "SSH connection details for ${{ vars.REMOTE_USER }} using private key id_gcp_key" >> hosts
+          
+          # Optionally stop the SSH agent
+          ssh-agent -k
 
       # Create Ansible Configuration
       - name: Create Ansible Configuration
