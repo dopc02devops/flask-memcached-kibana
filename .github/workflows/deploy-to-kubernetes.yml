@@ -200,7 +200,7 @@ jobs:
           echo "$ANSIBLE_HOST ansible_user=$KUBE_USER ansible_ssh_private_key_file=~/.ssh/id_gcp_key" >> inventory
 
           # Copy the docker-compose.yaml file to the remote server
-          ansible -i inventory target -m copy -a "src=docker-compose.env.yml dest=/home/$KUBE_USER/docker-compose.yaml mode=0644"
+          ansible -i inventory target -m copy -a "src=docker-compose.env.yml dest=/home/$KUBE_USER/docker-compose.env.yml mode=0644"
         env:
           ANSIBLE_HOST: ${{ vars.UBUNTU_GCP }}
 
@@ -211,7 +211,7 @@ jobs:
           echo "$ANSIBLE_HOST ansible_user=$KUBE_USER ansible_ssh_private_key_file=~/.ssh/id_gcp_key" >> inventory
           
           if [ -n "${{ inputs.release_tag }}" ]; then
-             ansible -i inventory target -m shell -a "cd /home/$KUBE_USER && VERSION=${{ inputs.release_tag }} docker-compose up -d --scale app=4"
+             ansible -i inventory target -m shell -a "cd /home/$KUBE_USER && VERSION=${{ inputs.release_tag }} docker-compose up -d --scale flask-app=4"
           else
             ansible -i inventory target -m shell -a "cd /home/$KUBE_USER && docker-compose up -d --scale app=4"
           fi
