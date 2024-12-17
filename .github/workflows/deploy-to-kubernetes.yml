@@ -143,20 +143,43 @@ jobs:
           python -m pip install --upgrade pip
           pip install ansible
 
-      - name: Deploy to AWS
+      - name: Test ssh connectivity
         shell: bash
         env:
-          SSH_PRIVATE_KEY : ${{ secrets.SSH_PRIVATE_KEY }}
-          SSH_PASSPHRASE : ${{ secrets.SSH_PASSPHRASE }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_PASSPHRASE: ${{ secrets.SSH_PASSPHRASE }}
         run: |
-          mkdir -p ~/.ssh
-          touch ~/.ssh/private.key
-          chmod 600 ~/.ssh/id_gcp_key
-          echo -e "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_gcp_key
-          eval $(ssh-agent -s)
-          echo $SSH_PASSPHRASE | ssh-add ~/.ssh/id_gcp_key
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_gcp_key kube_user@34.89.49.245
+          set -e  # Exit on any error
       
+          # Create the .ssh directory
+          mkdir -p ~/.ssh
+      
+          # Ensure SSH_PRIVATE_KEY is set
+          if [ -z "$SSH_PRIVATE_KEY" ]; then
+            echo "Error: SSH_PRIVATE_KEY is not set."
+            exit 1
+          fi
+      
+          # Create the SSH key file and set permissions
+          echo -e "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_gcp_key
+          chmod 600 ~/.ssh/id_gcp_key
+      
+          # Start the SSH agent
+          eval $(ssh-agent -s)
+      
+          # Ensure SSH_PASSPHRASE is set
+          if [ -z "$SSH_PASSPHRASE" ]; then
+            echo "Error: SSH_PASSPHRASE is not set."
+            exit 1
+          fi
+      
+          # Add the private key to the SSH agent
+          echo "$SSH_PASSPHRASE" | ssh-add ~/.ssh/id_gcp_key
+      
+          # Connect to the remote server
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_gcp_key kube_user@34.89.49.245
+
+
 
 #      - name: Setup SSH
 #        uses: webfactory/ssh-agent@v0.4.1
