@@ -74,8 +74,8 @@ jobs:
           # Copy files from flask-test to localhost
           docker cp flask-tests-container:/app/report.xml ./report.xml
           docker cp flask-tests-container:/app/report.html ./report.html
-          docker cp flask-tests-container:/app/Dockerfile.app ./Dockerfile.app
-          docker cp flask-tests-container:/app/Dockerfile.test ./Dockerfile.test
+#          docker cp flask-tests-container:/app/Dockerfile.app ./Dockerfile.app
+#          docker cp flask-tests-container:/app/Dockerfile.test ./Dockerfile.test
 
       - name: Upload XML Report Artifact
         uses: actions/upload-artifact@v3
@@ -101,10 +101,14 @@ jobs:
       - name: Trivy Scan Dockerfile.app
         run: |
           set -e
+          cd src
+          ls -ls
           sudo trivy config --severity HIGH,CRITICAL ./Dockerfile.app
       - name: Trivy Scan Dockerfile.test
         run: |
           set -e
+          cd src
+          ls -ls
           sudo trivy config --severity HIGH,CRITICAL ./Dockerfile.test
 
   Build-docker-image:
@@ -118,9 +122,8 @@ jobs:
       - name: Build Docker image
         run: |
           set -e
-          pwd
-          ls -la /home/runner/work/flask-memcached/flask-memcached/src
           cd src
+          ls -ls
           docker build -t ${{ secrets.DOCKER_USERNAME }}/python-memcached:${{ inputs.release_tag }} -f ./Dockerfile.app .
       - name: Push Docker image to Docker Hub
         run: |
