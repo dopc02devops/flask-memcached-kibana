@@ -151,23 +151,24 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ./.ssh/id_gcp_key
           chmod 600 ./.ssh/id_gcp_key
           ls -la ./.ssh
+          cat ./.ssh/id_gcp_key
 
-#      # Set up SSH private key from GitHub Secrets and passphrase handling
-#      - name: Set up SSH key for GCP
-#        run: |
-#          set -e
-#          eval $(ssh-agent -s)
-#          echo "${{ secrets.SSH_PASSPHRASE }}" | ssh-add ~/.ssh/id_gcp_key
-#
-#      # Optional: Check SSH connection (e.g., just log in to the GCP instance)
-#      - name: Test SSH connection to GCP instance
-#        run: |
-#          set -e
-#          ls -la
-#          cat ~/.ssh/id_gcp_key
-#          # Test the SSH connection to the GCP instance (replace with your GCP instance IP)
-#          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_gcp_key kube_user@34.89.49.245
-#
+      # Set up SSH private key from GitHub Secrets and passphrase handling
+      - name: Set up SSH key for GCP
+        run: |
+          set -e
+          eval $(ssh-agent -s)
+          echo "${{ secrets.SSH_PASSPHRASE }}" | ssh-add ./.ssh/id_gcp_key
+
+      # Optional: Check SSH connection (e.g., just log in to the GCP instance)
+      - name: Test SSH connection to GCP instance
+        run: |
+          set -e
+          ls -la
+          cat ./.ssh/id_gcp_key
+          # Test the SSH connection to the GCP instance
+          ssh -o StrictHostKeyChecking=no -i ./.ssh/id_gcp_key kube_user@34.89.49.245
+
 #
 #
 #
