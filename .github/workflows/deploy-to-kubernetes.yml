@@ -193,7 +193,7 @@ jobs:
 
       - name: Add $KUBE_USER to Docker group
         run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_gcp_key $KUBE_USER@${{ vars.UBUNTU_GCP }} "sudo usermod -aG docker $KUBE_USER"
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_gcp_key $KUBE_USER@${{ vars.UBUNTU_GCP }} "sudo groupadd -f docker && sudo usermod -aG docker $KUBE_USER"
           
 
       - name: Restart session (optional)
