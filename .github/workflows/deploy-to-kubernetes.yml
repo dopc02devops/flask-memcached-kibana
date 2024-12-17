@@ -131,7 +131,7 @@ jobs:
     #needs: [Build-docker-image]
     runs-on: ubuntu-latest
     env:
-      KUBE_USER: $KUBE_USER
+      KUBE_USER: kube_user
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
