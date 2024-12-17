@@ -211,9 +211,9 @@ jobs:
           echo "$ANSIBLE_HOST ansible_user=$KUBE_USER ansible_ssh_private_key_file=~/.ssh/id_gcp_key" >> inventory
           
           if [ -n "${{ inputs.release_tag }}" ]; then
-             ansible -i inventory target -m shell -a "cd /home/$KUBE_USER && VERSION=${{ inputs.release_tag }} docker-compose up -d --scale flask-app=4"
+             ansible -i inventory target -m shell -a "cd /home/$KUBE_USER && VERSION=${{ inputs.release_tag }} docker-compose -f docker-compose.env.yml up -d --scale flask-app=4"
           else
-            ansible -i inventory target -m shell -a "cd /home/$KUBE_USER && docker-compose up -d --scale app=4"
+            ansible -i inventory target -m shell -a "cd /home/$KUBE_USER && docker-compose -f docker-compose.env.yml up -d --scale flask-app=4"
           fi
         env:
           ANSIBLE_HOST: ${{ vars.UBUNTU_GCP }}
