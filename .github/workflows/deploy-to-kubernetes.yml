@@ -133,6 +133,11 @@ jobs:
     env:
       KUBE_USER: kube_user
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+
       # Set up Python and install Ansible
       - name: Set up Ansible
         uses: actions/setup-python@v4
@@ -143,7 +148,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install ansible
 
-      - name: Test ssh connectivity
+      - name: Set ssh connectivity
         shell: bash
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
@@ -188,10 +193,9 @@ jobs:
         env:
           ANSIBLE_HOST: ${{ vars.UBUNTU_GCP }}
 
-#
-#      # Run Ansible Playbook directly (without using a hosts file)
-#      - name: Run Ansible Playbook on GCP
-#        run: |
-#          # Run Ansible Playbook directly with SSH key and no hosts file
-#          ansible-playbook -i "34.89.49.245," -u kube_user --private-key ~/.ssh/id_gcp_key --ssh-common-args='-o StrictHostKeyChecking=no' playbook.yml
-
+      - name: working dir
+        run: |
+          set -e
+          pwd
+          ls -la
+      
