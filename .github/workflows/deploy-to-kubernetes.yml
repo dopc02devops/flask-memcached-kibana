@@ -161,6 +161,11 @@ jobs:
           [ssh_connection]
           pipelining = True" > ansible.cfg
 
+      # Ping Ansible Host to Verify Connectivity
+      - name: Ping Ansible Host
+        run: |
+          ansible -m ping ${{vars.UBUNTU_GCP}}
+
       # Run Ansible Playbook
       - name: Run Ansible Playbook
         env:
