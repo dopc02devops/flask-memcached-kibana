@@ -154,7 +154,7 @@ jobs:
           chmod 600 ~/.ssh/id_gcp_key
           echo -e "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_gcp_key
           eval $(ssh-agent -s)
-          echo $SSH_PASSPHRASE | ssh-add .ssh/id_gcp_key
+          echo $SSH_PASSPHRASE | ssh-add ~/.ssh/id_gcp_key
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_gcp_key kube_user@34.89.49.245
       
 
