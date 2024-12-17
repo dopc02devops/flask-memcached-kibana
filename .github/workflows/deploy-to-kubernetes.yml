@@ -176,19 +176,18 @@ jobs:
       
           # Add the private key to the SSH agent
           echo "$SSH_PASSPHRASE" | ssh-add ~/.ssh/id_gcp_key
-      
-          # Connect to the remote server
+
+      - name: Test SSH Connection
+        run: |
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_gcp_key $KUBE_USER@${{ vars.UBUNTU_GCP }}
 
-
-      # Ping Ansible Host to Verify Connectivity
-      - name: Ping Ansible Host
-        env:
-          ANSIBLE_HOST: ${{ vars.UBUNTU_GCP }}
+      - name: Ping GCP Server with Ansible
         run: |
           echo "[target]" > inventory
-          echo "$ANSIBLE_HOST ansible_user=kube_user" >> inventory
+          echo "$ANSIBLE_HOST ansible_user=kube_user ansible_ssh_private_key_file=~/.ssh/id_gcp_key" >> inventory
           ansible -i inventory target -m ping
+        env:
+          ANSIBLE_HOST: ${{ vars.UBUNTU_GCP }}
 
 #
 #      # Run Ansible Playbook directly (without using a hosts file)
