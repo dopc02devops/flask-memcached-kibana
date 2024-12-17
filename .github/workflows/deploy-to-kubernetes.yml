@@ -146,33 +146,24 @@ jobs:
       # Create SSH private key file
       - name: Create SSH private key file
         run: |
+          set -e
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_gcp_key
-          chmod 600 ~/.ssh/id_gcp_key  # Ensure proper permissions on the SSH key
+          chmod 600 ~/.ssh/id_gcp_key
 
       # Set up SSH private key from GitHub Secrets and passphrase handling
       - name: Set up SSH key for GCP
         run: |
-          # Create .ssh directory if it doesn't exist
-          mkdir -p ~/.ssh
-      
-          # Add the private SSH key from GitHub Secrets
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_gcp_key
-      
-          # Set permissions for the SSH key
-          chmod 600 ~/.ssh/id_gcp_key
-      
-          # Start the ssh-agent
+          set -e
           eval $(ssh-agent -s)
-      
-          # Add the SSH key to the ssh-agent with the passphrase
-          echo "${{ secrets.SSH_PASSPHRASE }}" | ssh-add ~/.ssh/id_gcp_key || exit 1
+          echo "${{ secrets.SSH_PASSPHRASE }}" | ssh-add ~/.ssh/id_gcp_key
           
       # Optional: Check SSH connection (e.g., just log in to the GCP instance)
       - name: Test SSH connection to GCP instance
         run: |
+          set -e
           # Test the SSH connection to the GCP instance (replace with your GCP instance IP)
-          ssh -T -i ~/.ssh/id_gcp_key kube_user@34.89.49.245
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_gcp_key kube_user@34.89.49.245
           
           
 
