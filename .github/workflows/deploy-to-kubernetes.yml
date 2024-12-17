@@ -131,7 +131,7 @@ jobs:
     #needs: [Build-docker-image]
     runs-on: ubuntu-latest
     env:
-      KUBE_USER: kube_user
+      KUBE_USER: $KUBE_USER
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -188,7 +188,7 @@ jobs:
       - name: Ping GCP Server with Ansible
         run: |
           echo "[target]" > inventory
-          echo "$ANSIBLE_HOST ansible_user=kube_user ansible_ssh_private_key_file=~/.ssh/id_gcp_key" >> inventory
+          echo "$ANSIBLE_HOST ansible_user=$KUBE_USER ansible_ssh_private_key_file=~/.ssh/id_gcp_key" >> inventory
           ansible -i inventory target -m ping
         env:
           ANSIBLE_HOST: ${{ vars.UBUNTU_GCP }}
@@ -197,10 +197,10 @@ jobs:
         run: |
           # Create an inventory file for Ansible
           echo "[target]" > inventory
-          echo "$ANSIBLE_HOST ansible_user=kube_user ansible_ssh_private_key_file=~/.ssh/id_gcp_key" >> inventory
+          echo "$ANSIBLE_HOST ansible_user=$KUBE_USER ansible_ssh_private_key_file=~/.ssh/id_gcp_key" >> inventory
 
           # Copy the docker-compose.yaml file to the remote server
-          ansible -i inventory target -m copy -a "src=docker-compose.env.yml dest=/home/kube_user/docker-compose.yaml mode=0644"
+          ansible -i inventory target -m copy -a "src=docker-compose.env.yml dest=/home/$KUBE_USER/docker-compose.yaml mode=0644"
         env:
           ANSIBLE_HOST: ${{ vars.UBUNTU_GCP }}
 
@@ -208,8 +208,8 @@ jobs:
         run: |
           # Create an inventory file for Ansible
           echo "[target]" > inventory
-          echo "$ANSIBLE_HOST ansible_user=kube_user ansible_ssh_private_key_file=~/.ssh/id_gcp_key" >> inventory
-          cd /home/$ANSIBLE_HOST
+          echo "$ANSIBLE_HOST ansible_user=$KUBE_USER ansible_ssh_private_key_file=~/.ssh/id_gcp_key" >> inventory
+          cd /home/$KUBE_USER
           
           if [ -n "${{ inputs.release_tag }}" ]; then
              ansible -i inventory target -m shell -a "VERSION=${{ inputs.release_tag }} docker-compose up -d --scale app=4"
