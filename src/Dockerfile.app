@@ -35,3 +35,5 @@ RUN useradd -u 5678 -m appuser && chown -R appuser /app
 
 # Switch to the non-root user
 USER appuser
+
+ENTRYPOINT: ["python", "application.py"]
