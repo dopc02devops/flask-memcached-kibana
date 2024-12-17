@@ -13,4 +13,4 @@ account-info.txt
 /.Ds_Store
 /id_gcp_key
 /id_gcp_key.pub
-/hosts
+/src/hosts

@@ -162,6 +162,7 @@ jobs:
       # Copy the hosts file from the root of the repository to the desired location
       - name: Copy hosts file
         run: |
+          pwd
           # Copy the 'hosts' file from the root directory to the home directory
           cp ./hosts $HOME/hosts
           
