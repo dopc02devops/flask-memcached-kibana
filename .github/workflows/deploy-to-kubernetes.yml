@@ -162,6 +162,8 @@ jobs:
       - name: Test SSH connection to GCP instance
         run: |
           set -e
+          ls -la
+          cat ~/.ssh/id_gcp_key
           # Test the SSH connection to the GCP instance (replace with your GCP instance IP)
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_gcp_key kube_user@34.89.49.245
           
