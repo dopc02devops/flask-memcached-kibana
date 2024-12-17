@@ -147,37 +147,38 @@ jobs:
       - name: Create SSH private key file
         run: |
           set -e
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_gcp_key
-          chmod 600 ~/.ssh/id_gcp_key
+          mkdir -p ./.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ./.ssh/id_gcp_key
+          chmod 600 ./.ssh/id_gcp_key
+          ls -la ./.ssh
 
-      # Set up SSH private key from GitHub Secrets and passphrase handling
-      - name: Set up SSH key for GCP
-        run: |
-          set -e
-          eval $(ssh-agent -s)
-          echo "${{ secrets.SSH_PASSPHRASE }}" | ssh-add ~/.ssh/id_gcp_key
-          
-      # Optional: Check SSH connection (e.g., just log in to the GCP instance)
-      - name: Test SSH connection to GCP instance
-        run: |
-          set -e
-          ls -la
-          cat ~/.ssh/id_gcp_key
-          # Test the SSH connection to the GCP instance (replace with your GCP instance IP)
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_gcp_key kube_user@34.89.49.245
-          
-          
-
-
-      # Ping Ansible Host to Verify Connectivity
-      - name: Ping Ansible Host
-        run: |
-          ansible -m ping ${{vars.UBUNTU_GCP}}
-
-      # Run Ansible Playbook directly (without using a hosts file)
-      - name: Run Ansible Playbook on GCP
-        run: |
-          # Run Ansible Playbook directly with SSH key and no hosts file
-          ansible-playbook -i "34.89.49.245," -u kube_user --private-key ~/.ssh/id_gcp_key --ssh-common-args='-o StrictHostKeyChecking=no' playbook.yml
+#      # Set up SSH private key from GitHub Secrets and passphrase handling
+#      - name: Set up SSH key for GCP
+#        run: |
+#          set -e
+#          eval $(ssh-agent -s)
+#          echo "${{ secrets.SSH_PASSPHRASE }}" | ssh-add ~/.ssh/id_gcp_key
+#
+#      # Optional: Check SSH connection (e.g., just log in to the GCP instance)
+#      - name: Test SSH connection to GCP instance
+#        run: |
+#          set -e
+#          ls -la
+#          cat ~/.ssh/id_gcp_key
+#          # Test the SSH connection to the GCP instance (replace with your GCP instance IP)
+#          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_gcp_key kube_user@34.89.49.245
+#
+#
+#
+#
+#      # Ping Ansible Host to Verify Connectivity
+#      - name: Ping Ansible Host
+#        run: |
+#          ansible -m ping ${{vars.UBUNTU_GCP}}
+#
+#      # Run Ansible Playbook directly (without using a hosts file)
+#      - name: Run Ansible Playbook on GCP
+#        run: |
+#          # Run Ansible Playbook directly with SSH key and no hosts file
+#          ansible-playbook -i "34.89.49.245," -u kube_user --private-key ~/.ssh/id_gcp_key --ssh-common-args='-o StrictHostKeyChecking=no' playbook.yml
 
