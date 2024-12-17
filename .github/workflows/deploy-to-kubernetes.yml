@@ -193,6 +193,20 @@ jobs:
         env:
           ANSIBLE_HOST: ${{ vars.UBUNTU_GCP }}
 
+      - name: Add $KUBE_USER to Docker group
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_gcp_key $KUBE_USER@${{ vars.UBUNTU_GCP }} "sudo usermod -aG docker $KUBE_USER"
+        env:
+          ANSIBLE_HOST: ${{ vars.UBUNTU_GCP }}
+          KUBE_USER: ${{ secrets.KUBE_USER }}
+
+      - name: Restart session (optional)
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_gcp_key $KUBE_USER@${{ vars.UBUNTU_GCP }} "newgrp docker"
+        env:
+          ANSIBLE_HOST: ${{ vars.UBUNTU_GCP }}
+          KUBE_USER: ${{ secrets.KUBE_USER }}
+
       - name: Copy docker-compose.yaml to GCP Server
         run: |
           # Create an inventory file for Ansible
