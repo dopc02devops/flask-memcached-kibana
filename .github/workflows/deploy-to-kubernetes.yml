@@ -17,116 +17,116 @@ on:
         default: 'latest'
 
 jobs:
-#  Install-Dependencies:
-#    runs-on: ubuntu-latest
-#    container:
-#      image: ubuntu:20.04
-#    steps:
-#      - name: Cache Python dependencies
-#        uses: actions/cache@v3
-#        with:
-#          path: |
-#            .venv/
-#            .tox/
-#            .nox/
-#            .docker/cache/
-#            .pip/
-#            ~/.cache/pip/
-#          key: ${{ runner.os }}-python-${{ hashFiles('**/requirements.txt') }}
-#          restore-keys: |
-#            ${{ runner.os }}-python-
-#
-#      - name: Install dependencies
-#        run: |
-#          set -e
-#          apt-get update
-#          apt-get install -y python3-pip curl docker.io
-#          pip install pytest requests pylint
-#
-#  Test:
-#    needs: [Install-Dependencies]
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Install Docker Compose
-#        run: |
-#          set -e
-#          curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-#          chmod +x /usr/local/bin/docker-compose
-#
-#      - name: Checkout repository
-#        uses: actions/checkout@v4
-#        with:
-#          ref: ${{ inputs.branch }}
-#
-#      - name: Run Docker Compose and Prepare Report
-#        run: |
-#          set -e
-#          # Create docker volume
-#          docker volume create app_volume
-#          pip install pytest-html
-#
-#          if [ -n "${{ inputs.pytest_tag }}" ]; then
-#            TEST_TAG="${{ inputs.pytest_tag }}" docker-compose -f docker-compose.test.yml up --build test-app
-#          else
-#            docker-compose -f docker-compose.test.yml up --build test-app
-#          fi
-#
-#          # Copy files from flask-test to localhost
-#          docker cp flask-tests-container:/app/report.xml ./report.xml
-#          docker cp flask-tests-container:/app/report.html ./report.html
-#          docker cp flask-tests-container:/app/Dockerfile.app ./Dockerfile.app
-#          docker cp flask-tests-container:/app/Dockerfile.test ./Dockerfile.test
-#
-#      - name: Upload XML Report Artifact
-#        uses: actions/upload-artifact@v3
-#        with:
-#          name: xml-report
-#          path: ./report.xml
-#          retention-days: 1
-#
-#      - name: Upload HTML Report Artifact
-#        uses: actions/upload-artifact@v3
-#        with:
-#          name: html-report
-#          path: ./report.html
-#          retention-days: 1
-#
-#      - name: Install Trivy
-#        run: |
-#          set -e
-#          sudo apt-get update
-#          sudo apt-get install -y wget
-#          sudo wget https://github.com/aquasecurity/trivy/releases/download/v0.29.1/trivy_0.29.1_Linux-64bit.deb
-#          sudo dpkg -i trivy_0.29.1_Linux-64bit.deb
-#      - name: Trivy Scan Dockerfile.app
-#        run: |
-#          set -e
-#          sudo trivy config --severity HIGH,CRITICAL ./Dockerfile.app
-#      - name: Trivy Scan Dockerfile.test
-#        run: |
-#          set -e
-#          sudo trivy config --severity HIGH,CRITICAL ./Dockerfile.test
-#
-#  Build-docker-image:
-#    needs: [Test]
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Checkout repository
-#        uses: actions/checkout@v4
-#        with:
-#          ref: ${{ inputs.branch }}
-#      - name: Build Docker image
-#        run: |
-#          set -e
-#          pwd
-#          ls -la /home/runner/work/flask-memcached/flask-memcached/src
-#          cd src
-#          docker build -t ${{ secrets.DOCKER_USERNAME }}/python-memcached:${{ inputs.release_tag }} -f ./Dockerfile.app .
-#      - name: Push Docker image to Docker Hub
-#        run: |
-#          set -e
-#          echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-#          docker push ${{ secrets.DOCKER_USERNAME }}/python-memcached:${{ inputs.release_tag }}
+  Install-Dependencies:
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:20.04
+    steps:
+      - name: Cache Python dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            .venv/
+            .tox/
+            .nox/
+            .docker/cache/
+            .pip/
+            ~/.cache/pip/
+          key: ${{ runner.os }}-python-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-python-
+
+      - name: Install dependencies
+        run: |
+          set -e
+          apt-get update
+          apt-get install -y python3-pip curl docker.io
+          pip install pytest requests pylint
+
+  Test:
+    needs: [Install-Dependencies]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Docker Compose
+        run: |
+          set -e
+          curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          chmod +x /usr/local/bin/docker-compose
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+
+      - name: Run Docker Compose and Prepare Report
+        run: |
+          set -e
+          # Create docker volume
+          docker volume create app_volume
+          pip install pytest-html
+
+          if [ -n "${{ inputs.pytest_tag }}" ]; then
+            TEST_TAG="${{ inputs.pytest_tag }}" docker-compose -f docker-compose.test.yml up --build test-app
+          else
+            docker-compose -f docker-compose.test.yml up --build test-app
+          fi
+
+          # Copy files from flask-test to localhost
+          docker cp flask-tests-container:/app/report.xml ./report.xml
+          docker cp flask-tests-container:/app/report.html ./report.html
+          docker cp flask-tests-container:/app/Dockerfile.app ./Dockerfile.app
+          docker cp flask-tests-container:/app/Dockerfile.test ./Dockerfile.test
+
+      - name: Upload XML Report Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: xml-report
+          path: ./report.xml
+          retention-days: 1
+
+      - name: Upload HTML Report Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: html-report
+          path: ./report.html
+          retention-days: 1
+
+      - name: Install Trivy
+        run: |
+          set -e
+          sudo apt-get update
+          sudo apt-get install -y wget
+          sudo wget https://github.com/aquasecurity/trivy/releases/download/v0.29.1/trivy_0.29.1_Linux-64bit.deb
+          sudo dpkg -i trivy_0.29.1_Linux-64bit.deb
+      - name: Trivy Scan Dockerfile.app
+        run: |
+          set -e
+          sudo trivy config --severity HIGH,CRITICAL ./Dockerfile.app
+      - name: Trivy Scan Dockerfile.test
+        run: |
+          set -e
+          sudo trivy config --severity HIGH,CRITICAL ./Dockerfile.test
+
+  Build-docker-image:
+    needs: [Test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+      - name: Build Docker image
+        run: |
+          set -e
+          pwd
+          ls -la /home/runner/work/flask-memcached/flask-memcached/src
+          cd src
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/python-memcached:${{ inputs.release_tag }} -f ./Dockerfile.app .
+      - name: Push Docker image to Docker Hub
+        run: |
+          set -e
+          echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+          docker push ${{ secrets.DOCKER_USERNAME }}/python-memcached:${{ inputs.release_tag }}
   Deploy-to-test-env:
     #needs: [Build-docker-image]
     runs-on: ubuntu-latest
