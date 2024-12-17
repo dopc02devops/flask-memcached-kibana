@@ -147,7 +147,7 @@ jobs:
       - name: Create Ansible Hosts File
         run: |
           echo "[gcp-instance]
-          ${{vars.UBUNTU_GCP}} ansible_user=${{vars.REMOTE_USER}} ansible_ssh_private_key_file=~/.ssh/id_gcp_key" > hosts
+          ${{vars.UBUNTU_GCP}} ansible_user=${{vars.REMOTE_USER}} ansible_ssh_private_key_file=./id_gcp_key" > hosts
 
       # Create Ansible Configuration
       - name: Create Ansible Configuration

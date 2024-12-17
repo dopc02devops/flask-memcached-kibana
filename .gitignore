@@ -11,3 +11,5 @@ venv
 account-info.txt
 /.pytest_cache/
 /.Ds_Store
+/id_gcp_key
+/id_gcp_key.pub
