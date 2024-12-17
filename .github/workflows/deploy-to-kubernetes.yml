@@ -183,8 +183,13 @@ jobs:
 
       # Ping Ansible Host to Verify Connectivity
       - name: Ping Ansible Host
+        env:
+          ANSIBLE_HOST: ${{ vars.UBUNTU_GCP }}
         run: |
-          ansible -m ping ${{vars.UBUNTU_GCP}}
+          echo "[target]" > inventory
+          echo "$ANSIBLE_HOST ansible_user=kube_user" >> inventory
+          ansible -i inventory target -m ping
+
 #
 #      # Run Ansible Playbook directly (without using a hosts file)
 #      - name: Run Ansible Playbook on GCP
