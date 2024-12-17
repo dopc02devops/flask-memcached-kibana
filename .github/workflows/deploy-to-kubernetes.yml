@@ -148,6 +148,7 @@ jobs:
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           SSH_PASSPHRASE: ${{ secrets.SSH_PASSPHRASE }}
+          KUBE_USER: kube_user
         run: |
           set -e  # Exit on any error
       
@@ -177,46 +178,13 @@ jobs:
           echo "$SSH_PASSPHRASE" | ssh-add ~/.ssh/id_gcp_key
       
           # Connect to the remote server
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_gcp_key kube_user@34.89.49.245
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_gcp_key $KUBE_USER@${{ vars.UBUNTU_GCP }}
 
 
-
-#      - name: Setup SSH
-#        uses: webfactory/ssh-agent@v0.4.1
-#        with:
-#          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-#
-#      # Create SSH private key file
-#      - name: Create SSH private key file
-#        run: |
-#          set -e
-#          mkdir -p .ssh
-#          echo "${{ secrets.SSH_PRIVATE_KEY }}" > .ssh/id_gcp_key
-#          chmod 600 .ssh/id_gcp_key
-#
-#      # Set up SSH private key from GitHub Secrets and passphrase handling
-#      - name: Set up SSH key for GCP
-#        run: |
-#          set -e
-#          eval $(ssh-agent -s)
-#          echo "${{ secrets.SSH_PASSPHRASE }}" | ssh-add .ssh/id_gcp_key
-#
-#      # Optional: Check SSH connection (e.g., just log in to the GCP instance)
-#      - name: Test SSH connection to GCP instance
-#        run: |
-#          set -e
-#          ls -la
-#          cat .ssh/id_gcp_key
-#          # Test the SSH connection to the GCP instance
-#          ssh -o StrictHostKeyChecking=no -i .ssh/id_gcp_key kube_user@34.89.49.245
-
-#
-#
-#
-#      # Ping Ansible Host to Verify Connectivity
-#      - name: Ping Ansible Host
-#        run: |
-#          ansible -m ping ${{vars.UBUNTU_GCP}}
+      # Ping Ansible Host to Verify Connectivity
+      - name: Ping Ansible Host
+        run: |
+          ansible -m ping ${{vars.UBUNTU_GCP}}
 #
 #      # Run Ansible Playbook directly (without using a hosts file)
 #      - name: Run Ansible Playbook on GCP
