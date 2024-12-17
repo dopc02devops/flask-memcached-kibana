@@ -143,11 +143,18 @@ jobs:
           python -m pip install --upgrade pip
           pip install ansible
 
+      # Create SSH private key file
+      - name: Create SSH private key file
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_gcp_key
+          chmod 600 ~/.ssh/id_gcp_key  # Ensure proper permissions on the SSH key
+
       # Create Ansible Hosts File
       - name: Create Ansible Hosts File
         run: |
-          echo "[gcp-instance]
-          ${{vars.UBUNTU_GCP}} ansible_user=${{vars.REMOTE_USER}} ansible_ssh_private_key_file=./id_gcp_key" > hosts
+          echo "[all]
+          ${{ vars.UBUNTU_GCP }} ansible_user=${{ vars.REMOTE_USER }} ansible_ssh_private_key_file=~/.ssh/id_gcp_key" > hosts
 
       # Create Ansible Configuration
       - name: Create Ansible Configuration
