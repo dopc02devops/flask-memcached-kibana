@@ -77,7 +77,7 @@ output "instance_name_ip" {
 
 # ssh-keygen -t rsa -b 4096 -C "terraform" -f ~/.ssh/id_gcp_key
 # ls -l ~/.ssh/id_gcp_key*
-# ssh -i ~/.ssh/id_gcp_key dopc02devops@remote_ip to ssh into instance
+# ssh -i ~/.ssh/id_gcp_key kube_user@remote_ip to ssh into instance
 # terraform init
 # terraform plan
 # terraform apply
