@@ -172,7 +172,7 @@ jobs:
       - name: Test SSH connection to GCP instance
         run: |
           # Test the SSH connection to the GCP instance (replace with your GCP instance IP)
-          ssh -i ~/.ssh/id_gcp_key kube_user@34.89.49.245
+          ssh -T -i ~/.ssh/id_gcp_key kube_user@34.89.49.245
           
           
 
