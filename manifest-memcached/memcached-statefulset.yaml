@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: memcached-statefulset
+  labels:
+    app: memcached
+spec:
+  serviceName: "memcached-service"  # Headless service for stable network identity
+  replicas: 2  # Adjust replicas as needed
+  selector:
+    matchLabels:
+      app: memcached
+  template:
+    metadata:
+      labels:
+        app: memcached
+    spec:
+      containers:
+        - name: memcached
+          image: memcached:1.6.21  # Use a specific version
+          ports:
+            - containerPort: 11211
+          resources:
+            requests:
+              memory: "$(MEMORY_REQUEST)"
+              cpu: "$(CPU_REQUEST)"
+            limits:
+              memory: "$(MEMORY_LIMIT)"
+              cpu: "$(CPU_LIMIT)"
+          envFrom:
+            - configMapRef:
+                name: memcached-config
+          readinessProbe:  # Ensure the pod is ready before accepting traffic
+            tcpSocket:
+              port: 11211
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:  # Restart the pod if it becomes unresponsive
+            tcpSocket:
+              port: 11211
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          volumeMounts:
+            - name: memcached-storage
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata:
+        name: memcached-storage
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+        storageClassName: nfs-client  # Uncomment and adjust if necessary
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: memcached-service
+  labels:
+    app: memcached
+spec:
+  ports:
+    - protocol: TCP
+      port: 11211
+      targetPort: 11211
+  clusterIP: None  # Headless service for StatefulSet
+  selector:
+    app: memcached

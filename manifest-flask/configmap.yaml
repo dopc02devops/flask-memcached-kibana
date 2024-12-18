@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: flask-app-resources
+  labels:
+    app: flask-app
+data:
+  memory-request: "128Mi"
+  memory-limit: "256Mi"
+  cpu-request: "250m"
+  cpu-limit: "500m"
