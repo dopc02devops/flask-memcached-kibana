@@ -1,23 +1,50 @@
+########################################
+# Creates Network Address Translation (NAT)
+# gateways for private subnets to access
+# the internet securely
+########################################
+# resource "aws_nat_gateway" "nat" {
+#   count        = 2
+#   allocation_id = aws_eip.nat[count.index].id # Elastic IPs associated with the NAT gateways
+#   subnet_id     = aws_subnet.public[count.index].id # Places NAT gateways in the public subnets
+
+#   tags = {
+#     Name = "nat-gateway-${count.index + 1}"
+#   }
+# }
 
 ########################################
-# Sets up the AWS provider for Terraform
-# to interact with the AWS environment
+# Allocates Elastic IPs for use with the
+# NAT gateways
 ########################################
-provider "aws" {
-  region = "eu-west-2"
+# resource "aws_eip" "nat" {
+#   count = 2
+#   domain = "vpc"
+# }
+
+
+########################################
+# Fetches the list of available availability
+# zones in the specified region
+########################################
+data "aws_availability_zones" "available" {
+  state = "available"  # Optional: Filters to only return available zones
 }
 
-provider "aws" {
-  alias  = "default"
-  region = "eu-west-2"
-  assume_role {
-    role_arn = env.role_arn
-  }
+########################################
+# Removes route configurations related to NAT gateway
+########################################
+resource "aws_route" "private" {
+  count                    = length(aws_route_table.private)  # Adjust if you use count in the aws_route_table
+  route_table_id           = aws_route_table.private[count.index].id  # Use count.index to refer to a specific route table instance
+  destination_cidr_block   = "0.0.0.0/0"
+  gateway_id               = aws_internet_gateway.igw.id  # Example with gateway_id, adjust as per your use case
 }
 
+
+
 ########################################
-# Creates a Virtual Private Cloud (VPC)
-# with a specified CIDR block
+# Creates the rest of the resources (no changes needed)
 ########################################
 resource "aws_vpc" "main" {
   cidr_block           = "10.0.0.0/16"
@@ -28,11 +55,6 @@ resource "aws_vpc" "main" {
   }
 }
 
-########################################
-# Creates an Internet Gateway (IGW) to
-# enable outbound internet access for
-# resources within the VPC
-########################################
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
 
@@ -41,11 +63,6 @@ resource "aws_internet_gateway" "igw" {
   }
 }
 
-########################################
-# Creates public/private subnets in the
-# VPC where instances have/do not internet
-# access
-########################################
 resource "aws_subnet" "public" {
   count                   = 2
   vpc_id                  = aws_vpc.main.id
@@ -69,10 +86,6 @@ resource "aws_subnet" "private" {
   }
 }
 
-########################################
-# Manages routing for public subnets to
-# direct internet-bound traffic via the IGW
-########################################
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
 
@@ -89,27 +102,13 @@ resource "aws_route_table" "private" {
     Name = "private-route-table-${count.index + 1}"
   }
 }
-########################################
-# Defines a route in the public route table
-# to allow traffic to the internet.
-########################################
+
 resource "aws_route" "public" {
   route_table_id         = aws_route_table.public.id
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = aws_internet_gateway.igw.id
 }
 
-resource "aws_route" "private" {
-  count                  = 2
-  route_table_id         = aws_route_table.private[count.index].id
-  destination_cidr_block = "0.0.0.0/0"
-  nat_gateway_id         = aws_nat_gateway.nat[count.index].id
-}
-
-########################################
-# Links the public route table to public
-# subnets
-########################################
 resource "aws_route_table_association" "public" {
   count          = length(aws_subnet.public)
   subnet_id      = aws_subnet.public[count.index].id
@@ -122,63 +121,18 @@ resource "aws_route_table_association" "private" {
   route_table_id = aws_route_table.private[count.index].id
 }
 
-
-########################################
-# Creates Network Address Translation (NAT)
-# gateways for private subnets to access
-# the internet securely
-########################################
-resource "aws_nat_gateway" "nat" {
-  count        = 2
-  allocation_id = aws_eip.nat[count.index].id # Elastic IPs associated with the NAT gateways
-  subnet_id     = aws_subnet.public[count.index].id # Places NAT gateways in the public subnets
-
-  tags = {
-    Name = "nat-gateway-${count.index + 1}"
-  }
-}
-
-########################################
-# Allocates Elastic IPs for use with the
-# NAT gateways
-########################################
-resource "aws_eip" "nat" {
-  count = 2
-  domain = "vpc"
-}
-
-########################################
-# Fetches the list of available availability
-# zones in the specified region
-########################################
-
-data "aws_availability_zones" "available" {}
-
-########################################
-# Generate a random string for the
-# bucket name
-########################################
 resource "random_string" "bucket_name" {
-  length  = 16  # Adjust length as needed
-  special = false  # Set to true if you want special characters
-  upper   = false  # Set to true if you want uppercase characters
+  length  = 16
+  special = false
+  upper   = false
 }
 
-########################################
-# S3 bucket
-# aws s3 rm s3://terraform-9i2qxtqtbzhsbh5a --recursive
-########################################
 resource "aws_s3_bucket" "backend_bucket" {
   bucket        = "terraform-${random_string.bucket_name.result}"
-#   acl           = "public-read"
-  force_destroy = true # Ensure no accidental deletion of objects
-
-#   lifecycle {
-#        prevent_destroy = true   # Prevent bucket deletion
-#            }
+  force_destroy = true
 
   tags = {
-    Name        = "terraform-${random_string.bucket_name.result}"
+    Name = "terraform-${random_string.bucket_name.result}"
   }
 }
 
@@ -202,17 +156,13 @@ resource "aws_s3_bucket_policy" "public_policy" {
 resource "aws_s3_bucket_public_access_block" "public_access_block" {
   bucket = aws_s3_bucket.backend_bucket.id
 
-  block_public_acls       = true   # Allow private ACLs, but block public ACLs
-  block_public_policy     = false  # Allow public bucket policies
-  ignore_public_acls      = true   # Ignore public ACLs, ensure access is controlled via bucket policy
-  restrict_public_buckets = true   # Restrict public access to the bucket
+  block_public_acls       = true
+  block_public_policy     = false
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 
   depends_on = [aws_s3_bucket.backend_bucket]
 }
-
-#########################
-# Outputs
-#########################
 
 output "bucket_name" {
   value = aws_s3_bucket.backend_bucket.bucket
@@ -243,19 +193,7 @@ output "internet_gateway_id" {
   description = "The ID of the Internet Gateway."
 }
 
-output "nat_gateway_id" {
-  value       = aws_nat_gateway.nat[*].id
-}
-
 output "private_route_table_ids" {
   value       = aws_route_table.private[*].id
   description = "The IDs of the private route tables."
 }
-
-
-# export ROLE_ARN=arn:aws:iam::123456789012:role/example-role
-# echo $ROLE_ARN
-# terraform init
-# terraform plan
-# terraform apply
-# terraform destroy
