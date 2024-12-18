@@ -42,3 +42,6 @@ Trouble shooting
 
 TEST_TAG="home" docker-compose -f docker-compose.test.yml run --rm test-app
 TEST_TAG="home" docker-compose -f docker-compose.test.yml run --rm test-app /bin/bash
+
+
+curl ifconfig.me

@@ -12,9 +12,9 @@ provider "aws" {
 }
 
 ########################################
-# EC2 Public Instance
+# EC2 Master Instance
 ########################################
-resource "aws_instance" "public_instance" {
+resource "aws_instance" "master_instance" {
   ami             = var.ami_id
   instance_type   = "t2.micro"
   subnet_id       = data.terraform_remote_state.vpc.outputs.public_subnets[0]
@@ -35,17 +35,17 @@ resource "aws_instance" "public_instance" {
 }
 
 ########################################
-# EC2 Private Instances
+# EC2 Worker Instances
 ########################################
-resource "aws_instance" "private_instance_1" {
+resource "aws_instance" "worker_instance_1" {
   ami             = var.ami_id
   instance_type   = "t2.micro"
-  subnet_id       = data.terraform_remote_state.vpc.outputs.private_subnets[0]
+  subnet_id       = data.terraform_remote_state.vpc.outputs.public_subnets[1]
   associate_public_ip_address = false
   tags = {
     Name = "Worker-Node-01"
   }
-  vpc_security_group_ids = [aws_security_group.allow_private_sg.id]
+  vpc_security_group_ids = [aws_security_group.allow_ssh_http_https.id]
 
   user_data = <<-EOF
                 #!/bin/bash
@@ -58,15 +58,15 @@ resource "aws_instance" "private_instance_1" {
 
 }
 
-resource "aws_instance" "private_instance_2" {
+resource "aws_instance" "worker_instance_2" {
   ami             = var.ami_id
   instance_type   = "t2.micro"
-  subnet_id       = data.terraform_remote_state.vpc.outputs.private_subnets[1]
+  subnet_id       = data.terraform_remote_state.vpc.outputs.public_subnets[1]
   associate_public_ip_address = false
   tags = {
     Name = "Worker-Node-02"
   }
-  vpc_security_group_ids = [aws_security_group.allow_private_sg.id]
+  vpc_security_group_ids = [aws_security_group.allow_ssh_http_https.id]
 
   user_data = <<-EOF
               #!/bin/bash
@@ -110,8 +110,8 @@ resource "aws_security_group" "allow_ssh_http_https" {
 
   # For kubernetes dashboard
   ingress {
-    from_port   = 8001
-    to_port     = 8001
+    from_port   = 8091
+    to_port     = 8091
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -174,19 +174,19 @@ data "terraform_remote_state" "vpc" {
 # Output EC2 IP Addresses
 ########################################
 
-output "public_instance_ip" {
+output "master_instance_ip" {
   description = "Public IP of the public EC2 instance"
-  value       = aws_instance.public_instance.public_ip
+  value       = aws_instance.master_instance.public_ip
 }
 
-output "private_instance_1_ip" {
+output "worker_instance_1_ip" {
   description = "Private IP of the first private EC2 instance"
-  value       = aws_instance.private_instance_1.private_ip
+  value       = aws_instance.worker_instance_1.private_ip
 }
 
-output "private_instance_2_ip" {
+output "worker_instance_2_ip" {
   description = "Private IP of the second private EC2 instance"
-  value       = aws_instance.private_instance_2.private_ip
+  value       = aws_instance.worker_instance_2.private_ip
 }
 
 
