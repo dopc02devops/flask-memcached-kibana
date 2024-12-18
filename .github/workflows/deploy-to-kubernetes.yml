@@ -225,8 +225,8 @@ jobs:
           echo "${{ vars.UBUNTU_GCP }} ansible_user=$KUBE_USER ansible_ssh_private_key_file=~/.ssh/id_gcp_key" >> inventory
 
           # Step 2: Create the volume using Ansible
-          ansible all -i inventory -m shell -a "docker volume create flask-app-data"
-          ansible all -i inventory -m shell -a "docker volume create memcached-data"
+          ansible all -i inventory -m shell -a "sudo docker volume create flask-app-data"
+          ansible all -i inventory -m shell -a "sudo docker volume create memcached-data"
       # Copy docker-compose to server
       - name: Copy docker-compose.yaml to GCP Server
         run: |
