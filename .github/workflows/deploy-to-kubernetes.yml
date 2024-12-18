@@ -15,6 +15,14 @@ on:
         description: 'Specify the release tag for the Docker image'
         required: false
         default: 'latest'
+      deploy_to_test:
+        description: 'Deploy to test env? (true/false)'
+        required: false
+        default: 'true'
+      deploy_to_stage:
+        description: 'Deploy to stage env? (true/false)'
+        required: false
+        default: 'false'
 
 jobs:
   Install-Dependencies:
@@ -22,6 +30,7 @@ jobs:
     container:
       image: ubuntu:20.04
     steps:
+      # Cache dependencies
       - name: Cache Python dependencies
         uses: actions/cache@v3
         with:
@@ -35,7 +44,7 @@ jobs:
           key: ${{ runner.os }}-python-${{ hashFiles('**/requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-python-
-
+      # Install python dependencies
       - name: Install dependencies
         run: |
           set -e
@@ -47,17 +56,18 @@ jobs:
     needs: [Install-Dependencies]
     runs-on: ubuntu-latest
     steps:
+      # Install docker-compose
       - name: Install Docker Compose
         run: |
           set -e
           curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           chmod +x /usr/local/bin/docker-compose
-
+      # Checkout repo
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.branch }}
-
+      # Run tests using docker-compose
       - name: Run Docker Compose and Prepare Report
         run: |
           set -e
@@ -74,23 +84,21 @@ jobs:
           # Copy files from flask-test to localhost
           docker cp flask-tests-container:/app/report.xml ./report.xml
           docker cp flask-tests-container:/app/report.html ./report.html
-#          docker cp flask-tests-container:/app/Dockerfile.app ./Dockerfile.app
-#          docker cp flask-tests-container:/app/Dockerfile.test ./Dockerfile.test
-
+      # Upload test xml artefacts
       - name: Upload XML Report Artifact
         uses: actions/upload-artifact@v3
         with:
           name: xml-report
           path: ./report.xml
           retention-days: 1
-
+      # Upload test html artefacts
       - name: Upload HTML Report Artifact
         uses: actions/upload-artifact@v3
         with:
           name: html-report
           path: ./report.html
           retention-days: 1
-
+      # Install Trivy
       - name: Install Trivy
         run: |
           set -e
@@ -98,12 +106,14 @@ jobs:
           sudo apt-get install -y wget
           sudo wget https://github.com/aquasecurity/trivy/releases/download/v0.29.1/trivy_0.29.1_Linux-64bit.deb
           sudo dpkg -i trivy_0.29.1_Linux-64bit.deb
+      # Scan app container using Trivy
       - name: Trivy Scan Dockerfile.app
         run: |
           set -e
           cd src
           ls -ls
           sudo trivy config --severity HIGH,CRITICAL ./Dockerfile.app
+      # Scan test container using Trivy
       - name: Trivy Scan Dockerfile.test
         run: |
           set -e
@@ -115,27 +125,32 @@ jobs:
     needs: [Test]
     runs-on: ubuntu-latest
     steps:
+      # Checkout repo
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.branch }}
+      # Build docker image
       - name: Build Docker image
         run: |
           set -e
           cd src
           ls -ls
           docker build -t ${{ secrets.DOCKER_USERNAME }}/python-memcached:${{ inputs.release_tag }} -f ./Dockerfile.app .
+      # Push image to docker hub
       - name: Push Docker image to Docker Hub
         run: |
           set -e
           echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
           docker push ${{ secrets.DOCKER_USERNAME }}/python-memcached:${{ inputs.release_tag }}
   Deploy-to-test-env:
+    if: ${{ inputs.deploy_to_test == 'true' }}
     needs: [Build-docker-image]
     runs-on: ubuntu-latest
     env:
       KUBE_USER: kube_user
     steps:
+      # Checkout repo
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -146,11 +161,12 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.8'
+      # Install ansible
       - name: Install Ansible
         run: |
           python -m pip install --upgrade pip
           pip install ansible
-
+      # set up ssh
       - name: Set ssh connectivity
         shell: bash
         env:
@@ -183,26 +199,25 @@ jobs:
       
           # Add the private key to the SSH agent
           echo "$SSH_PASSPHRASE" | ssh-add ~/.ssh/id_gcp_key
-
+      # Test ssh
       - name: Test SSH Connection
         run: |
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_gcp_key $KUBE_USER@${{ vars.UBUNTU_GCP }}
-
+      # Ping server
       - name: Ping GCP Server with Ansible
         run: |
           echo "[target]" > inventory
           echo "${{ vars.UBUNTU_GCP }} ansible_user=$KUBE_USER ansible_ssh_private_key_file=~/.ssh/id_gcp_key" >> inventory
           ansible -i inventory target -m ping
-
+      # Add user to docker group
       - name: Add $KUBE_USER to Docker group
         run: |
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_gcp_key $KUBE_USER@${{ vars.UBUNTU_GCP }} "sudo groupadd -f docker && sudo usermod -aG docker $KUBE_USER"
-          
-
+      # Restart session
       - name: Restart session (optional)
         run: |
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_gcp_key $KUBE_USER@${{ vars.UBUNTU_GCP }} "newgrp docker"
-
+      # Copy docker-compose to server
       - name: Copy docker-compose.yaml to GCP Server
         run: |
           # Create an inventory file for Ansible
@@ -211,15 +226,57 @@ jobs:
 
           # Copy the docker-compose.yaml file to the remote server
           ansible -i inventory target -m copy -a "src=docker-compose.env.yml dest=/home/$KUBE_USER/docker-compose.env.yml mode=0644"
-
+      # Run docker-compose up
       - name: Run docker-compose up -d and scale services
         run: |
           # Create an inventory file for Ansible
           echo "[target]" > inventory
           echo "${{ vars.UBUNTU_GCP }} ansible_user=$KUBE_USER ansible_ssh_private_key_file=~/.ssh/id_gcp_key" >> inventory
-          
+
           if [ -n "${{ inputs.release_tag }}" ]; then
-             ansible -i inventory target -m shell -a "cd /home/$KUBE_USER && sudo VERSION=${{ inputs.release_tag }} docker-compose -f docker-compose.env.yml up -d"
+            echo "Running docker-compose with release tag ${{ inputs.release_tag }}..."
+            ansible -i inventory target -m shell -a \
+              "cd /home/$KUBE_USER && sudo VERSION=${{ inputs.release_tag }} docker-compose -f docker-compose.env.yml up -d" \
+              -o
           else
-            ansible -i inventory target -m shell -a "cd /home/$KUBE_USER && sudo docker-compose -f docker-compose.env.yml up -d"
+            echo "Running docker-compose without a release tag..."
+            ansible -i inventory target -m shell -a \
+              "cd /home/$KUBE_USER && sudo docker-compose -f docker-compose.env.yml up -d" \
+              -o
           fi
+
+  Deploy-to-stage-env:
+    if: ${{ inputs.deploy_to_stage == 'true' }}
+    needs: [ Deploy-to-test-env ]
+    runs-on: ubuntu-latest
+    env:
+      KUBE_USER: kube_user
+    steps:
+      # Checkout repo
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+      # Configure AWS credentials
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1 # Update to your AWS region
+      # Set up kubectl for Kubernetes cluster management
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'v1.27.1' # Use a Kubernetes client version matching your cluster
+      # Authenticate with Kubernetes cluster using AWS IAM
+      - name: Authenticate with Kubernetes cluster
+        run: |
+          aws eks update-kubeconfig --region us-east-1 --name your-cluster-name
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      # Deploy manifests to staging
+      - name: Apply Kubernetes manifests
+        run: |
+          kubectl apply -f k8s/staging/

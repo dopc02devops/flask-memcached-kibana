@@ -24,13 +24,34 @@ resource "google_compute_instance" "e2_micro_instance" {
 
   metadata = {
     # Create user and copy ssh key
-    ssh-keys = "kube_user:${file("/Users/elvisngwesse/.ssh/id_gcp_key.pub")}"
+    ssh-keys             = "kube_user:${file("/Users/elvisngwesse/.ssh/id_gcp_key.pub")}"
+    metadata_startup_script = <<-EOT
+      #!/bin/bash
+      # Update system packages
+      sudo apt-get update
+
+      # Install Docker
+      sudo apt-get install -y docker.io
+
+      # Create Docker group
+      if ! getent group docker; then
+        sudo groupadd docker
+      fi
+
+      # Add kube_user to Docker group
+      sudo usermod -aG docker kube_user
+
+      # Restart Docker to apply group changes
+      sudo systemctl restart docker
+
+      # Confirm Docker is installed and group is set up
+      docker --version
+      groups kube_user
+    EOT
   }
 
   tags = ["web", "ubuntu-test"]
-
 }
-
 
 # Enable ssh
 resource "google_compute_firewall" "allow_ssh" {
@@ -45,13 +66,25 @@ resource "google_compute_firewall" "allow_ssh" {
   target_tags = ["ubuntu-test"]
 }
 
-# Enable port 8081
-resource "google_compute_firewall" "allow_ssh_8081" {
-  name    = "allow-ssh"
+# Enable port 8091
+resource "google_compute_firewall" "allow_ssh_8091" {
+  name    = "allow-ssh-8091"
   network = "default"
   allow {
     protocol = "tcp"
-    ports    = ["8081"]
+    ports    = ["8091"]
+  }
+  source_ranges = ["0.0.0.0/0"]
+  target_tags = ["ubuntu-test"]
+}
+
+# Enable port 8095
+resource "google_compute_firewall" "allow_ssh_8095" {
+  name    = "allow-ssh-8095"
+  network = "default"
+  allow {
+    protocol = "tcp"
+    ports    = ["8095"]
   }
   source_ranges = ["0.0.0.0/0"]
   target_tags = ["ubuntu-test"]
@@ -63,7 +96,7 @@ variable "create_firewall" {
   default = false
 }
 
-# Out-put
+# Output
 output "instance_name_ip" {
   value = {
     name = google_compute_instance.e2_micro_instance.name
@@ -72,12 +105,10 @@ output "instance_name_ip" {
   description = "The name and public IP of the VM instance"
 }
 
-
-
-
-# ssh-keygen -t rsa -b 4096 -C "terraform" -f ~/.ssh/id_gcp_key
-# ls -l ~/.ssh/id_gcp_key*
-# ssh -i ~/.ssh/id_gcp_key kube_user@remote_ip to ssh into instance
-# terraform init
-# terraform plan
-# terraform apply
+# Instructions:
+# 1. ssh-keygen -t rsa -b 4096 -C "terraform" -f ~/.ssh/id_gcp_key
+# 2. ls -l ~/.ssh/id_gcp_key*
+# 3. ssh -i ~/.ssh/id_gcp_key kube_user@remote_ip to ssh into instance
+# 4. terraform init
+# 5. terraform plan
+# 6. terraform apply
