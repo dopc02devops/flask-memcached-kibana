@@ -9,7 +9,6 @@ provider "aws" {
     role_arn = env.role_arn
   }
 }
-
 # Data block to retrieve running EC2 instances
 data "aws_instances" "running_instances" {
   filter {
@@ -18,19 +17,17 @@ data "aws_instances" "running_instances" {
   }
 }
 
-# Stop the running EC2 instances
-resource "aws_instance" "stopped_instances" {
-  for_each = { for id, instance in data.aws_instances.running_instances.ids : id => instance }
+# Stop the running EC2 instances using local-exec
+resource "null_resource" "stop_instances" {
+  for_each = toset(data.aws_instances.running_instances.ids)
 
-  instance_id = each.value
-
-  stop {
-    force = true
+  provisioner "local-exec" {
+    command = "aws ec2 stop-instances --instance-ids ${each.value}"
   }
 }
 
 # Output the stopped instances
 output "stopped_instance_ids" {
-  value = [for id in aws_instance.stopped_instances : id.id]
+  value = [for id in null_resource.stop_instances : id.id]
   description = "List of stopped EC2 instance IDs"
 }

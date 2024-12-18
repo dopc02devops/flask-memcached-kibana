@@ -41,7 +41,7 @@ resource "aws_instance" "worker_instance_1" {
   ami             = var.ami_id
   instance_type   = "t2.micro"
   subnet_id       = data.terraform_remote_state.vpc.outputs.public_subnets[1]
-  associate_public_ip_address = false
+  associate_public_ip_address = true
   tags = {
     Name = "Worker-Node-01"
   }
@@ -62,7 +62,7 @@ resource "aws_instance" "worker_instance_2" {
   ami             = var.ami_id
   instance_type   = "t2.micro"
   subnet_id       = data.terraform_remote_state.vpc.outputs.public_subnets[1]
-  associate_public_ip_address = false
+  associate_public_ip_address = true
   tags = {
     Name = "Worker-Node-02"
   }
