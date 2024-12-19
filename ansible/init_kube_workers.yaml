@@ -4,7 +4,7 @@
 
 - name: Initialize workers playbook
   hosts: master
-  remote_user: root
+  remote_user: ubuntu
   become: yes
   become_user: root
   gather_facts: true
@@ -42,7 +42,7 @@
 
 - name: Add workers playbook
   hosts: worker
-  remote_user: root
+  remote_user: ubuntu
   become: yes
   become_user: root
 
@@ -52,7 +52,7 @@
     ##################################
     - name: Wait for TCP port 6443 to be open on the master node
       wait_for:
-        host: 206.189.122.101  # IP address of the master node
+        host: "{{ hostvars['kube_master'].ansible_host }}"
         port: 6443
         timeout: 120  # Timeout in seconds
         state: started  # Ensures the port is open and listening

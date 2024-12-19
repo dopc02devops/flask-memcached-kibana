@@ -5,7 +5,7 @@
 
 - name: Create Users playbook
   hosts: all
-  remote_user: root
+  remote_user: ubuntu
   become: yes
   become_user: root
   gather_facts: true

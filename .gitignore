@@ -14,3 +14,4 @@ account-info.txt
 /id_gcp_key
 /id_gcp_key.pub
 /src/hosts
+.pem

@@ -4,7 +4,7 @@
 
 - name: Install k3 playbook
   hosts: all
-  remote_user: root
+  remote_user: ubuntu
   become: yes
   become_user: root
   gather_facts: true

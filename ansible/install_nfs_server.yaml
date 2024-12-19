@@ -124,9 +124,9 @@
     # Run showmount -e on the NFS server
     ##################################
     - name: Run showmount on the NFS server
-      command: showmount -e {{ hostvars['kube_master']['ansible_host'] }}
+      command: showmount -e {{ hostvars['kube_master'].ansible_host }}
       register: showmount_output
-      delegate_to: "{{ hostvars['kube_master']['ansible_host'] }}"
+      delegate_to: "{{ hostvars['kube_master'].ansible_host }}"
 
     ##################################
     # Output the result of showmount
