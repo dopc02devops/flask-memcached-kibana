@@ -1,0 +1,20 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: flask-app-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /   # Rewrite URLs to root if needed
+    nginx.ingress.kubernetes.io/proxy-body-size: 10m  # Example annotation for body size limit
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"  # Set to false if you don't want HTTPS redirection
+spec:
+  rules:
+    - host: flask-app.example.com  # Replace with your domain
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: flask-app-service  # Connects to your Service
+                port:
+                  number: 8095
