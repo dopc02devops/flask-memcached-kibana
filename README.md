@@ -1,7 +1,6 @@
 
-
 ############################
-Install
+# Install
 ############################
 - pip install flask pymemcache
 - brew install  memcached
@@ -11,9 +10,8 @@ Install
 - pip freeze > src/requirements.txt
 - source venv/bin/activate
 
-
 ############################
-Build the Docker Image
+# Build the Docker Image
 ############################
 - docker build -t python-memcached-app .  
 - docker build --no-cache -t python-memcached-app .
@@ -22,7 +20,9 @@ Build the Docker Image
 - docker run -it --rm -p 8095:8095 -e HOST=0.0.0.0 -e PORT=8095 --name python-memcached-container python-memcached-app
 - docker run -it --rm -p 8095:8095 --name python-memcached-container python-memcached-app
 
-Explanation:
+############################
+# Explanation:
+############################
 -it: Runs the container in interactive mode.
 --rm: Automatically removes the container after it stops.
 --name python-memcached-container: Names the container python-k8s-container.
@@ -31,18 +31,25 @@ python-memcached-app: Specifies the image to run.
 8090: The port you’ll use to access the app on your host.
 8088: The port your application is listening to inside the container.
 
-
-Trouble shooting
+##########################
+# docker commands
+##########################
 - docker ps
 - docker inspect f0a4e7e8ac76e0e6044240c8140106962c359a49571ec3879469050b968b45dd | grep "IPAddress"
 - docker inspect f0a4e7e8ac76e0e6044240c8140106962c359a49571ec3879469050b968b45dd | grep "NetworkMode"
--  docker logs f0a4e7e8ac76e0e6044240c8140106962c359a49571ec3879469050b968b45dd# flask-memcached
+- docker logs f0a4e7e8ac76e0e6044240c8140106962c359a49571ec3879469050b968b45dd# flask-memcached
 
-
-
-TEST_TAG="home" docker-compose -f docker-compose.test.yml run --rm test-app
-TEST_TAG="home" docker-compose -f docker-compose.test.yml run --rm test-app /bin/bash
-
-
-curl ifconfig.me
-nslookup 13.40.154.147
+- TEST_TAG="home" docker-compose -f docker-compose.test.yml run --rm test-app
+- TEST_TAG="home" docker-compose -f docker-compose.test.yml run --rm test-app /bin/bash
+##########################
+# Get ip
+##########################
+- curl ifconfig.me
+- nslookup 13.40.154.147
+##########################
+# Add ssh key
+##########################
+- ssh-keygen -t rsa -b 4096 -C "terraform" -f ~/.ssh/id_kube_user_key
+- ssh-keygen -t rsa -b 4096 -C "terraform" -f ~/.ssh/id_kube_user_key -N ""
+- ls -l ~/.ssh/id_gcp_key*
+- ssh -i ~/.ssh/id_gcp_key kube_user@remote_ip to ssh into instance

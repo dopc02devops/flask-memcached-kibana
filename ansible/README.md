@@ -10,7 +10,7 @@
     - ansible-playbook install_dependencies.yaml
     - ansible-playbook init_kube_master.yaml
     - ansible-playbook init_kube_workers.yaml
-    - Login to master node and run below commands
+    - Login to master node with kube_user and run below commands
       - kubectl get nodes
       - kubectl get all -A
       - kubectl label nodes [Replace with ip from get nodes command] node-role.kubernetes.io/worker=worker
@@ -23,7 +23,7 @@
        - ls -l /k8mount
        - df -h /k8mount
 - Create dashboard
-    - Ansible/install_dashboard.yaml
+    - ansible-playbook install_dashboard.yaml
     - Run command on shell (localhost)
     - ssh -L 8001:127.0.0.1:8001 kube_user@master_ip
     kubectl proxy

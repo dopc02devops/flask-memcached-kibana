@@ -16,7 +16,7 @@ provider "aws" {
 ########################################
 resource "aws_key_pair" "ec2_key_pair" {
   key_name   = "my-key-pair"
-  public_key = file("~/.ssh/id_rsa.pub")
+  public_key = file("~/.ssh/id_kube_user_key.pub")
 }
 
 ########################################

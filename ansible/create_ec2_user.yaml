@@ -38,10 +38,13 @@
     ##################################
     # Add kube_user pub key
     ##################################
-    - name: set up authorized keys for the kube_user
-      authorized_key: user=kube_user key="{{item}}"
+    - name: Set up authorized keys for the kube_user
+      authorized_key:
+        user: kube_user
+        state: present
+        key: "{{ item }}"
       with_file:
-        - ~/.ssh/id_rsa.pub
+        - ~/.ssh/id_kube_user_key.pub
 
     ##################################
     # Ensure docker group exists

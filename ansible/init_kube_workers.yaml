@@ -31,15 +31,6 @@
         name: "all_workers"
         kube_join_command: "{{ join_command.stdout }}"
 
-#    - name: Open Port 6443
-#      become: yes
-#      shell: |
-#        ufw enable
-#        ufw allow 6443/tcp
-#        ufw reload
-#        ufw status verbose
-#        ufw disable
-
 - name: Add workers playbook
   hosts: worker
   remote_user: ubuntu

@@ -98,14 +98,20 @@
     ##################################
     # Create .kube directory
     ##################################
+#    - name: Create .kube directory
+#      become: yes
+#      become_user: kube_user
+#      file:
+#        path: $HOME/.kube
+#        state: directory
+#        mode: 0755
     - name: Create .kube directory
-      become: yes
-      become_user: kube_user
       file:
-        path: $HOME/.kube
+        path: /home/kube_user/.kube
         state: directory
-
-        mode: 0755
+        owner: kube_user
+        group: kube_user
+        mode: "0755"
 
     ##################################
     # Copy admin.conf
