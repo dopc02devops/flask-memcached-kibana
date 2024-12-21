@@ -6,7 +6,7 @@
 # resource "aws_nat_gateway" "nat" {
 #   count        = 2
 #   allocation_id = aws_eip.nat[count.index].id # Elastic IPs associated with the NAT gateways
-#   subnet_id     = aws_subnet.public[count.index].id # Places NAT gateways in the public subnets
+#   subnet_id     = aws_subnet.public[count.index].id
 
 #   tags = {
 #     Name = "nat-gateway-${count.index + 1}"
@@ -28,23 +28,21 @@
 # zones in the specified region
 ########################################
 data "aws_availability_zones" "available" {
-  state = "available"  # Optional: Filters to only return available zones
+  state = "available"
 }
 
 ########################################
 # Removes route configurations related to NAT gateway
 ########################################
 resource "aws_route" "private" {
-  count                    = length(aws_route_table.private)  # Adjust if you use count in the aws_route_table
-  route_table_id           = aws_route_table.private[count.index].id  # Use count.index to refer to a specific route table instance
+  count                    = length(aws_route_table.private)
+  route_table_id           = aws_route_table.private[count.index].id
   destination_cidr_block   = "0.0.0.0/0"
-  gateway_id               = aws_internet_gateway.igw.id  # Example with gateway_id, adjust as per your use case
+  gateway_id               = aws_internet_gateway.igw.id
 }
 
-
-
 ########################################
-# Creates the rest of the resources (no changes needed)
+# Creates the rest of the resources
 ########################################
 resource "aws_vpc" "main" {
   cidr_block           = "10.0.0.0/16"

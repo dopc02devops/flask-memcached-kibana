@@ -16,7 +16,7 @@ provider "aws" {
 ########################################
 resource "aws_key_pair" "ec2_key_pair" {
   key_name   = "my-key-pair"
-  public_key = file("~/.ssh/id_rsa.pub") # Path to your public key
+  public_key = file("~/.ssh/id_rsa.pub")
 }
 
 ########################################
@@ -31,7 +31,7 @@ resource "aws_instance" "master_instance" {
   tags = {
     Name = "Master-Node"
   }
-  vpc_security_group_ids = [aws_security_group.allow_ssh_http_https.id]
+  vpc_security_group_ids = [aws_security_group.nfs_security_group.id, aws_security_group.http_Kubernetes_sg.id]
 
   user_data = <<-EOF
               #!/bin/bash
@@ -55,7 +55,7 @@ resource "aws_instance" "worker_instance_1" {
   tags = {
     Name = "Worker-Node01"
   }
-  vpc_security_group_ids = [aws_security_group.allow_ssh_http_https.id]
+  vpc_security_group_ids = [aws_security_group.nfs_security_group.id, aws_security_group.http_Kubernetes_sg.id]
 
   user_data = <<-EOF
               #!/bin/bash
@@ -79,7 +79,7 @@ resource "aws_instance" "worker_instance_2" {
   tags = {
     Name = "Worker-Node02"
   }
-  vpc_security_group_ids = [aws_security_group.allow_ssh_http_https.id]
+  vpc_security_group_ids = [aws_security_group.nfs_security_group.id, aws_security_group.http_Kubernetes_sg.id]
 
   user_data = <<-EOF
               #!/bin/bash
@@ -96,48 +96,77 @@ resource "aws_instance" "worker_instance_2" {
 # Security Groups
 ########################################
 
-resource "aws_security_group" "allow_ssh_http_https" {
-  name        = "allow_ssh_http_https"
-  description = "Allow SSH, HTTP, and HTTPS inbound traffic"
+# nfs security-group
+resource "aws_security_group" "nfs_security_group" {
+  name        = "nfs-security-group"
+  description = "Security group for NFS server access"
   vpc_id      = data.terraform_remote_state.vpc.outputs.vpc_id
 
+  # Inbound Rules
   ingress {
-    from_port   = 22
-    to_port     = 22
+    from_port   = 111
+    to_port     = 111
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
   ingress {
-    from_port   = 80
-    to_port     = 80
+    from_port   = 2049
+    to_port     = 2049
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
   ingress {
-    from_port   = 443
-    to_port     = 443
+    from_port   = 32768
+    to_port     = 32768
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # For kubernetes dashboard
   ingress {
-    from_port   = 8091
-    to_port     = 8091
+    from_port   = 44182
+    to_port     = 44182
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # For workers to join master
   ingress {
-    from_port   = 6443
-    to_port     = 6443
+    from_port   = 54508
+    to_port     = 54508
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  ingress {
+    from_port   = 111
+    to_port     = 111
+    protocol    = "udp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 2049
+    to_port     = 2049
+    protocol    = "udp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 32768
+    to_port     = 32768
+    protocol    = "udp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 32770
+    to_port     = 32800
+    protocol    = "udp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # Outbound Rules
   egress {
     from_port   = 0
     to_port     = 0
@@ -145,6 +174,94 @@ resource "aws_security_group" "allow_ssh_http_https" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
+
+resource "aws_security_group" "http_Kubernetes_sg" {
+  name        = "allow_ssh_http_https"
+  description = "Allow SSH, HTTP, HTTPS, Kubernetes, and NFS inbound traffic"
+  vpc_id      = data.terraform_remote_state.vpc.outputs.vpc_id
+
+  # Allow SSH
+  ingress {
+    description = "Allow SSH traffic"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # Allow HTTP
+  ingress {
+    description = "Allow HTTP traffic"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # Allow HTTPS
+  ingress {
+    description = "Allow HTTPS traffic"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # Allow ICMP
+  ingress {
+    description = "Allow ICMP traffic"
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # flask app port
+  ingress {
+    description = "Allow flask app traffic"
+    from_port   = 8095
+    to_port     = 8095
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # Allow Kubernetes Dashboard
+  ingress {
+    description = "Allow Kubernetes Dashboard traffic"
+    from_port   = 8091
+    to_port     = 8091
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # Allow Kubernetes Worker to Join Master
+  ingress {
+    description = "Allow Kubernetes Worker to join Master traffic"
+    from_port   = 6443
+    to_port     = 6443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # Allow NFS Traffic
+  ingress {
+    description = "Allow NFS traffic"
+    from_port   = 2049
+    to_port     = 2049
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # Allow All Outbound Traffic
+  egress {
+    description = "Allow all outbound traffic"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
 
 
 ########################################

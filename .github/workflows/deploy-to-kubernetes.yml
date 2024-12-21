@@ -257,7 +257,7 @@ jobs:
 
   Deploy-to-stage-env:
     if: ${{ inputs.deploy_to_stage == 'true' }}
-    needs: [ Deploy-to-test-env ]
+    needs: [Build-docker-image]
     runs-on: ubuntu-latest
     env:
       KUBE_USER: kube_user

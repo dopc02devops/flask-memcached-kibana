@@ -66,15 +66,6 @@
       register: nfs_service_status
 
     ##################################
-    # Open firewall for NFS
-    ##################################
-    - name: Open firewall for NFS
-      ufw:
-        rule: allow
-        port: 2049
-        proto: tcp
-
-    ##################################
     # Show nfs status
     ##################################
     - name: Display NFS service status
@@ -127,6 +118,8 @@
       command: showmount -e {{ hostvars['kube_master'].ansible_host }}
       register: showmount_output
       delegate_to: "{{ hostvars['kube_master'].ansible_host }}"
+      # timeout: 600  # Adjust timeout (in seconds) as needed
+
 
     ##################################
     # Output the result of showmount

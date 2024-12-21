@@ -45,3 +45,4 @@ TEST_TAG="home" docker-compose -f docker-compose.test.yml run --rm test-app /bin
 
 
 curl ifconfig.me
+nslookup 13.40.154.147
