@@ -44,26 +44,38 @@
         - sudo systemctl start glusterd
 - We installed gluster on 2 ubuntu 20.04 nodes
 - We need to now group them into a storage pool so they can communicate with each other
+- Ensude gluster volume folder created on both nodes
+    - sudo ls -l /gluster
     - edit hosts files and add ip addresses of both servers
         - sudo vim /etc/hosts
-          35.179.252.35 server1
-          18.132.121.219 server2
+          - server1
+            127.0.0.1   server1
+            server2PublicIP   server2
+          - server2
+            127.0.0.1   server2
+            server1PublicIP server1
     - edit client machine hosts file, it should be able to ping both glusterfs machines
-        - ping gluster1
-          ping gluster2
+        - ping server1
+          ping server2
 - We now need to group them together to form a single storage pool
-    - run below command on gluster1 machine
-      - gluster peer probe gluster2
-      - gluster peer status
+    - run below command on server1 machine
+      - sudo gluster peer probe server2
+      - sudo gluster peer status
 - We need create volume
     - create volume dir on both nodes
-        - mkdir /gluster-volume
-        - gluster volume create volume1 replica 2 transport tcp gluster1.amazonaws.com:/gluster-volume/brick1 gluster2:/gluster-volume/brick1
+        - sudo gluster volume create myvolume replica 2 server1:/gluster/brick1 server2:/gluster/brick1
         - the warning is because we have 2 replicas, when creating highly available clusters, its usually with odd
           numbers eg 3, 5, 7
-        - gluster volume create volume1 replica 2 gluster1:/gluster-volume/brick1 gluster2:/gluster-volume/brick1 force
+        - sudo gluster volume create myvolume replica 2 server1:/gluster/brick1 server2:/gluster/brick1 force
 - Commands
     - gluster volume list
+    - sudo gluster volume start myvolume
+    - sudo gluster volume status myvolume
+    - sudo mount -t glusterfs <server>:<volume_name> <mount_point>
+    - sudo mount -t glusterfs gluster1:/myvolume /mnt
+    - sudo mount -t nfs <server>:/<volume_name> <mount_point>
+    - sudo tail -f /var/log/glusterfs/glusterd.log
+    - sudo gluster peer status
 
 #####################
 # Nfs-server

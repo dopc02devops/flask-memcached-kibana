@@ -1,8 +1,7 @@
 #!/usr/bin/env -S ansible-playbook -K
 # NOTE: Don't provide the playbook filename in the shebang. It is added automatically.
 
----
-# Play to install and configure GlusterFS client on master node
+
 - name: Install and Configure GlusterFS client on Master Node
   hosts: master
   remote_user: kube_user
@@ -32,11 +31,9 @@
 
     - name: Show client status output
       debug:
-        var: gluster_client_status
+        var: gluster_client_status.stdout
 
----
 
-# Play to install and configure GlusterFS server on Worker nodes
 - name: Install and Configure GlusterFS server
   hosts: worker
   remote_user: kube_user
@@ -83,3 +80,11 @@
     - name: Show service status output
       debug:
         var: gluster_service_status.stdout
+
+    - name: Create gluster volume directory and set permissions
+      become: true
+      shell: |
+        mkdir -p /gluster
+        chmod 0755 /gluster
+      args:
+        executable: /bin/bash
