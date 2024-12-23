@@ -1,0 +1,85 @@
+#!/usr/bin/env -S ansible-playbook -K
+# NOTE: Don't provide the playbook filename in the shebang. It is added automatically.
+
+---
+# Play to install and configure GlusterFS client on master node
+- name: Install and Configure GlusterFS client on Master Node
+  hosts: master
+  remote_user: kube_user
+  become: yes
+  gather_facts: true
+  tasks:
+    - name: Ensure software-properties-common is installed (Master)
+      apt:
+        name: software-properties-common
+        state: present
+        update_cache: yes
+
+    - name: Add GlusterFS community PPA (Master)
+      apt_repository:
+        repo: "ppa:gluster/glusterfs-9"
+        state: present
+
+    - name: Update APT cache (Master)
+      apt:
+        update_cache: yes
+
+    - name: Install GlusterFS client package (Master)
+      apt:
+        name: glusterfs-client
+        state: present
+      register: gluster_client_status
+
+    - name: Show client status output
+      debug:
+        var: gluster_client_status
+
+---
+
+# Play to install and configure GlusterFS server on Worker nodes
+- name: Install and Configure GlusterFS server
+  hosts: worker
+  remote_user: kube_user
+  become: yes
+  gather_facts: true
+  tasks:
+    - name: Ensure software-properties-common is installed
+      apt:
+        name: software-properties-common
+        state: present
+        update_cache: yes
+
+    - name: Add GlusterFS community PPA
+      apt_repository:
+        repo: "ppa:gluster/glusterfs-9"
+        state: present
+
+    - name: Update APT cache
+      apt:
+        update_cache: yes
+
+    - name: Install GlusterFS Server
+      apt:
+        name: glusterfs-server
+        state: present
+
+    - name: Enable GlusterFS service to start on boot
+      service:
+        name: glusterd
+        enabled: yes
+        state: started
+
+    - name: Restart GlusterFS service
+      service:
+        name: glusterd
+        state: restarted
+
+    - name: Display GlusterFS service status
+      shell: systemctl status glusterd
+      args:
+        executable: /bin/bash
+      register: gluster_service_status
+
+    - name: Show service status output
+      debug:
+        var: gluster_service_status.stdout

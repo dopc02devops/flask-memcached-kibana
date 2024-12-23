@@ -20,76 +20,96 @@ resource "aws_key_pair" "ec2_key_pair" {
 }
 
 ########################################
+# Elastic IP
+########################################
+resource "aws_eip" "master_instance_eip" {
+  instance = aws_instance.master_instance.id
+  vpc      = true
+  tags = {
+    Name = "Master-Node-EIP"
+  }
+}
+
+########################################
 # EC2 Master Instance
 ########################################
 resource "aws_instance" "master_instance" {
   ami             = var.ami_id
   instance_type   = "t2.micro"
   subnet_id       = data.terraform_remote_state.vpc.outputs.public_subnets[0]
-  associate_public_ip_address = true
+  associate_public_ip_address = false # Disable automatic public IP to use Elastic IP
   key_name        = aws_key_pair.ec2_key_pair.key_name
   tags = {
     Name = "Master-Node"
   }
-  vpc_security_group_ids = [aws_security_group.nfs_security_group.id, aws_security_group.http_Kubernetes_sg.id]
+  vpc_security_group_ids = [
+    aws_security_group.nfs_security_group.id,
+    aws_security_group.http_Kubernetes_sg.id,
+    aws_security_group.glusterfs_security_group.id
+  ]
+}
 
-  user_data = <<-EOF
-              #!/bin/bash
-              apt-get update -y
-              apt-get upgrade -y
-              apt-get install -y apache2
-              systemctl enable apache2
-              systemctl start apache2
-              EOF
+
+########################################
+# Elastic IP for Worker Instance 1
+########################################
+resource "aws_eip" "worker_instance_1_eip" {
+  instance = aws_instance.worker_instance_1.id
+  vpc      = true
+  tags = {
+    Name = "Worker-Node01-EIP"
+  }
 }
 
 ########################################
 # EC2 Worker Instances 1
 ########################################
 resource "aws_instance" "worker_instance_1" {
-  ami             = var.ami_id
-  instance_type   = "t2.micro"
-  subnet_id       = data.terraform_remote_state.vpc.outputs.public_subnets[1]
-  associate_public_ip_address = true
-  key_name        = aws_key_pair.ec2_key_pair.key_name
+  ami                         = var.ami_id
+  instance_type               = "t2.micro"
+  subnet_id                   = data.terraform_remote_state.vpc.outputs.public_subnets[1]
+  associate_public_ip_address = false  # Disable automatic public IP to use Elastic IP
+  key_name                    = aws_key_pair.ec2_key_pair.key_name
   tags = {
     Name = "Worker-Node01"
   }
-  vpc_security_group_ids = [aws_security_group.nfs_security_group.id, aws_security_group.http_Kubernetes_sg.id]
+  vpc_security_group_ids = [
+    aws_security_group.nfs_security_group.id,
+    aws_security_group.http_Kubernetes_sg.id,
+    aws_security_group.glusterfs_security_group.id
+  ]
+}
 
-  user_data = <<-EOF
-              #!/bin/bash
-              apt-get update -y
-              apt-get upgrade -y
-              apt-get install -y apache2
-              systemctl enable apache2
-              systemctl start apache2
-              EOF
+########################################
+# Elastic IP for Worker Instance 2
+########################################
+resource "aws_eip" "worker_instance_2_eip" {
+  instance = aws_instance.worker_instance_2.id
+  vpc      = true
+  tags = {
+    Name = "Worker-Node02-EIP"
+  }
 }
 
 ########################################
 # EC2 Worker Instances 2
 ########################################
 resource "aws_instance" "worker_instance_2" {
-  ami             = var.ami_id
-  instance_type   = "t2.micro"
-  subnet_id       = data.terraform_remote_state.vpc.outputs.public_subnets[1]
-  associate_public_ip_address = true
-  key_name        = aws_key_pair.ec2_key_pair.key_name
+  ami                         = var.ami_id
+  instance_type               = "t2.micro"
+  subnet_id                   = data.terraform_remote_state.vpc.outputs.public_subnets[1]
+  associate_public_ip_address = false  # Disable automatic public IP to use Elastic IP
+  key_name                    = aws_key_pair.ec2_key_pair.key_name
   tags = {
     Name = "Worker-Node02"
   }
-  vpc_security_group_ids = [aws_security_group.nfs_security_group.id, aws_security_group.http_Kubernetes_sg.id]
-
-  user_data = <<-EOF
-              #!/bin/bash
-              apt-get update -y
-              apt-get upgrade -y
-              apt-get install -y apache2
-              systemctl enable apache2
-              systemctl start apache2
-              EOF
+  vpc_security_group_ids = [
+    aws_security_group.nfs_security_group.id,
+    aws_security_group.http_Kubernetes_sg.id,
+    aws_security_group.glusterfs_security_group.id
+  ]
 }
+
 
 
 ########################################
@@ -262,6 +282,49 @@ resource "aws_security_group" "http_Kubernetes_sg" {
   }
 }
 
+resource "aws_security_group" "glusterfs_security_group" {
+  name        = "glusterfs-security-group"
+  description = "Security group for GlusterFS nodes"
+  vpc_id      = data.terraform_remote_state.vpc.outputs.vpc_id
+
+  # Inbound Rules
+  ingress {
+    from_port   = 24007
+    to_port     = 24007
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]  # Adjust CIDR as per your network policy
+  }
+
+  ingress {
+    from_port   = 49152
+    to_port     = 49251
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]  # Adjust CIDR as per your network policy
+  }
+
+  ingress {
+    from_port   = 24007
+    to_port     = 24007
+    protocol    = "udp"
+    cidr_blocks = ["0.0.0.0/0"]  # Optional: for future-proofing UDP use
+  }
+
+  ingress {
+    from_port   = 49152
+    to_port     = 49251
+    protocol    = "udp"
+    cidr_blocks = ["0.0.0.0/0"]  # Optional: for future-proofing UDP use
+  }
+
+  # Outbound Rules
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
 
 
 ########################################
@@ -285,18 +348,18 @@ data "terraform_remote_state" "vpc" {
 ########################################
 
 output "master_instance_ip" {
-  description = "Public IP of the public EC2 instance"
-  value       = aws_instance.master_instance.public_ip
+  description = "Elastic IP of the second EC2 worker instance"
+  value       = aws_eip.master_instance_eip.public_ip
 }
 
 output "worker_instance_1_ip" {
-  description = "Private IP of the first private EC2 instance"
-  value       = aws_instance.worker_instance_1.public_ip
+  description = "Elastic IP of the second EC2 worker instance"
+  value       = aws_eip.worker_instance_1_eip.public_ip
 }
 
 output "worker_instance_2_ip" {
-  description = "Private IP of the second private EC2 instance"
-  value       = aws_instance.worker_instance_2.public_ip
+  description = "Elastic IP of the second EC2 worker instance"
+  value       = aws_eip.worker_instance_2_eip.public_ip
 }
 
 

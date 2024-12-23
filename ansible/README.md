@@ -5,7 +5,7 @@
     - source venv/bin/activate
     - cd ansible
 - Create kube_user
-    - ansible-playbook create_ec2_user.yaml
+    - ansible-playbook user/create_user.yaml
 - Install kubernetes on ec2 instances
     - ansible-playbook install_dependencies.yaml
     - ansible-playbook init_kube_master.yaml
@@ -30,6 +30,40 @@
     - Navigate to the dashboard page from a web browser on your local machine
     - http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/
 
+
+#####################
+# glusterfs-server
+#####################
+- Activate venv
+    - source venv/bin/activate
+    - cd ansible
+    - ansible-playbook storage/install_glusterfs.yaml
+    - check service status: sudo systemctl status glusterd
+    - service will exit because it has not been configured to share
+    - start service
+        - sudo systemctl start glusterd
+- We installed gluster on 2 ubuntu 20.04 nodes
+- We need to now group them into a storage pool so they can communicate with each other
+    - edit hosts files and add ip addresses of both servers
+        - sudo vim /etc/hosts
+          35.179.252.35 server1
+          18.132.121.219 server2
+    - edit client machine hosts file, it should be able to ping both glusterfs machines
+        - ping gluster1
+          ping gluster2
+- We now need to group them together to form a single storage pool
+    - run below command on gluster1 machine
+      - gluster peer probe gluster2
+      - gluster peer status
+- We need create volume
+    - create volume dir on both nodes
+        - mkdir /gluster-volume
+        - gluster volume create volume1 replica 2 transport tcp gluster1.amazonaws.com:/gluster-volume/brick1 gluster2:/gluster-volume/brick1
+        - the warning is because we have 2 replicas, when creating highly available clusters, its usually with odd
+          numbers eg 3, 5, 7
+        - gluster volume create volume1 replica 2 gluster1:/gluster-volume/brick1 gluster2:/gluster-volume/brick1 force
+- Commands
+    - gluster volume list
 
 #####################
 # Nfs-server
