@@ -33,6 +33,14 @@
       debug:
         var: gluster_client_status.stdout
 
+    - name: Create mount volume directory and set permissions
+      become: true
+      shell: |
+        mkdir -p /mount/myvolume
+        chmod 0755 /mount/myvolume
+      args:
+        executable: /bin/bash
+
 
 - name: Install and Configure GlusterFS server
   hosts: worker

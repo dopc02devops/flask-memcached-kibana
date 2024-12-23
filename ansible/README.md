@@ -53,6 +53,11 @@
             server2PublicIP   server2
           - server2
             127.0.0.1   server2
+            server1PublicIP   server1
+          - client
+            server1PublicIP   server1
+            server2PublicIP   server2
+            
             server1PublicIP server1
     - edit client machine hosts file, it should be able to ping both glusterfs machines
         - ping server1
@@ -62,20 +67,39 @@
       - sudo gluster peer probe server2
       - sudo gluster peer status
 - We need create volume
-    - create volume dir on both nodes
+    - create replicated volume
         - sudo gluster volume create myvolume replica 2 server1:/gluster/brick1 server2:/gluster/brick1
         - the warning is because we have 2 replicas, when creating highly available clusters, its usually with odd
           numbers eg 3, 5, 7
         - sudo gluster volume create myvolume replica 2 server1:/gluster/brick1 server2:/gluster/brick1 force
+      - create distributed volume
+        - sudo gluster volume create myvolume2 server1:/gluster/brick2 server2:/gluster/brick2 force
+        - sudo gluster volume start myvolume
+- We need to mount volume on client 
+    - verify mount dir exist
+        - sudo ls -l /mount/myvolume
+        - sudo mount -t glusterfs server2:/myvolume /mount/myvolume
+        - sudo mount | grep volume
+- Navigate to /mount/myvolume
+    - create file: touch example.txt
+    - verify example.txt exist in both bricks
+    - sudo gluster volume start myvolume2
 - Commands
     - gluster volume list
-    - sudo gluster volume start myvolume
+    - sudo gluster volume stop myvolume
     - sudo gluster volume status myvolume
-    - sudo mount -t glusterfs <server>:<volume_name> <mount_point>
-    - sudo mount -t glusterfs gluster1:/myvolume /mnt
+    - sudo gluster volume delete myvolume
     - sudo mount -t nfs <server>:/<volume_name> <mount_point>
-    - sudo tail -f /var/log/glusterfs/glusterd.log
+    - sudo ls -la /var/log/glusterfs (log dir)
+    - sudo cat /var/log/glusterfs/bricks/gluster-brick1.log
+    - sudo tail -f /var/log/glusterfs/mount-myvolume.log
     - sudo gluster peer status
+    - sudo gluster volume info myvolume
+    - sudo gluster volume heal myvolume full
+    - sudo gluster volume heal myvolume full
+    - sudo gluster volume set myvolume cluster.self-heal-daemon on
+    - sudo gluster volume set myvolume cluster.read-subvolume client
+
 
 #####################
 # Nfs-server
