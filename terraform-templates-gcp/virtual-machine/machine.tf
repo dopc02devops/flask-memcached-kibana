@@ -6,7 +6,7 @@ provider "google" {
 
 # Create virtual machine
 resource "google_compute_instance" "e2_micro_instance" {
-  name         = "master-node"
+  name         = "build-machine"
   machine_type = "e2-micro"
   zone         = "europe-west2-a"
 
@@ -24,7 +24,7 @@ resource "google_compute_instance" "e2_micro_instance" {
 
   metadata = {
     # Create user and copy ssh key
-    ssh-keys             = "kube_user:${file("/Users/elvisngwesse/.ssh/id_gcp_key.pub")}"
+    ssh-keys             = "kube_user:${file("~/.ssh/id_kube_user_key.pub")}"
     metadata_startup_script = <<-EOT
       #!/bin/bash
       # Update system packages
@@ -50,8 +50,9 @@ resource "google_compute_instance" "e2_micro_instance" {
     EOT
   }
 
-  tags = ["web", "ubuntu-test", "nfs-security-group", "kubernetes-nodes"]
+  tags = ["web", "ubuntu-test"]
 }
+
 
 # Enable ssh
 resource "google_compute_firewall" "allow_ssh" {
@@ -66,6 +67,7 @@ resource "google_compute_firewall" "allow_ssh" {
   target_tags = ["ubuntu-test"]
 }
 
+
 # Enable port 8091
 resource "google_compute_firewall" "allow_8091" {
   name    = "allow-8091"
@@ -76,117 +78,6 @@ resource "google_compute_firewall" "allow_8091" {
   }
   source_ranges = ["0.0.0.0/0"]
   target_tags = ["ubuntu-test"]
-}
-
-
-resource "google_compute_firewall" "kubernetes_security_group" {
-  name    = "kubernetes-security-group"
-  network = "default"
-
-  # Allow ICMP
-  allow {
-    protocol = "icmp"
-  }
-
-  # Allow TCP port 8095
-  allow {
-    protocol = "tcp"
-    ports    = ["8095"]
-  }
-
-  # Allow TCP port 6443
-  allow {
-    protocol = "tcp"
-    ports    = ["6443"]
-  }
-
-  source_ranges = ["0.0.0.0/0"]
-  target_tags   = ["kubernetes-nodes"]
-}
-
-
-
-# nfs security-group
-resource "aws_security_group" "nfs_security_group" {
-  name        = "nfs-security-group"
-  description = "Security group for NFS server access"
-  vpc_id      = "your-vpc-id" # Replace with your VPC ID
-
-  # Inbound Rules
-  ingress {
-    from_port   = 111
-    to_port     = 111
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = 2049
-    to_port     = 2049
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = 32768
-    to_port     = 32768
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = 44182
-    to_port     = 44182
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = 54508
-    to_port     = 54508
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = 111
-    to_port     = 111
-    protocol    = "udp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = 2049
-    to_port     = 2049
-    protocol    = "udp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = 32768
-    to_port     = 32768
-    protocol    = "udp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = 32770
-    to_port     = 32800
-    protocol    = "udp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  # Outbound Rules
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "nfs-security-group"
-  }
 }
 
 
