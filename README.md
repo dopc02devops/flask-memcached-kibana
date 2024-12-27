@@ -51,5 +51,6 @@ python-memcached-app: Specifies the image to run.
 ##########################
 - ssh-keygen -t rsa -b 4096 -C "terraform" -f ~/.ssh/id_kube_user_key
 - ssh-keygen -t rsa -b 4096 -C "terraform" -f ~/.ssh/id_kube_user_key -N ""
+- sudo ssh-keygen -t rsa -b 4096 -C "heketi" -f ~/.ssh/id_heketi_key -N ""
 - ls -l ~/.ssh/id_gcp_key*
 - ssh -i ~/.ssh/id_gcp_key kube_user@remote_ip to ssh into instance

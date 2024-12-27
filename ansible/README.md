@@ -38,6 +38,7 @@
     - source venv/bin/activate
     - cd ansible
     - ansible-playbook storage/install_glusterfs.yaml
+    - ansible-playbook storage/install_heketi.yaml
     - check service status: sudo systemctl status glusterd
     - service will exit because it has not been configured to share
     - start service
@@ -67,14 +68,15 @@
       - sudo gluster peer probe server2
       - sudo gluster peer status
 - We need create volume
-    - create replicated volume
+    - create replicated volume (replicate accross all brick)
         - sudo gluster volume create myvolume replica 2 server1:/gluster/brick1 server2:/gluster/brick1
         - the warning is because we have 2 replicas, when creating highly available clusters, its usually with odd
           numbers eg 3, 5, 7
         - sudo gluster volume create myvolume replica 2 server1:/gluster/brick1 server2:/gluster/brick1 force
-      - create distributed volume
-        - sudo gluster volume create myvolume2 server1:/gluster/brick2 server2:/gluster/brick2 force
         - sudo gluster volume start myvolume
+      - create distributed volume (distribute to specified brick)
+        - sudo gluster volume create myvolume2 server1:/gluster/brick2 server2:/gluster/brick2 force
+        - sudo gluster volume start myvolume2
 - We need to mount volume on client 
     - verify mount dir exist
         - sudo ls -l /mount/myvolume
@@ -83,7 +85,17 @@
 - Navigate to /mount/myvolume
     - create file: touch example.txt
     - verify example.txt exist in both bricks
-    - sudo gluster volume start myvolume2
+- Quotas for volumes
+    - sudo gluster volume quota myvolume list
+    - sudo gluster volume quota myvolume enable on nodes
+    - limit quota on root dir
+        - sudo gluster volume quota myvolume limit-usage / 50GB
+    - limit quota on specific dir
+        - run: df -h | grep myvolume
+        - sudo mkdir -p /run/gluster/myvolume_quota_limit/data1
+        - sudo mkdir -p /run/gluster/myvolume_quota_limit/data2
+        - sudo gluster volume quota myvolume limit-usage /data1 5GB
+    - sudo gluster volume quota myvolume disable
 - Commands
     - gluster volume list
     - sudo gluster volume stop myvolume
@@ -100,6 +112,11 @@
     - sudo gluster volume set myvolume cluster.self-heal-daemon on
     - sudo gluster volume set myvolume cluster.read-subvolume client
 
+#####################
+# Heketi on master
+#####################
+- follow heketi installation
+    - https://kubesphere.io/docs/v3.4/reference/storage-system-installation/glusterfs-server/
 
 #####################
 # Nfs-server

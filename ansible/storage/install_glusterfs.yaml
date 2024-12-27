@@ -22,6 +22,16 @@
     - name: Update APT cache (Master)
       apt:
         update_cache: yes
+    - name: Enable GlusterFS service to start on boot
+      service:
+        name: glusterd
+        enabled: yes
+        state: started
+
+    - name: Restart GlusterFS service
+      service:
+        name: glusterd
+        state: restarted
 
     - name: Install GlusterFS client package (Master)
       apt:
