@@ -149,6 +149,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       KUBE_USER: kube_user
+      ID_GCP_KEY: id_kube_user_key
     steps:
       # Checkout repo
       - name: Checkout repository
@@ -185,8 +186,8 @@ jobs:
           fi
       
           # Create the SSH key file and set permissions
-          echo -e "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_gcp_key
-          chmod 600 ~/.ssh/id_gcp_key
+          echo -e "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/$ID_GCP_KEY
+          chmod 600 ~/.ssh/$ID_GCP_KEY
       
           # Start the SSH agent
           eval $(ssh-agent -s)
@@ -198,31 +199,31 @@ jobs:
           fi
       
           # Add the private key to the SSH agent
-          echo "$SSH_PASSPHRASE" | ssh-add ~/.ssh/id_gcp_key
+          echo "$SSH_PASSPHRASE" | ssh-add ~/.ssh/$ID_GCP_KEY
       # Test ssh
       - name: Test SSH Connection
         run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_gcp_key $KUBE_USER@${{ vars.UBUNTU_GCP }}
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/$ID_GCP_KEY $KUBE_USER@${{ vars.UBUNTU_GCP }}
       # Ping server
       - name: Ping GCP Server with Ansible
         run: |
           echo "[target]" > inventory
-          echo "${{ vars.UBUNTU_GCP }} ansible_user=$KUBE_USER ansible_ssh_private_key_file=~/.ssh/id_gcp_key" >> inventory
+          echo "${{ vars.UBUNTU_GCP }} ansible_user=$KUBE_USER ansible_ssh_private_key_file=~/.ssh/$ID_GCP_KEY" >> inventory
           ansible -i inventory target -m ping
       # Add user to docker group
       - name: Add $KUBE_USER to Docker group
         run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_gcp_key $KUBE_USER@${{ vars.UBUNTU_GCP }} "sudo groupadd -f docker && sudo usermod -aG docker $KUBE_USER"
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/$ID_GCP_KEY $KUBE_USER@${{ vars.UBUNTU_GCP }} "sudo groupadd -f docker && sudo usermod -aG docker $KUBE_USER"
       # Restart session
       - name: Restart session (optional)
         run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_gcp_key $KUBE_USER@${{ vars.UBUNTU_GCP }} "newgrp docker"
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/$ID_GCP_KEY $KUBE_USER@${{ vars.UBUNTU_GCP }} "newgrp docker"
       # Create docker volume
       - name: Create docker-compose volume on GCP Server
         run: |
           # Step 1: Create an inventory file for Ansible
           echo "[target]" > inventory
-          echo "${{ vars.UBUNTU_GCP }} ansible_user=$KUBE_USER ansible_ssh_private_key_file=~/.ssh/id_gcp_key" >> inventory
+          echo "${{ vars.UBUNTU_GCP }} ansible_user=$KUBE_USER ansible_ssh_private_key_file=~/.ssh/$ID_GCP_KEY" >> inventory
 
           # Step 2: Create the volume using Ansible
           ansible all -i inventory -m shell -a "sudo docker volume create flask-app-data"
@@ -232,7 +233,7 @@ jobs:
         run: |
           # Create an inventory file for Ansible
           echo "[target]" > inventory
-          echo "${{ vars.UBUNTU_GCP }} ansible_user=$KUBE_USER ansible_ssh_private_key_file=~/.ssh/id_gcp_key" >> inventory
+          echo "${{ vars.UBUNTU_GCP }} ansible_user=$KUBE_USER ansible_ssh_private_key_file=~/.ssh/$ID_GCP_KEY" >> inventory
 
           # Copy the docker-compose.yaml file to the remote server
           ansible -i inventory target -m copy -a "src=docker-compose.env.yml dest=/home/$KUBE_USER/docker-compose.env.yml mode=0644"
@@ -241,7 +242,7 @@ jobs:
         run: |
           # Create an inventory file for Ansible
           echo "[target]" > inventory
-          echo "${{ vars.UBUNTU_GCP }} ansible_user=$KUBE_USER ansible_ssh_private_key_file=~/.ssh/id_gcp_key" >> inventory
+          echo "${{ vars.UBUNTU_GCP }} ansible_user=$KUBE_USER ansible_ssh_private_key_file=~/.ssh/$ID_GCP_KEY" >> inventory
 
           if [ -n "${{ inputs.release_tag }}" ]; then
             echo "Running docker-compose with release tag ${{ inputs.release_tag }}..."
