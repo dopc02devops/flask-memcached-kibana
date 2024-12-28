@@ -1,7 +1,7 @@
 
 [master]
-kube_master ansible_host=13.43.141.113 ansible_ssh_private_key_file=~/.ssh/id_kube_user_key
+kube_master ansible_host=18.134.172.100 ansible_ssh_private_key_file=~/.ssh/id_kube_user_key
 
 [worker]
-kube_worker1 ansible_host=51.24.49.125 ansible_ssh_private_key_file=~/.ssh/id_kube_user_key
-kube_worker2 ansible_host=35.177.140.200 ansible_ssh_private_key_file=~/.ssh/id_kube_user_key
+kube_worker1 ansible_host=18.175.6.242 ansible_ssh_private_key_file=~/.ssh/id_kube_user_key
+kube_worker2 ansible_host=35.178.5.139 ansible_ssh_private_key_file=~/.ssh/id_kube_user_key

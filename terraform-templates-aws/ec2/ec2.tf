@@ -24,7 +24,7 @@ resource "aws_key_pair" "ec2_key_pair" {
 ########################################
 resource "aws_eip" "master_instance_eip" {
   instance = aws_instance.master_instance.id
-  vpc      = true
+  domain = "vpc"
   tags = {
     Name = "Master-Node-EIP"
   }
@@ -55,7 +55,7 @@ resource "aws_instance" "master_instance" {
 ########################################
 resource "aws_eip" "worker_instance_1_eip" {
   instance = aws_instance.worker_instance_1.id
-  vpc      = true
+  domain = "vpc"
   tags = {
     Name = "Worker-Node01-EIP"
   }
@@ -85,7 +85,7 @@ resource "aws_instance" "worker_instance_1" {
 ########################################
 resource "aws_eip" "worker_instance_2_eip" {
   instance = aws_instance.worker_instance_2.id
-  vpc      = true
+  domain = "vpc"
   tags = {
     Name = "Worker-Node02-EIP"
   }

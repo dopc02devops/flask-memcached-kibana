@@ -77,6 +77,12 @@
         name: apt-transport-https
         state: present
 
+    - name: Ensure keyrings directory exists
+      file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+
     ##################################
     # Install Docker
     ##################################

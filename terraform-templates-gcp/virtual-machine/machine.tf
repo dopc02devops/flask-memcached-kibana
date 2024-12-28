@@ -27,34 +27,54 @@ resource "google_compute_instance" "e2_micro_instance" {
     ssh-keys             = "kube_user:${file("~/.ssh/id_kube_user_key.pub")}"
     metadata_startup_script = <<-EOT
       #!/bin/bash
+
+      # Log file
+      LOG_FILE="/var/log/startup-script.log"
+      exec > >(tee -a $LOG_FILE) 2>&1
+
+      echo "Starting startup script at $(date)..."
+
       # Update system packages
-      sudo apt-get update
+      echo "Updating system packages..."
+      sudo apt-get update && sudo apt-get upgrade -y
 
       # Install Docker
-      sudo apt-get install -y docker.io
-
-      # Create Docker group
-      if ! getent group docker; then
-        sudo groupadd docker
+      echo "Installing Docker..."
+      if ! command -v docker > /dev/null; then
+        sudo apt-get install -y docker.io
+        echo "Docker installed successfully."
+      else
+        echo "Docker is already installed."
       fi
 
-      # Add kube_user to Docker group
+      # Create Docker group if it doesn't exist
+      if ! getent group docker > /dev/null; then
+        echo "Creating Docker group..."
+        sudo groupadd docker
+      else
+        echo "Docker group already exists."
+      fi
+
+      # Add kube_user to the Docker group
+      echo "Adding kube_user to the Docker group..."
       sudo usermod -aG docker kube_user
 
-      # Restart Docker to apply group changes
+      # Restart Docker service to apply changes
+      echo "Restarting Docker service..."
       sudo systemctl restart docker
 
-      # Confirm Docker is installed and group is set up
-      docker --version
-      groups kube_user
+      # Verify Docker installation and group membership
+      echo "Docker version: $(docker --version)"
+      echo "Groups for kube_user: $(groups kube_user)"
+
+      echo "Startup script completed at $(date)."
     EOT
   }
 
   tags = ["web", "ubuntu-test"]
 }
 
-
-# Enable ssh
+# Enable SSH
 resource "google_compute_firewall" "allow_ssh" {
   count   = var.create_firewall ? 1 : 0
   name    = "allow-ssh"
@@ -67,10 +87,9 @@ resource "google_compute_firewall" "allow_ssh" {
   target_tags = ["ubuntu-test"]
 }
 
-
-# Enable port 8091
-resource "google_compute_firewall" "allow_8091" {
-  name    = "allow-8091"
+# Enable port 8091 (TCP)
+resource "google_compute_firewall" "allow_8091_tcp" {
+  name    = "allow-8091-tcp"
   network = "default"
   allow {
     protocol = "tcp"
@@ -80,6 +99,17 @@ resource "google_compute_firewall" "allow_8091" {
   target_tags = ["ubuntu-test"]
 }
 
+# Enable port 8091 (UDP)
+resource "google_compute_firewall" "allow_8091_udp" {
+  name    = "allow-8091-udp"
+  network = "default"
+  allow {
+    protocol = "udp"
+    ports    = ["8091"]
+  }
+  source_ranges = ["0.0.0.0/0"]
+  target_tags = ["ubuntu-test"]
+}
 
 # Variable
 variable "create_firewall" {

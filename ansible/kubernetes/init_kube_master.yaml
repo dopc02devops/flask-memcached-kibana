@@ -14,7 +14,7 @@
     - name: Update apt cache
       apt:
         update_cache: yes
-        upgrade: dist #  dist, full, no, safe, yes
+#        upgrade: dist #  dist, full, no, safe, yes
 
     ##################################
     # Empty file for Kubeadm configuring
