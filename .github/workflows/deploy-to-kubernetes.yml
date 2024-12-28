@@ -349,7 +349,11 @@ jobs:
 
           # Set the environment variable VERSION using the release tag from GitHub Actions
           kubectl set env Deployment/flask-app-deployment VERSION=${{ inputs.release_tag }} -n stage
-      
+          
+          export VERSION=${{ inputs.release_tag }}
+
+          envsubst < deployment/manifest-rolling-flask/deployment.yaml | kubectl apply -f - -n stage
+
           # Apply the Deployment for Flask
           kubectl apply -f deployment/manifest-rolling-flask/deployment.yaml -n stage
       
