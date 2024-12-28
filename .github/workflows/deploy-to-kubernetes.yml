@@ -289,9 +289,6 @@ jobs:
           echo "${{ vars.UBUNTU_AWS }} ansible_user=$KUBE_USER ansible_ssh_private_key_file=~/.ssh/$ID_KUBE_KEY" >> inventory
           ansible -i inventory target -m fetch -a "src=/home/$KUBE_USER/.kube/config dest=/home/runner/config flat=yes" || exit 1
 
-           # Replace the server value with the external IP (from environment variable)
-          sed -i 's|server: https://.*|server: https://18.134.172.100:6443|' /home/runner/config
-          
           # Verify if the update was successful by checking the content of the kubeconfig
           cat /home/runner/config
 
@@ -321,27 +318,23 @@ jobs:
       
       - name: Apply Memcached Deployment
         run: |
-
-          # Ensure the KUBECONFIG is set to the correct path for accessing your cluster
-          export KUBECONFIG=/home/runner/config  # Adjust this path if necessary
+          export KUBECONFIG=/home/runner/config 
           
           kubectl config get-contexts
-
-          kubectl config use-context my-cluster
 
           # Create the namespace
           kubectl create namespace stage || echo "Namespace 'stage' already exists"
           
           # Apply the ConfigMap for Memcached
-          kubectl --insecure-skip-tls-verify=true apply -f deployment/manifest-memcached/configmap-memcached.yaml -n stage
+          kubectl apply -f deployment/manifest-memcached/configmap-memcached.yaml -n stage
       
           # Apply the StatefulSet for Memcached
-          kubectl --insecure-skip-tls-verify=true apply -f deployment/manifest-memcached/memcached-statefulset.yaml -n stage
+          kubectl apply -f deployment/manifest-memcached/memcached-statefulset.yaml -n stage
       
           # Monitor the rollout status of the StatefulSet
-          kubectl --insecure-skip-tls-verify=true rollout status StatefulSet/memcached-statefulset -n stage --timeout=600s  # Set an appropriate deployment name and timeout
+          kubectl rollout status StatefulSet/memcached-statefulset -n stage --timeout=600s
       
           # Optionally, check if the pods are running successfully after rollout
-          kubectl --insecure-skip-tls-verify=true get pods -l app=memcached -n stage  # Make sure the label matches your StatefulSet spec
+          kubectl get pods -l app=memcached -n stage
       
           
