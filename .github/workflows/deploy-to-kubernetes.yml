@@ -320,14 +320,15 @@ jobs:
       
       - name: Apply Memcached Deployment
         run: |
+          pwd
           # Ensure the KUBECONFIG is set to the correct path for accessing your cluster
           export KUBECONFIG=/home/runner/config  # Adjust this path if necessary
           
           # Apply the ConfigMap for Memcached
-          kubectl apply -f deployment/manifest-memcached/configmap-memcached.yaml
+          kubectl apply -f /home/runner/deployment/manifest-memcached/configmap-memcached.yaml
       
           # Apply the StatefulSet for Memcached
-          kubectl apply -f deployment/manifest-memcached/memcached-statefulset.yaml
+          kubectl apply -f /home/runner/deployment/manifest-memcached/memcached-statefulset.yaml
       
           # Monitor the rollout status of the StatefulSet
           kubectl rollout status StatefulSet/memcached-statefulset --timeout=600s  # Set an appropriate deployment name and timeout
