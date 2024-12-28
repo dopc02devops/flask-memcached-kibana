@@ -308,11 +308,12 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/$ID_KUBE_KEY $KUBE_USER@${{ vars.UBUNTU_AWS }} || exit 1
 
      
-      - name: Export kubeconfig from Remote Machine
+      - name: Copy docker-compose.yaml to GCP Server
         run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/$ID_KUBE_KEY $KUBE_USER@${{ vars.UBUNTU_AWS }} "cat ~/.kube/config" > kubeconfig || exit 1
-          export KUBECONFIG=$PWD/kubeconfig
-        
+          echo "[target]" > inventory
+          echo "${{ vars.UBUNTU_AWS }} ansible_user=$KUBE_USER ansible_ssh_private_key_file=~/.ssh/$ID_KUBE_KEY" >> inventory
+          ansible -i inventory target -m copy -a "src=~/.kube/config dest=/home/runner/config flat=yes mode=0644" || exit 1
+    
 
       - name: Verify Kubernetes Access
         run: |
