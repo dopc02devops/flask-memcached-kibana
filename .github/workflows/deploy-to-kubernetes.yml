@@ -333,10 +333,10 @@ jobs:
           kubectl create namespace stage || echo "Namespace 'stage' already exists"
           
           # Apply the ConfigMap for Memcached
-          kubectl apply -f deployment/manifest-memcached/configmap-memcached.yaml -n stage
+          kubectl --insecure-skip-tls-verify=true apply -f deployment/manifest-memcached/configmap-memcached.yaml -n stage
       
           # Apply the StatefulSet for Memcached
-          kubectl apply -f deployment/manifest-memcached/memcached-statefulset.yaml -n stage
+          kubectl --insecure-skip-tls-verify=true apply -f deployment/manifest-memcached/memcached-statefulset.yaml -n stage
       
           # Monitor the rollout status of the StatefulSet
           kubectl rollout status StatefulSet/memcached-statefulset -n stage --timeout=600s  # Set an appropriate deployment name and timeout

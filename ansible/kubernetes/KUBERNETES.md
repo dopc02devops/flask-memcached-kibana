@@ -29,6 +29,9 @@ You need to run this command to include the UBUNTU_AWS on the number of hosts on
 kubectl config set-cluster my-cluster --server=https://18.134.172.100:6443
 kubectl config view
 
+# Set context
+kubectl config set-context my-cluster --cluster=my-cluster --user=kubernetes-admin --namespace=stage
+
 kubeadm token create --print-join-command
 
 # if u see errors when joining due to left over config
