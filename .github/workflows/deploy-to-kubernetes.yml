@@ -343,24 +343,17 @@ jobs:
           
           # Apply the ConfigMap for Flask
           kubectl apply -f deployment/manifest-rolling-flask/configmap.yaml -n stage
-
-          # Apply the Deployment for Flask
-          kubectl apply -f deployment/manifest-rolling-flask/deployment.yaml -n stage
-
-          # Set the environment variable VERSION using the release tag from GitHub Actions
-          kubectl set env Deployment/flask-app-deployment VERSION=${{ inputs.release_tag }} -n stage
-          
-          export VERSION=${{ inputs.release_tag }}
-
-          envsubst < deployment/manifest-rolling-flask/deployment.yaml | kubectl apply -f - -n stage
-
-          # Apply the Deployment for Flask
-          kubectl apply -f deployment/manifest-rolling-flask/deployment.yaml -n stage
       
-          # Monitor the rollout status of the StatefulSet
-          kubectl rollout status Deployment/flask-app-deployment -n stage --timeout=600s
+          # Set the environment variable VERSION using the release tag from GitHub Actions
+          export VERSION=${{ inputs.release_tag }}
+      
+          # Substitute VERSION in the deployment YAML and apply it in a single step
+          envsubst < deployment/manifest-rolling-flask/deployment.yaml | kubectl apply -f - -n stage
+      
+          # Monitor the rollout status of the deployment
+          kubectl rollout status deployment/flask-app-deployment -n stage --timeout=600s
       
           # Optionally, check if the pods are running successfully after rollout
           kubectl get pods -l app=flask-app -n stage
-      
-          
+    
+        
