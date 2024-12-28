@@ -28,3 +28,14 @@ sudo kubeadm init --apiserver-cert-extra-sans 18.134.172.100 --ignore-preflight-
 You need to run this command to include the UBUNTU_AWS on the number of hosts on the certificate
 kubectl config set-cluster my-cluster --server=https://18.134.172.100:6443
 kubectl config view
+
+kubeadm token create --print-join-command
+
+# if u see errors when joining due to left over config
+    - sudo kubeadm reset
+      sudo rm -f /etc/kubernetes/kubelet.conf
+      sudo rm -f /etc/kubernetes/pki/ca.crt
+      sudo rm -rf /etc/kubernetes/pki/*
+      sudo systemctl stop kubelet
+
+

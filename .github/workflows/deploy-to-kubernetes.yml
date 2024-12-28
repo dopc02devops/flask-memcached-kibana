@@ -321,10 +321,14 @@ jobs:
       
       - name: Apply Memcached Deployment
         run: |
-        
+
           # Ensure the KUBECONFIG is set to the correct path for accessing your cluster
           export KUBECONFIG=/home/runner/config  # Adjust this path if necessary
           
+          kubectl config get-contexts
+
+          kubectl config use-context my-cluster
+
           # Create the namespace
           kubectl create namespace stage || echo "Namespace 'stage' already exists"
           
