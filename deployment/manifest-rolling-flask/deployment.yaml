@@ -21,16 +21,16 @@ spec:
             - containerPort: 8095
           envFrom:
             - configMapRef:
-                name: flask-app-config  # Reference ConfigMap for environment variables
+                name: flask-app-config 
             - configMapRef:
-                name: flask-app-resources  # Reference ConfigMap for resource settings
+                name: flask-app-resources
           resources:
             requests:
-              memory: "${MEMORY_REQUEST}"
-              cpu: "${CPU_REQUEST}"
+              memory: "128Mi"
+              cpu: "250m"
             limits:
-              memory: "${MEMORY_LIMIT}"
-              cpu: "${CPU_LIMIT}"
+              memory: "256Mi"
+              cpu: "500m"
           readinessProbe:
             httpGet:
               path: /health
@@ -93,19 +93,19 @@ metadata:
   labels:
     app: flask-app
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /  # Optional: Rewrites URL to root
+    nginx.ingress.kubernetes.io/rewrite-target: / 
 spec:
   rules:
-    - host: flask-app.example.com  # Replace with your actual domain
+    - host: flask-app.example.com 
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: flask-app-service  # Name of your service
+                name: flask-app-service
                 port:
-                  number: 8095  # Port on which your service is exposed
+                  number: 8095 
 
 
 # export VERSION="1.0.0"
