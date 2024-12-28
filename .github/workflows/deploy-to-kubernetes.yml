@@ -339,9 +339,9 @@ jobs:
           kubectl --insecure-skip-tls-verify=true apply -f deployment/manifest-memcached/memcached-statefulset.yaml -n stage
       
           # Monitor the rollout status of the StatefulSet
-          kubectl rollout status StatefulSet/memcached-statefulset -n stage --timeout=600s  # Set an appropriate deployment name and timeout
+          kubectl --insecure-skip-tls-verify=true rollout status StatefulSet/memcached-statefulset -n stage --timeout=600s  # Set an appropriate deployment name and timeout
       
           # Optionally, check if the pods are running successfully after rollout
-          kubectl get pods -l app=memcached -n stage  # Make sure the label matches your StatefulSet spec
+          kubectl --insecure-skip-tls-verify=true get pods -l app=memcached -n stage  # Make sure the label matches your StatefulSet spec
       
           
