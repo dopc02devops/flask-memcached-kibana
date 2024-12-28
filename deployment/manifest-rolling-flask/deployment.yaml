@@ -33,13 +33,13 @@ spec:
               cpu: "500m"
           readinessProbe:
             httpGet:
-              path: /health
+              path: /
               port: 8095
             initialDelaySeconds: 5
             periodSeconds: 10
           livenessProbe:
             httpGet:
-              path: /health
+              path: /
               port: 8095
             initialDelaySeconds: 15
             periodSeconds: 20
