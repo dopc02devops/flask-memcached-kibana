@@ -22,11 +22,11 @@ spec:
             - containerPort: 11211
           resources:
             requests:
-              memory: "$(MEMORY_REQUEST)"
-              cpu: "$(CPU_REQUEST)"
+              memory: "64Mi"  # Directly specify the value
+              cpu: "250m"
             limits:
-              memory: "$(MEMORY_LIMIT)"
-              cpu: "$(CPU_LIMIT)"
+              memory: "128Mi"
+              cpu: "500m"
           envFrom:
             - configMapRef:
                 name: memcached-config
