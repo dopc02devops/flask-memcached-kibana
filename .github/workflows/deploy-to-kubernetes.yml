@@ -288,6 +288,12 @@ jobs:
           echo "${{ vars.UBUNTU_AWS }} ansible_user=$KUBE_USER ansible_ssh_private_key_file=~/.ssh/$ID_KUBE_KEY" >> inventory
           ansible -i inventory target -m fetch -a "src=/home/$KUBE_USER/.kube/config dest=/home/runner/config flat=yes" || exit 1
 
+           # Replace the server value with the external IP (from environment variable)
+          sed -i 's|server: https://.*|server: https://18.134.172.100:6443|' /home/runner/config
+          
+          # Verify if the update was successful by checking the content of the kubeconfig
+          cat /home/runner/config
+
       - name: Verify Kubernetes Access
         run: |
           export KUBECONFIG=/home/runner/config
@@ -300,8 +306,10 @@ jobs:
           do
             kubectl cluster-info && kubectl get nodes && SUCCESS=1 && break
             COUNT=$((COUNT+1))
-            echo "Retrying... attempt $COUNT"
-            sleep 10  # Wait 10 seconds before retrying
+            if [ $COUNT -lt $RETRIES ]; then
+              echo "Retrying... attempt $COUNT"
+              sleep 10  # Wait 10 seconds before retrying
+            fi
           done
       
           # Fail the job if unsuccessful after retries
