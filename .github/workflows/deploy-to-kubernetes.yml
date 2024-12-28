@@ -312,7 +312,7 @@ jobs:
         run: |
           echo "[target]" > inventory
           echo "${{ vars.UBUNTU_AWS }} ansible_user=$KUBE_USER ansible_ssh_private_key_file=~/.ssh/$ID_KUBE_KEY" >> inventory
-          ansible -i inventory target -m copy -a "src=/home/$KUBE_USER/.kube/config dest=/home/runner/config flat=yes mode=0644" || exit 1
+          ansible -i inventory target -m copy -a "src=/home/$KUBE_USER/.kube/config dest=/home/runner/config remote_src=yes mode=0644" || exit 1
     
 
       - name: Verify Kubernetes Access
