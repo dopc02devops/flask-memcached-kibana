@@ -317,5 +317,6 @@ jobs:
 
       - name: Verify Kubernetes Access
         run: |
+          export KUBECONFIG=/home/runner/config
           kubectl cluster-info
           kubectl get nodes
