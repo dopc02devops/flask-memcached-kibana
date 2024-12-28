@@ -26,8 +26,8 @@
 # We need to add our master to the certificate and re-initialise the cluster
 sudo kubeadm init --apiserver-cert-extra-sans 18.134.172.100 --ignore-preflight-errors=NumCPU,Mem
 You need to run this command to include the UBUNTU_AWS on the number of hosts on the certificate
-kubectl config set-cluster my-cluster --server=https://18.134.172.100:6443
-kubectl config view
+
+
 
 # Set context
 kubectl config set-context my-cluster --cluster=my-cluster --user=kubernetes-admin --namespace=stage
@@ -40,5 +40,9 @@ kubeadm token create --print-join-command
       sudo rm -f /etc/kubernetes/pki/ca.crt
       sudo rm -rf /etc/kubernetes/pki/*
       sudo systemctl stop kubelet
+      kubectl config set-cluster kubernetes --server=https://18.134.172.100:6443
+      sudo kubeadm init --apiserver-cert-extra-sans 18.134.172.100 --ignore-preflight- 
+      errors=NumCPU,Mem
+      kubectl config view
 
 

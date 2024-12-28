@@ -79,10 +79,16 @@
     # Initialize the cluster
     ##################################
     - name: Initialize the cluster
-      shell: kubeadm init --config /etc/kubernetes/kubeadm-config.yaml --ignore-preflight-errors=NumCPU,Mem >> cluster_initialized.log
+      shell: |
+        kubeadm init --config /etc/kubernetes/kubeadm-config.yaml \
+          --ignore-preflight-errors=NumCPU,Mem \
+          --apiserver-advertise-address={{ external_ip }} \
+          --control-plane-endpoint={{ external_ip }} >> cluster_initialized.log
       args:
         chdir: /home/kube_user
         creates: /etc/kubernetes/admin.conf
+      environment:
+        external_ip: "{{ hostvars['kube_master'].ansible_host }}"
 
     - name: Initialize admin cluster
       command: "kubeadm init --pod-network-cidr=10.244.0.0/16"
