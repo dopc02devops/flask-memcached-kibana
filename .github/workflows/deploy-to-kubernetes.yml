@@ -35,124 +35,218 @@ on:
         default: 'false'
 
 jobs:
-  Install-Dependencies:
-    runs-on: ubuntu-latest
-    container:
-      image: ubuntu:20.04
-    steps:
-      - name: Cache Python dependencies
-        uses: actions/cache@v3
-        with:
-          path: |
-            .venv/
-            .tox/
-            .nox/
-            .docker/cache/
-            .pip/
-            ~/.cache/pip/
-          key: ${{ runner.os }}-python-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-python-
+  # Install-Dependencies:
+  #   runs-on: ubuntu-latest
+  #   container:
+  #     image: ubuntu:20.04
+  #   steps:
+  #     - name: Cache Python dependencies
+  #       uses: actions/cache@v3
+  #       with:
+  #         path: |
+  #           .venv/
+  #           .tox/
+  #           .nox/
+  #           .docker/cache/
+  #           .pip/
+  #           ~/.cache/pip/
+  #         key: ${{ runner.os }}-python-${{ hashFiles('**/requirements.txt') }}
+  #         restore-keys: |
+  #           ${{ runner.os }}-python-
 
-      - name: Install dependencies
-        run: |
-          set -e
-          apt-get update
-          apt-get install -y python3-pip curl docker.io
-          pip install pytest requests pylint
+  #     - name: Install dependencies
+  #       run: |
+  #         set -e
+  #         apt-get update
+  #         apt-get install -y python3-pip curl docker.io
+  #         pip install pytest requests pylint
 
-  Test:
-    needs: [Install-Dependencies]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Install Docker Compose
-        run: |
-          set -e
-          curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-          chmod +x /usr/local/bin/docker-compose
+  # Test:
+  #   needs: [Install-Dependencies]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Install Docker Compose
+  #       run: |
+  #         set -e
+  #         curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+  #         chmod +x /usr/local/bin/docker-compose
 
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.branch }}
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
+  #       with:
+  #         ref: ${{ inputs.branch }}
 
-      - name: Run Docker Compose and Prepare Report
-        run: |
-          set -e
-          docker volume create app_volume
-          pip install pytest-html
+  #     - name: Run Docker Compose and Prepare Report
+  #       run: |
+  #         set -e
+  #         docker volume create app_volume
+  #         pip install pytest-html
 
-          if [ -n "${{ inputs.pytest_tag }}" ]; then
-            TEST_TAG="${{ inputs.pytest_tag }}" docker-compose -f docker-compose.test.yml up --build test-app || exit 1
-          else
-            docker-compose -f docker-compose.test.yml up --build test-app || exit 1
-          fi
+  #         if [ -n "${{ inputs.pytest_tag }}" ]; then
+  #           TEST_TAG="${{ inputs.pytest_tag }}" docker-compose -f docker-compose.test.yml up --build test-app || exit 1
+  #         else
+  #           docker-compose -f docker-compose.test.yml up --build test-app || exit 1
+  #         fi
 
-          docker cp flask-tests-container:/app/report.xml ./report.xml || exit 1
-          docker cp flask-tests-container:/app/report.html ./report.html || exit 1
+  #         docker cp flask-tests-container:/app/report.xml ./report.xml || exit 1
+  #         docker cp flask-tests-container:/app/report.html ./report.html || exit 1
 
-      - name: Upload XML Report Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: xml-report
-          path: ./report.xml
-          retention-days: 1
+  #     - name: Upload XML Report Artifact
+  #       uses: actions/upload-artifact@v3
+  #       with:
+  #         name: xml-report
+  #         path: ./report.xml
+  #         retention-days: 1
 
-      - name: Upload HTML Report Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: html-report
-          path: ./report.html
-          retention-days: 1
+  #     - name: Upload HTML Report Artifact
+  #       uses: actions/upload-artifact@v3
+  #       with:
+  #         name: html-report
+  #         path: ./report.html
+  #         retention-days: 1
 
-      - name: Install Trivy
-        run: |
-          set -e
-          sudo apt-get update
-          sudo apt-get install -y wget
-          sudo wget https://github.com/aquasecurity/trivy/releases/download/v0.29.1/trivy_0.29.1_Linux-64bit.deb
-          sudo dpkg -i trivy_0.29.1_Linux-64bit.deb
+  #     - name: Install Trivy
+  #       run: |
+  #         set -e
+  #         sudo apt-get update
+  #         sudo apt-get install -y wget
+  #         sudo wget https://github.com/aquasecurity/trivy/releases/download/v0.29.1/trivy_0.29.1_Linux-64bit.deb
+  #         sudo dpkg -i trivy_0.29.1_Linux-64bit.deb
 
-      - name: Trivy Scan Dockerfile.app
-        run: |
-          set -e
-          cd src
-          sudo trivy config --severity HIGH,CRITICAL ./Dockerfile.app || exit 1
+  #     - name: Trivy Scan Dockerfile.app
+  #       run: |
+  #         set -e
+  #         cd src
+  #         sudo trivy config --severity HIGH,CRITICAL ./Dockerfile.app || exit 1
 
-      - name: Trivy Scan Dockerfile.test
-        run: |
-          set -e
-          cd src
-          sudo trivy config --severity HIGH,CRITICAL ./Dockerfile.test || exit 1
+  #     - name: Trivy Scan Dockerfile.test
+  #       run: |
+  #         set -e
+  #         cd src
+  #         sudo trivy config --severity HIGH,CRITICAL ./Dockerfile.test || exit 1
 
-  Build-docker-image:
-    needs: [Test]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.branch }}
+  # Build-docker-image:
+  #   needs: [Test]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
+  #       with:
+  #         ref: ${{ inputs.branch }}
 
-      - name: Build Docker image
-        run: |
-          set -e
-          cd src
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/python-memcached:${{ inputs.release_tag }} -f ./Dockerfile.app . || exit 1
+  #     - name: Build Docker image
+  #       run: |
+  #         set -e
+  #         cd src
+  #         docker build -t ${{ secrets.DOCKER_USERNAME }}/python-memcached:${{ inputs.release_tag }} -f ./Dockerfile.app . || exit 1
 
-      - name: Push Docker image to Docker Hub
-        run: |
-          set -e
-          echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-          docker push ${{ secrets.DOCKER_USERNAME }}/python-memcached:${{ inputs.release_tag }} || exit 1
+  #     - name: Push Docker image to Docker Hub
+  #       run: |
+  #         set -e
+  #         echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+  #         docker push ${{ secrets.DOCKER_USERNAME }}/python-memcached:${{ inputs.release_tag }} || exit 1
 
-  Deploy-to-test-env:
-    if: ${{ inputs.deploy_to_test == 'true' }}
-    needs: [Build-docker-image]
+
+  # Deploy-to-test-env:
+  #   if: ${{ inputs.deploy_to_test == 'true' }}
+  #   needs: [Build-docker-image]
+  #   runs-on: ubuntu-latest
+  #   env:
+  #     KUBE_USER: kube_user
+  #     ID_GCP_KEY: id_kube_user_key
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
+  #       with:
+  #         ref: ${{ inputs.branch }}
+
+  #     - name: Set up Ansible
+  #       uses: actions/setup-python@v4
+  #       with:
+  #         python-version: '3.8'
+
+  #     - name: Install Ansible
+  #       run: |
+  #         python -m pip install --upgrade pip
+  #         pip install ansible
+
+  #     - name: Set SSH connectivity
+  #       shell: bash
+  #       env:
+  #         SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+  #         SSH_PASSPHRASE: ${{ secrets.SSH_PASSPHRASE }}
+  #       run: |
+  #         set -e
+  #         mkdir -p ~/.ssh
+
+  #         if [ -z "$SSH_PRIVATE_KEY" ]; then
+  #           echo "Error: SSH_PRIVATE_KEY is not set."
+  #           exit 1
+  #         fi
+
+  #         echo -e "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/$ID_GCP_KEY
+  #         chmod 600 ~/.ssh/$ID_GCP_KEY
+
+  #         eval $(ssh-agent -s)
+
+  #         if [ -z "$SSH_PASSPHRASE" ]; then
+  #           echo "Error: SSH_PASSPHRASE is not set."
+  #           exit 1
+  #         fi
+
+  #         echo "$SSH_PASSPHRASE" | ssh-add ~/.ssh/$ID_GCP_KEY || exit 1
+
+  #     - name: Test SSH Connection
+  #       run: |
+  #         ssh -o StrictHostKeyChecking=no -i ~/.ssh/$ID_GCP_KEY $KUBE_USER@${{ vars.UBUNTU_GCP }} || exit 1
+
+  #     - name: Ping GCP Server with Ansible
+  #       run: |
+  #         echo "[target]" > inventory
+  #         echo "${{ vars.UBUNTU_GCP }} ansible_user=$KUBE_USER ansible_ssh_private_key_file=~/.ssh/$ID_GCP_KEY" >> inventory
+  #         ansible -i inventory target -m ping || exit 1
+
+  #     - name: Add $KUBE_USER to Docker group
+  #       run: |
+  #         ssh -o StrictHostKeyChecking=no -i ~/.ssh/$ID_GCP_KEY $KUBE_USER@${{ vars.UBUNTU_GCP }} "sudo groupadd -f docker && sudo usermod -aG docker $KUBE_USER" || exit 1
+
+  #     - name: Restart session (optional)
+  #       run: |
+  #         ssh -o StrictHostKeyChecking=no -i ~/.ssh/$ID_GCP_KEY $KUBE_USER@${{ vars.UBUNTU_GCP }} "newgrp docker" || exit 1
+
+  #     - name: Create docker-compose volume on GCP Server
+  #       run: |
+  #         echo "[target]" > inventory
+  #         echo "${{ vars.UBUNTU_GCP }} ansible_user=$KUBE_USER ansible_ssh_private_key_file=~/.ssh/$ID_GCP_KEY" >> inventory
+  #         ansible all -i inventory -m shell -a "sudo docker volume create flask-app-data" || exit 1
+  #         ansible all -i inventory -m shell -a "sudo docker volume create memcached-data" || exit 1
+
+  #     - name: Copy docker-compose.yaml to GCP Server
+  #       run: |
+  #         echo "[target]" > inventory
+  #         echo "${{ vars.UBUNTU_GCP }} ansible_user=$KUBE_USER ansible_ssh_private_key_file=~/.ssh/$ID_GCP_KEY" >> inventory
+  #         ansible -i inventory target -m copy -a "src=docker-compose.env.yml dest=/home/$KUBE_USER/docker-compose.env.yml mode=0644" || exit 1
+
+  #     - name: Run docker-compose up -d and scale services
+  #       run: |
+  #         echo "[target]" > inventory
+  #         echo "${{ vars.UBUNTU_GCP }} ansible_user=$KUBE_USER ansible_ssh_private_key_file=~/.ssh/$ID_GCP_KEY" >> inventory
+
+  #         if [ -n "${{ inputs.release_tag }}" ]; then
+  #           ansible -i inventory target -m shell -a \
+  #             "cd /home/$KUBE_USER && sudo VERSION=${{ inputs.release_tag }} docker-compose -f docker-compose.env.yml up -d" || exit 1
+  #         else
+  #           ansible -i inventory target -m shell -a \
+  #             "cd /home/$KUBE_USER && sudo docker-compose -f docker-compose.env.yml up -d" || exit 1
+  #         fi
+
+  Deploy-to-stage-env:
+    if: ${{ inputs.deploy_to_stage == 'true' }}
+    # needs: [Build-docker-image]
     runs-on: ubuntu-latest
     env:
       KUBE_USER: kube_user
-      ID_GCP_KEY: id_kube_user_key
+      ID_KUBE_KEY: id_kube_user_key
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -168,108 +262,58 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install ansible
-
-      - name: Set SSH connectivity
-        shell: bash
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          SSH_PASSPHRASE: ${{ secrets.SSH_PASSPHRASE }}
-        run: |
-          set -e
-          mkdir -p ~/.ssh
-
-          if [ -z "$SSH_PRIVATE_KEY" ]; then
-            echo "Error: SSH_PRIVATE_KEY is not set."
-            exit 1
-          fi
-
-          echo -e "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/$ID_GCP_KEY
-          chmod 600 ~/.ssh/$ID_GCP_KEY
-
-          eval $(ssh-agent -s)
-
-          if [ -z "$SSH_PASSPHRASE" ]; then
-            echo "Error: SSH_PASSPHRASE is not set."
-            exit 1
-          fi
-
-          echo "$SSH_PASSPHRASE" | ssh-add ~/.ssh/$ID_GCP_KEY || exit 1
-
-      - name: Test SSH Connection
-        run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/$ID_GCP_KEY $KUBE_USER@${{ vars.UBUNTU_GCP }} || exit 1
-
-      - name: Ping GCP Server with Ansible
-        run: |
-          echo "[target]" > inventory
-          echo "${{ vars.UBUNTU_GCP }} ansible_user=$KUBE_USER ansible_ssh_private_key_file=~/.ssh/$ID_GCP_KEY" >> inventory
-          ansible -i inventory target -m ping || exit 1
-
-      - name: Add $KUBE_USER to Docker group
-        run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/$ID_GCP_KEY $KUBE_USER@${{ vars.UBUNTU_GCP }} "sudo groupadd -f docker && sudo usermod -aG docker $KUBE_USER" || exit 1
-
-      - name: Restart session (optional)
-        run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/$ID_GCP_KEY $KUBE_USER@${{ vars.UBUNTU_GCP }} "newgrp docker" || exit 1
-
-      - name: Create docker-compose volume on GCP Server
-        run: |
-          echo "[target]" > inventory
-          echo "${{ vars.UBUNTU_GCP }} ansible_user=$KUBE_USER ansible_ssh_private_key_file=~/.ssh/$ID_GCP_KEY" >> inventory
-          ansible all -i inventory -m shell -a "sudo docker volume create flask-app-data" || exit 1
-          ansible all -i inventory -m shell -a "sudo docker volume create memcached-data" || exit 1
-
-      - name: Copy docker-compose.yaml to GCP Server
-        run: |
-          echo "[target]" > inventory
-          echo "${{ vars.UBUNTU_GCP }} ansible_user=$KUBE_USER ansible_ssh_private_key_file=~/.ssh/$ID_GCP_KEY" >> inventory
-          ansible -i inventory target -m copy -a "src=docker-compose.env.yml dest=/home/$KUBE_USER/docker-compose.env.yml mode=0644" || exit 1
-
-      - name: Run docker-compose up -d and scale services
-        run: |
-          echo "[target]" > inventory
-          echo "${{ vars.UBUNTU_GCP }} ansible_user=$KUBE_USER ansible_ssh_private_key_file=~/.ssh/$ID_GCP_KEY" >> inventory
-
-          if [ -n "${{ inputs.release_tag }}" ]; then
-            ansible -i inventory target -m shell -a \
-              "cd /home/$KUBE_USER && sudo VERSION=${{ inputs.release_tag }} docker-compose -f docker-compose.env.yml up -d" || exit 1
-          else
-            ansible -i inventory target -m shell -a \
-              "cd /home/$KUBE_USER && sudo docker-compose -f docker-compose.env.yml up -d" || exit 1
-          fi
-
-  Deploy-to-stage-env:
-    if: ${{ inputs.deploy_to_stage == 'true' }}
-    needs: [Build-docker-image]
-    runs-on: ubuntu-latest
-    env:
-      KUBE_USER: kube_user
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.branch }}
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v3
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-west-2
-
+      
       - name: Setup kubectl
         uses: azure/setup-kubectl@v4
         with:
-          version: 'v1.27.1'
-
-      - name: Authenticate with Kubernetes cluster
-        run: |
-          aws eks update-kubeconfig --region eu-west-2 --name your-cluster-name || exit 1
+          version: 'latest'
+      
+      - name: Set up SSH Key
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          SSH_PASSPHRASE: ${{ secrets.SSH_PASSPHRASE }}
+          SSH_KEY_PATH: "~/.ssh/$ID_KUBE_KEY" # Optional if the key is in a non-default location
+          
 
-      - name: Apply Kubernetes manifests
+      # - name: Set SSH connectivity
+      #   shell: bash
+      #   env:
+      #     SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      #     SSH_PASSPHRASE: ${{ secrets.SSH_PASSPHRASE }}
+      #   run: |
+      #     set -e
+      #     mkdir -p ~/.ssh
+
+      #     if [ -z "$SSH_PRIVATE_KEY" ]; then
+      #       echo "Error: SSH_PRIVATE_KEY is not set."
+      #       exit 1
+      #     fi
+
+      #     echo -e "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/$ID_KUBE_KEY
+      #     chmod 600 ~/.ssh/$ID_KUBE_KEY
+
+      #     eval $(ssh-agent -s)
+
+      #     if [ -z "$SSH_PASSPHRASE" ]; then
+      #       echo "Error: SSH_PASSPHRASE is not set."
+      #       exit 1
+      #     fi
+
+      #     echo "$SSH_PASSPHRASE" | ssh-add ~/.ssh/$ID_KUBE_KEY || exit 1
+
+      - name: Test SSH Connection
         run: |
-          kubectl apply -f k8s/staging/ || exit
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/$ID_KUBE_KEY $KUBE_USER@${{ vars.UBUNTU_AWS }} || exit 1
+
+     
+      - name: Export kubeconfig from Remote Machine
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/$ID_KUBE_KEY $KUBE_USER@${{ vars.UBUNTU_AWS }} "cat ~/.kube/config" > kubeconfig || exit 1
+          export KUBECONFIG=$PWD/kubeconfig
+
+      - name: Verify Kubernetes Access
+        run: |
+          kubectl cluster-info
+          kubectl get nodes
