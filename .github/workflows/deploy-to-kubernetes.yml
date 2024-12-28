@@ -312,6 +312,7 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/$ID_KUBE_KEY $KUBE_USER@${{ vars.UBUNTU_AWS }} "cat ~/.kube/config" > kubeconfig || exit 1
           export KUBECONFIG=$PWD/kubeconfig
+        
 
       - name: Verify Kubernetes Access
         run: |
