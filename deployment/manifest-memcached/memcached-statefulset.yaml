@@ -5,8 +5,8 @@ metadata:
   labels:
     app: memcached
 spec:
-  serviceName: "memcached-service"  # Headless service for stable network identity
-  replicas: 2  # Adjust replicas as needed
+  serviceName: "memcached-service" 
+  replicas: 1
   selector:
     matchLabels:
       app: memcached
