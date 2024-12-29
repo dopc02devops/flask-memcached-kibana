@@ -44,7 +44,7 @@ resource "aws_instance" "master_instance" {
   }
   vpc_security_group_ids = [
     aws_security_group.nfs_security_group.id,
-    aws_security_group.http_Kubernetes_sg.id,
+    aws_security_group.Kubernetes_sg.id,
     aws_security_group.glusterfs_security_group.id
   ]
 }
@@ -75,7 +75,7 @@ resource "aws_instance" "worker_instance_1" {
   }
   vpc_security_group_ids = [
     aws_security_group.nfs_security_group.id,
-    aws_security_group.http_Kubernetes_sg.id,
+    aws_security_group.Kubernetes_sg.id,
     aws_security_group.glusterfs_security_group.id
   ]
 }
@@ -105,8 +105,9 @@ resource "aws_instance" "worker_instance_2" {
   }
   vpc_security_group_ids = [
     aws_security_group.nfs_security_group.id,
-    aws_security_group.http_Kubernetes_sg.id,
-    aws_security_group.glusterfs_security_group.id
+    aws_security_group.Kubernetes_sg.id,
+    aws_security_group.glusterfs_security_group.id,
+    aws_security_group.Http_SSH_sg.id
   ]
 }
 
@@ -195,34 +196,70 @@ resource "aws_security_group" "nfs_security_group" {
   }
 }
 
-resource "aws_security_group" "http_Kubernetes_sg" {
-  name        = "allow_ssh_http_https"
-  description = "Allow SSH, HTTP, HTTPS, Kubernetes, and NFS inbound traffic"
+resource "aws_security_group" "Kubernetes_sg" {
+  name        = "allow_kubernetes"
+  description = "Kubernetes communication"
   vpc_id      = data.terraform_remote_state.vpc.outputs.vpc_id
 
-  # Allow SSH
+  # 2379-2380 (TCP) - etcd server client API (used internally by Kubernetes)
   ingress {
-    description = "Allow SSH traffic"
-    from_port   = 22
-    to_port     = 22
+    description = "etcd server client API"
+    from_port   = 2379
+    to_port     = 2380
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Allow HTTP
+  # 30000-32767 (TCP) - NodePort Services (for external traffic to services).
   ingress {
-    description = "Allow HTTP traffic"
-    from_port   = 80
-    to_port     = 80
+    description = "NodePort Services"
+    from_port   = 30000
+    to_port     = 32767
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Allow HTTPS
+  # 10259 (TCP) - kube-scheduler $ Kubelet API
+  # 10257 (TCP) - kube-controller-manager.
   ingress {
-    description = "Allow HTTPS traffic"
-    from_port   = 443
-    to_port     = 443
+    description = "kube-scheduler Kubelet API"
+    from_port   = 10250
+    to_port     = 10259
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # 6783-6784 (TCP/UDP) - Used by the Flannel CNI plugin
+  ingress {
+    description = "Used by the Flannel CNI plugin tcp"
+    from_port   = 6783
+    to_port     = 6784
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "Used by the Flannel CNI plugin udp"
+    from_port   = 6783
+    to_port     = 6784
+    protocol    = "udp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # 8472 (UDP) - Used by the Calico CNI plugin
+  ingress {
+    description = "Used by the Calico CNI plugin"
+    from_port   = 8472
+    to_port     = 8472
+    protocol    = "udp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # 179 (TCP) - Used by BGP for Calico
+  ingress {
+    description = "Used by BGP for Calico"
+    from_port   = 179
+    to_port     = 179
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -254,7 +291,7 @@ resource "aws_security_group" "http_Kubernetes_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Allow Kubernetes Worker to Join Master
+  # 6443 (TCP) - Kubernetes API server.
   ingress {
     description = "Allow Kubernetes Worker to join Master traffic"
     from_port   = 6443
@@ -280,6 +317,41 @@ resource "aws_security_group" "http_Kubernetes_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+}
+
+
+resource "aws_security_group" "Http_SSH_sg" {
+  name        = "allow_Http_SSH"
+  description = "Http SSH connection"
+  vpc_id      = data.terraform_remote_state.vpc.outputs.vpc_id
+
+  # Allow SSH
+  ingress {
+    description = "Allow SSH traffic"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # Allow HTTP
+  ingress {
+    description = "Allow HTTP traffic"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # Allow HTTPS
+  ingress {
+    description = "Allow HTTPS traffic"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
 }
 
 resource "aws_security_group" "glusterfs_security_group" {
@@ -347,17 +419,17 @@ data "terraform_remote_state" "vpc" {
 # Output EC2 IP Addresses
 ########################################
 
-output "master_instance_ip" {
+output "master_elastic_ip" {
   description = "Elastic IP of the second EC2 worker instance"
   value       = aws_eip.master_instance_eip.public_ip
 }
 
-output "worker_instance_1_ip" {
+output "worker_1_elastic_ip" {
   description = "Elastic IP of the second EC2 worker instance"
   value       = aws_eip.worker_instance_1_eip.public_ip
 }
 
-output "worker_instance_2_ip" {
+output "worker_2_elastic_ip" {
   description = "Elastic IP of the second EC2 worker instance"
   value       = aws_eip.worker_instance_2_eip.public_ip
 }
