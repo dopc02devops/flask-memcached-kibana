@@ -293,6 +293,15 @@ resource "aws_security_group" "Kubernetes_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  # Allow flask app
+  ingress {
+    description = "Allow flask app"
+    from_port   = 8096
+    to_port     = 8096
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   # 6443 (TCP) - Kubernetes API server.
   ingress {
     description = "Allow Kubernetes Worker to join Master traffic"
