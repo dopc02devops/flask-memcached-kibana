@@ -36,11 +36,33 @@
           apiVersion: kubeadm.k8s.io/v1beta3
           controlPlaneEndpoint: "{{ external_ip }}:6443"
           clusterName: "{{ cluster_name }}"
+          apiServer:
+            extraArgs:
+              authorization-mode: Node,RBAC
+              feature-gates: "TTLAfterFinished=true"
+            timeoutForControlPlane: 4m0s
           networking:
-            podSubnet: "10.244.0.0/16"
+            dnsDomain: cluster.local
+            podSubnet: 10.244.0.0/16
+            serviceSubnet: 10.32.0.0/12 
+          dns:
+            type: CoreDNS
+          etcd:
+            local:
+              dataDir: /var/lib/etcd
+          controllerManager:
+            extraArgs:
+              feature-gates: "TTLAfterFinished=true"
+              bind-address: "0.0.0.0"
+          scheduler:
+            extraArgs:
+              feature-gates: "TTLAfterFinished=true"
+              bind-address: "0.0.0.0"
           ---
           kind: KubeletConfiguration
           apiVersion: kubelet.config.k8s.io/v1beta1
+          FeatureGates:
+          TTLAfterFinished: true
           runtimeRequestTimeout: "15m"
           cgroupDriver: "systemd"
           systemReserved:
