@@ -79,7 +79,6 @@ Recommendations:
 Ensure your podSubnet and serviceSubnet configurations match the kubeadm-config.yaml setup during the kubeadm init process.
 Document the IP ranges to avoid future overlaps if your network grows.
 
-
 #####################
 # explanation
 #####################
