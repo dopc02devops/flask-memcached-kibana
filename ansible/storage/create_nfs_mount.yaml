@@ -1,0 +1,50 @@
+#!/usr/bin/env -S ansible-playbook -K
+# NOTE: Don't provide the playbook filename in the shebang. It is added automatically.
+
+
+- name: Install and Configure GlusterFS client on Master Node
+  hosts: worker
+  remote_user: kube_user
+  become: yes
+  gather_facts: true
+  tasks:
+
+    - name: Update APT cache (Master)
+      apt:
+        update_cache: yes
+
+    - name: Ensure /nfs directory exists
+      file:
+        path: /nfs
+        state: directory
+
+    - name: Ensure /nfs/mount directory exists
+      file:
+        path: /nfs/mount
+        state: directory
+
+    - name: Mount the NFS share
+      mount:
+        path: /nfs/mount
+        src: "{{ hostvars['kube_master'].ansible_host }}:/k8mount"
+        fstype: nfs
+        opts: defaults
+        state: mounted
+
+
+    - name: Verify mounted filesystems
+      command: df -h
+      register: mount_status
+
+    - name: Display mount verification output
+      debug:
+        var: mount_status.stdout
+
+    - name: Check if k8mount appears in mounted filesystems
+      command: grep k8mount /proc/mounts
+      register: grep_result
+      failed_when: grep_result.rc != 0
+
+    - name: Display grep output
+      debug:
+        var: grep_result.stdout

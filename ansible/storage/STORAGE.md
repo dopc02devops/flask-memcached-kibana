@@ -8,6 +8,8 @@
     - ansible-playbook storage/install_nfs_provisioner.yaml
     - Check if exist on file system
        - ls -l /k8mount
+- Create mount on clients
+    - ansible-playbook storage/create_nfs_mount.yaml
 
 #####################
 # Nfs-server-doc
