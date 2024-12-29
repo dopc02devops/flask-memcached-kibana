@@ -45,7 +45,8 @@ resource "aws_instance" "master_instance" {
   vpc_security_group_ids = [
     aws_security_group.nfs_security_group.id,
     aws_security_group.Kubernetes_sg.id,
-    aws_security_group.glusterfs_security_group.id
+    aws_security_group.glusterfs_security_group.id,
+    aws_security_group.Http_SSH_sg.id
   ]
 }
 
@@ -76,7 +77,8 @@ resource "aws_instance" "worker_instance_1" {
   vpc_security_group_ids = [
     aws_security_group.nfs_security_group.id,
     aws_security_group.Kubernetes_sg.id,
-    aws_security_group.glusterfs_security_group.id
+    aws_security_group.glusterfs_security_group.id,
+    aws_security_group.Http_SSH_sg.id
   ]
 }
 
