@@ -134,13 +134,6 @@ resource "aws_security_group" "nfs_security_group" {
   }
 
   ingress {
-    from_port   = 2049
-    to_port     = 2049
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
     from_port   = 32768
     to_port     = 32768
     protocol    = "tcp"
@@ -161,26 +154,6 @@ resource "aws_security_group" "nfs_security_group" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  ingress {
-    from_port   = 111
-    to_port     = 111
-    protocol    = "udp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = 2049
-    to_port     = 2049
-    protocol    = "udp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = 32768
-    to_port     = 32768
-    protocol    = "udp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
 
   ingress {
     from_port   = 32770
@@ -203,7 +176,7 @@ resource "aws_security_group" "Kubernetes_sg" {
   description = "Kubernetes communication"
   vpc_id      = data.terraform_remote_state.vpc.outputs.vpc_id
 
-  # 2379-2380 (TCP) - etcd server client API (used internally by Kubernetes)
+  # etcd server client API (used internally by Kubernetes)
   ingress {
     description = "etcd server client API"
     from_port   = 2379
@@ -212,7 +185,7 @@ resource "aws_security_group" "Kubernetes_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # 30000-32767 (TCP) - NodePort Services (for external traffic to services).
+  # NodePort Services (for external traffic to services).
   ingress {
     description = "NodePort Services"
     from_port   = 30000
@@ -221,8 +194,8 @@ resource "aws_security_group" "Kubernetes_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # 10259 (TCP) - kube-scheduler $ Kubelet API
-  # 10257 (TCP) - kube-controller-manager.
+  # kube-scheduler $ Kubelet API
+  # kube-controller-manager.
   ingress {
     description = "kube-scheduler Kubelet API"
     from_port   = 10250
@@ -231,7 +204,7 @@ resource "aws_security_group" "Kubernetes_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # 6783-6784 (TCP/UDP) - Used by the Flannel CNI plugin
+  # Used by the Flannel CNI plugin
   ingress {
     description = "Used by the Flannel CNI plugin tcp"
     from_port   = 6783
@@ -248,7 +221,7 @@ resource "aws_security_group" "Kubernetes_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # 8472 (UDP) - Used by the Calico CNI plugin
+  # Used by the Calico CNI plugin
   ingress {
     description = "Used by the Calico CNI plugin"
     from_port   = 8472
@@ -257,7 +230,7 @@ resource "aws_security_group" "Kubernetes_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # 179 (TCP) - Used by BGP for Calico
+  # Used by BGP for Calico
   ingress {
     description = "Used by BGP for Calico"
     from_port   = 179
@@ -302,12 +275,20 @@ resource "aws_security_group" "Kubernetes_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # 6443 (TCP) - Kubernetes API server.
+  # Kubernetes API server.
   ingress {
     description = "Allow Kubernetes Worker to join Master traffic"
     from_port   = 6443
     to_port     = 6443
     protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "Allow Kubernetes Worker to join Master traffic"
+    from_port   = 6443
+    to_port     = 6443
+    protocol    = "udp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
