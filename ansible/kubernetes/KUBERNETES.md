@@ -22,12 +22,15 @@
     - ansible-playbook kubernetes/install_dashboard.yaml
 
 #####################
-# internal kubernetes
+# Curl using utiles app
 #####################
-- kubectl get pods -o wide
-- spin up utility pod
+- kubectl get pods -n stage -o wide
+- Get name for utiles pod
 - execute into utility pod
-- run curl using flask container ip plus port 8096
+    - kubectl exec -n stage utilities-5bf8fd7f97-6p8pd -- ls -la
+    - kubectl exec -it utilities-5bf8fd7f97-6p8pd -n stage -- /bin/bash
+    - curl 10.244.254.132:8095
+
 
 #####################
 # initialize kubernetes
