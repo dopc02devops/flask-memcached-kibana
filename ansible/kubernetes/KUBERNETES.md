@@ -18,6 +18,16 @@
       - kubectl get all -A
       - kubectl label nodes [Replace with ip from get nodes command] node-role.kubernetes.io/worker=worker
         kubectl label nodes [Replace with ip from get nodes command] node-role.kubernetes.io/worker=worker
+- Dashboard
+    - ansible-playbook kubernetes/install_dashboard.yaml
+
+#####################
+# internal kubernetes
+#####################
+- kubectl get pods -o wide
+- spin up utility pod
+- execute into utility pod
+- run curl using flask container ip plus port 8096
 
 #####################
 # initialize kubernetes
@@ -31,7 +41,6 @@ You need to run this command to include the UBUNTU_AWS on the number of hosts on
 
 # Set context
 kubectl config set-context my-cluster --cluster=my-cluster --user=kubernetes-admin --namespace=stage
-
 kubeadm token create --print-join-command
 
 # if u see errors when joining due to left over config

@@ -9,20 +9,16 @@
   gather_facts: true
 
   tasks:
-
-    #    - name: Open Port 8001
-    #      become: yes
-    #      shell: |
-    #        ufw enable
-    #        ufw allow 8001/tcp
-    #        ufw reload
-    #        ufw status verbose
-    #        ufw disable
-    - name: Install kubectl
+    - name: Ensure pip3 is installed
       apt:
-        name: kubectl
+        name: python3-pip
         state: present
-        update_cache: yes
+
+    - name: Install kubernetes Python module
+      pip:
+        name: kubernetes
+        executable: /usr/bin/pip3
+      become: yes
 
     - name: Install Kubernetes Dashboard
       become: no
@@ -74,3 +70,5 @@
         msg:
           - "{{ dashboard_token }}"
           - "Kubernetes Dashboard is accessible at: http://{{ ansible_host }}:8001/api/v1/namespaces/kubernetes-dashboard/services/http:kubernetes-dashboard:/proxy/"
+# kubectl port-forward -n kubernetes-dashboard service/kubernetes-dashboard 8443:443
+# https://localhost:8443

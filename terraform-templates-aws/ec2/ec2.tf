@@ -259,9 +259,18 @@ resource "aws_security_group" "Kubernetes_sg" {
 
   # Allow Kubernetes Dashboard
   ingress {
-    description = "Allow Kubernetes Dashboard traffic"
+    description = "Allow Kubernetes Dashboard traffic 1"
     from_port   = 8091
     to_port     = 8091
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # Allow Kubernetes Dashboard
+  ingress {
+    description = "Allow Kubernetes Dashboard traffic 2"
+    from_port   = 8001
+    to_port     = 8001
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }

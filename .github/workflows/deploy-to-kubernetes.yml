@@ -246,6 +246,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       KUBE_USER: kube_user
+      SHORT_HOSTNAME: ubuntumachine.com
       ID_KUBE_KEY: id_kube_user_key
       HOME_RUNNER: /home/runner/work/flask-memcached/flask-memcached
     steps:
@@ -291,6 +292,14 @@ jobs:
 
           # Verify if the update was successful by checking the content of the kubeconfig
           cat /home/runner/config
+      
+      - name: Update /etc/hosts
+        run: |
+          echo "[target]" > inventory
+          echo "${{ vars.UBUNTU_AWS }} ansible_user=$KUBE_USER ansible_ssh_private_key_file=~/.ssh/$ID_KUBE_KEY" >> inventory
+          
+          # Add entry to /etc/hosts
+          echo "${{ vars.UBUNTU_AWS }} $SHORT_HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
 
       - name: Verify Kubernetes Access
         run: |
@@ -319,8 +328,6 @@ jobs:
       - name: Apply Memcached Deployment
         run: |
           export KUBECONFIG=/home/runner/config 
-          
-          kubectl config get-contexts
 
           # Create the namespace
           kubectl create namespace stage || echo "Namespace 'stage' already exists"
@@ -336,6 +343,19 @@ jobs:
       
           # Optionally, check if the pods are running successfully after rollout
           kubectl get pods -l app=memcached -n stage
+
+      - name: Apply Utility Deployment
+        run: |
+          export KUBECONFIG=/home/runner/config 
+          
+          # Apply the Deployment for Utility
+          kubectl apply -f deployment/utils.yaml -n stage
+          
+          # Monitor the rollout status of the Deployment
+          kubectl rollout status deployment/utilities -n stage --timeout=600s
+          
+          # Optionally, check if the pods are running successfully after rollout
+          kubectl get pods -l app=utilities -n stage
       
       - name: Apply Flask Deployment
         run: |
