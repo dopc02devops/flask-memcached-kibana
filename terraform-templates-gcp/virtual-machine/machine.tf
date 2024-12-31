@@ -76,7 +76,7 @@ resource "google_compute_instance" "e2_micro_instance" {
 
 # Enable SSH
 resource "google_compute_firewall" "allow_ssh" {
-  count   = var.create_firewall ? 1 : 0
+#  count   = var.create_firewall ? 1 : 0
   name    = "allow-ssh"
   network = "default"
   allow {
