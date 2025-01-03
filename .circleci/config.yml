@@ -1,15 +1,9 @@
 version: 2.1
 
 executors:
-  docker_executor:
-    docker:
-      - image: cimg/python:3.8  # Updated next-gen CircleCI Python image
-      - image: docker:20.10-dind  # Docker-in-Docker image
-        privileged: true
-    working_directory: ~/project
-    environment:
-      DOCKER_HOST: tcp://localhost:2375
-      DOCKER_TLS_VERIFY: 0
+  machine_executor:
+    machine:
+      image: ubuntu-2004:202101-01  # Use a full VM instead of Docker container
 
 commands:
   install_docker_compose:
@@ -25,7 +19,7 @@ commands:
 
 jobs:
   install_dependencies:
-    executor: docker_executor
+    executor: machine_executor
     steps:
       - checkout
       - run:
@@ -36,7 +30,7 @@ jobs:
             pip install pytest requests pylint
 
   test:
-    executor: docker_executor
+    executor: machine_executor
     steps:
       - checkout
       - install_docker_compose
