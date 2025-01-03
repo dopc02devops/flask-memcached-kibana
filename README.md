@@ -4,5 +4,6 @@
 ########################
 - How to tag your commit
 ########################
-git tag <your-tag-name>
-git push origin <your-tag-name>
+  git tag v1.0
+  git push origin v1.0
+
