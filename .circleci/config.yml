@@ -67,7 +67,7 @@ jobs:
           destination: reports-html
 
   build_docker_image:
-    executor: docker_executor
+    executor: machine_executor
     steps:
       - checkout
       - run:
