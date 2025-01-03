@@ -106,18 +106,18 @@ workflows:
       - build_docker_image:
           requires:
             - test
-    build_tags:
-      jobs:
-        - install_dependencies
-        - test
-        - build_docker_image_tag:
-            requires:
-              - test
-            filters:
-              tags:
-                only: /^v.*/
-              branches:
-                ignore: /.*/
+  build-tags:
+    jobs:
+      - install_dependencies
+      - test
+      - build_docker_image_tag:
+          requires:
+            - test
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
 
 
 
