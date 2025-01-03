@@ -101,6 +101,9 @@ jobs:
 
   deploy_test_env:
     executor: python-executor
+    environment:
+      USER_KEY_PATH: id_kube_user_key
+      SSH_PASSPHRASE: terraform
     steps:
       - checkout
       - run:
