@@ -1,15 +1,10 @@
 version: 2.1
 
 executors:
-  default:
-    docker:
-      - image: cimg/python:3.8
-    working_directory: ~/project
-
   docker_executor:
     docker:
-      - image: cimg/python:3.8 # for Python-related tasks
-      - image: docker:20.10-dind # for Docker CLI utilities or to build/manage Docker containers
+      - image: cimg/python:3.13.1
+    working_directory: ~/project
     environment:
       DOCKER_HOST: tcp://localhost:2375
       DOCKER_TLS_VERIFY: 0
