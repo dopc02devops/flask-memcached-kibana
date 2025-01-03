@@ -109,6 +109,8 @@ workflows:
   build-tags:
     jobs:
       - build_docker_image_tag:
+          requires:
+            - test
           filters:
             tags:
               only: /.*/
