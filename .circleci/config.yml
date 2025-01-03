@@ -95,8 +95,7 @@ workflows:
             - install_dependencies
           filters:
             tags:
-              - /^v.*/      # Trigger for tags like 'v1.0', 'v2.1', etc.
-              - /^release-.*/  # Trigger for tags like 'release-1.0', 'release-2.1', etc.
+              - '/^(v.*|release-.*)/'
 
 
 
