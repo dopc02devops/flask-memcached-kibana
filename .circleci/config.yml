@@ -110,10 +110,18 @@ jobs:
           fingerprints:
             - "SHA256:E5222fhICNId9Z1YUdknmx+eax4SpL8p26sqEhtKjGQ"
       - run:
-          name: Verify SSH Connection
+          name: Test SSH Connection
           command: |
-            # Test the SSH connection to GitHub (or your remote host)
-            ssh -T git@github.com
+            # Ensure the SSH directory exists
+            mkdir -p ~/.ssh
+            
+            # Optional: Manually specify a private key if you want to use a different path
+            echo -e "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/$USER_KEY_PATH
+            chmod 600 ~/.ssh/$USER_KEY_PATH
+            
+            # Test SSH connection with specific key
+            ssh -o StrictHostKeyChecking=no -i ~/.ssh/$USER_KEY_PATH $KUBE_USER@$UBUNTU_GCP || exit 1
+
       - run:
           name: Set up Ansible
           command: |
