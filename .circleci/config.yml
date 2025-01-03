@@ -106,35 +106,43 @@ jobs:
       SSH_PASSPHRASE: terraform
     steps:
       - checkout
+      - add_ssh_keys:
+          fingerprints:
+            - "SHA256:E5222fhICNId9Z1YUdknmx+eax4SpL8p26sqEhtKjGQ"
+      - run:
+          name: Verify SSH Connection
+          command: |
+            # Test the SSH connection to GitHub (or your remote host)
+            ssh -T git@github.com
       - run:
           name: Set up Ansible
           command: |
             python -m pip install --upgrade pip
             pip install ansible
 
-      - run:
-          name: Set SSH Connectivity
-          shell: /bin/bash
-          command: |
-            set -e
-            mkdir -p ~/.ssh
-            
-            if [ -z "$SSH_PRIVATE_KEY" ]; then
-              echo "Error: SSH_PRIVATE_KEY is not set."
-              exit 1
-            fi
-            
-            echo -e "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/$USER_KEY_PATH
-            chmod 600 ~/.ssh/$USER_KEY_PATH
-            
-            eval $(ssh-agent -s)
-            
-            if [ -z "$SSH_PASSPHRASE" ]; then
-              echo "Error: SSH_PASSPHRASE is not set."
-              exit 1
-            fi
-            
-            echo "$SSH_PASSPHRASE" | ssh-add ~/.ssh/$USER_KEY_PATH || exit 1
+#      - run:
+#          name: Set SSH Connectivity
+#          shell: /bin/bash
+#          command: |
+#            set -e
+#            mkdir -p ~/.ssh
+#
+#            if [ -z "$SSH_PRIVATE_KEY" ]; then
+#              echo "Error: SSH_PRIVATE_KEY is not set."
+#              exit 1
+#            fi
+#
+#            echo -e "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/$USER_KEY_PATH
+#            chmod 600 ~/.ssh/$USER_KEY_PATH
+#
+#            eval $(ssh-agent -s)
+#
+#            if [ -z "$SSH_PASSPHRASE" ]; then
+#              echo "Error: SSH_PASSPHRASE is not set."
+#              exit 1
+#            fi
+#
+#            echo "$SSH_PASSPHRASE" | ssh-add ~/.ssh/$USER_KEY_PATH || exit 1
 
       - run:
           name: Test SSH Connection
