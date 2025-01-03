@@ -1,0 +1,110 @@
+version: 2.1
+
+executors:
+  default:
+    docker:
+      - image: circleci/python:3.8
+    working_directory: ~/project
+
+  docker_executor:
+    docker:
+      - image: circleci/python:3.8
+      - image: docker:20.10.7
+
+jobs:
+  install_dependencies:
+    executor: docker_executor
+    steps:
+      - checkout
+      - run:
+          name: Install Dependencies
+          command: |
+            apt-get update
+            apt-get install -y python3-pip curl docker.io
+            pip install pytest requests pylint
+
+  test:
+    executor: docker_executor
+    steps:
+      - checkout
+      - run:
+          name: Install Docker Compose
+          command: |
+            curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+            chmod +x /usr/local/bin/docker-compose
+      - run:
+          name: Run Tests
+          command: |
+            docker volume create app_volume
+            pip install pytest-html
+            docker-compose -f docker-compose.test.yml up --build test-app || exit 1
+      - run:
+          name: Copy Test Reports
+          command: |
+            docker cp flask-tests-container:/app/report.xml ./report.xml
+            docker cp flask-tests-container:/app/report.html ./report.html
+      - persist_to_workspace:
+          root: .
+          paths:
+            - report.xml
+            - report.html
+
+  build_docker_image:
+    executor: docker_executor
+    steps:
+      - checkout
+      - run:
+          name: Build Docker Image
+          command: |
+            docker build -t your_docker_username/python-memcached:${CIRCLE_TAG} -f ./Dockerfile.app .
+      - run:
+          name: Push Docker Image
+          command: |
+            echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+            docker push your_docker_username/python-memcached:${CIRCLE_TAG}
+
+  deploy_test:
+    executor: docker_executor
+    steps:
+      - checkout
+      - run:
+          name: Deploy to Test Environment
+          command: |
+            ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa user@host \
+              "cd /path/to/project && docker-compose -f docker-compose.env.yml up -d"
+
+  deploy_stage:
+    executor: docker_executor
+    steps:
+      - checkout
+      - run:
+          name: Setup kubectl
+          command: |
+            curl -LO "https://dl.k8s.io/release/v1.26.0/bin/linux/amd64/kubectl"
+            chmod +x ./kubectl
+            mv ./kubectl /usr/local/bin/kubectl
+      - run:
+          name: Deploy to Stage Environment
+          command: |
+            export KUBECONFIG=/path/to/kubeconfig
+            kubectl apply -f deployment/manifest-memcached/configmap-memcached.yaml -n stage
+            kubectl apply -f deployment/manifest-memcached/memcached-statefulset.yaml -n stage
+            kubectl rollout status statefulset/memcached -n stage
+
+workflows:
+  version: 2
+  deploy_pipeline:
+    jobs:
+      - install_dependencies
+      - test:
+          requires:
+            - install_dependencies
+      - build_docker_image:
+          requires:
+            - test
+      - deploy_test:
+          requires:
+            - build_docker_image
+      - deploy_stage:
+          requires:
+            - build_docker_image
