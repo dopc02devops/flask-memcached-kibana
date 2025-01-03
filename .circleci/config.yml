@@ -1,18 +1,26 @@
 version: 2.1
 
 executors:
-  docker_executor:
-    docker:
-      - image: circleci/python:3.8
-      - image: docker:20.10.7
-    working_directory: ~/project
-    environment:
-      DOCKER_HOST: tcp://localhost:2375
-      DOCKER_TLS_VERIFY: 0
+  machine_executor:
+    machine:
+      image: ubuntu-2204:current  # Use a full VM image (Ubuntu 22.04)
+      docker_layer_caching: true  # Optional: Enable Docker layer caching for faster builds
+
+commands:
+  install_docker_compose:
+    steps:
+      - run:
+          name: Install Docker Compose
+          command: |
+            sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+            sudo chmod +x /usr/local/bin/docker-compose
+      - run:
+          name: Verify Docker Compose Installation
+          command: docker-compose --version
 
 jobs:
   install_dependencies:
-    executor: docker_executor
+    executor: machine_executor
     steps:
       - checkout
       - run:
@@ -23,25 +31,16 @@ jobs:
             pip install pytest requests pylint
 
   test:
-    executor: docker_executor
+    executor: machine_executor
     steps:
       - checkout
+      - install_docker_compose
       - run:
           name: Start Docker Daemon
           command: |
-            # Start the Docker daemon in the background
-            dockerd --host=tcp://localhost:2375 &
-            # Wait for the Docker daemon to initialize
-            sleep 5
-      - run:
-          name: Install Docker Compose
-          command: |
-            sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-            sudo chmod +x /usr/local/bin/docker-compose
-      - run:
-          name: Verify Docker Compose Installation
-          command: docker-compose --version
-
+            sudo systemctl start docker  # Start Docker daemon in the machine executor
+            sudo systemctl enable docker  # Enable Docker to start on boot
+            sleep 5  # Wait for Docker daemon to fully initialize
       - run:
           name: Run Tests
           command: |
@@ -55,6 +54,7 @@ workflows:
     jobs:
       - install_dependencies
       - test
+
 
 
 
