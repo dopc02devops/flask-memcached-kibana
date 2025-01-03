@@ -74,7 +74,7 @@ jobs:
       - run:
           name: Build Docker Image
           command: |
-            docker build -t $DOCKER_USERNAME/python-memcached:latest -f ./Dockerfile.app .
+            docker build -t $DOCKER_USERNAME/python-memcached:latest -f src/Dockerfile.app .
       - run:
           name: Push Docker Image
           command: |
@@ -88,9 +88,7 @@ workflows:
   main_workflow:
     jobs:
       - install_dependencies
-      - test:
-          requires:
-            - install_dependencies
+      - test
       - build_docker_image:
           requires:
             - test
