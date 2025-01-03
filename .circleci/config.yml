@@ -10,18 +10,6 @@ executors:
       DOCKER_HOST: tcp://localhost:2375
       DOCKER_TLS_VERIFY: 0
 
-commands:
-  install_docker_compose:
-    steps:
-      - run:
-          name: Install Docker Compose
-          command: |
-            sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-            sudo chmod +x /usr/local/bin/docker-compose
-      - run:
-          name: Verify Docker Compose Installation
-          command: docker-compose --version
-
 jobs:
   install_dependencies:
     executor: docker_executor
@@ -38,7 +26,22 @@ jobs:
     executor: docker_executor
     steps:
       - checkout
-      - install_docker_compose
+      - run:
+          name: Start Docker Daemon
+          command: |
+            # Start the Docker daemon in the background
+            dockerd --host=tcp://localhost:2375 &
+            # Wait for the Docker daemon to initialize
+            sleep 5
+      - run:
+          name: Install Docker Compose
+          command: |
+            sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+            sudo chmod +x /usr/local/bin/docker-compose
+      - run:
+          name: Verify Docker Compose Installation
+          command: docker-compose --version
+
       - run:
           name: Run Tests
           command: |
