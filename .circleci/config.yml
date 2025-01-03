@@ -3,13 +3,16 @@ version: 2.1
 executors:
   default:
     docker:
-      - image: circleci/python:3.8
+      - image: cimg/python:3.8
     working_directory: ~/project
 
   docker_executor:
     docker:
-      - image: circleci/python:3.8 # for Python-related tasks
-      - image: docker:20.10.7 # for Docker CLI utilities or to build/manage Docker containers
+      - image: cimg/python:3.8 # for Python-related tasks
+      - image: docker:20.10-dind # for Docker CLI utilities or to build/manage Docker containers
+    environment:
+      DOCKER_HOST: tcp://localhost:2375
+      DOCKER_TLS_VERIFY: 0
 
 jobs:
   install_dependencies:
@@ -22,6 +25,7 @@ jobs:
             sudo apt-get update
             sudo apt-get install -y python3-pip curl docker.io
             pip install pytest requests pylint
+      
 
   test:
     executor: docker_executor
@@ -38,16 +42,16 @@ jobs:
             docker volume create app_volume
             pip install pytest-html
             docker-compose -f docker-compose.test.yml up --build test-app || exit 1
+
       - run:
           name: Copy Test Reports
           command: |
             docker cp flask-tests-container:/app/report.xml ./report.xml
             docker cp flask-tests-container:/app/report.html ./report.html
-      - persist_to_workspace:
-          root: .
-          paths:
-            - report.xml
-            - report.html
+      - store_test_results:
+          path: report.xml  # Store test reports for CircleCI
+      - store_artifacts:
+          path: report.html  # Optional: Store test reports as artifacts
 
   build_docker_image:
     executor: docker_executor
@@ -97,9 +101,9 @@ workflows:
   deploy_pipeline:
     jobs:
       - install_dependencies
-#      - test:
-#          requires:
-#            - install_dependencies
+      - test:
+          requires:
+            - install_dependencies
 #      - build_docker_image:
 #          requires:
 #            - test
