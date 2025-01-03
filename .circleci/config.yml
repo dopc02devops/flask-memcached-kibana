@@ -80,6 +80,9 @@ jobs:
           command: |
             echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
             docker push $DOCKER_USERNAME/python-memcached:${CIRCLE_TAG}
+    filters:
+      tags:
+        - '/^(v.*|release-.*)/'  # Trigger for tags starting with 'v' or 'release-'
 
 workflows:
   version: 2
@@ -93,9 +96,6 @@ workflows:
           requires:
             - test
             - install_dependencies
-          filters:
-            tags:
-              - '/^(v.*|release-.*)/'
 
 
 
