@@ -106,7 +106,7 @@ workflows:
       - build_docker_image:
           requires:
             - test
-    build-tags:
+    build_tags:
       jobs:
         - install_dependencies
         - test
