@@ -88,9 +88,14 @@ workflows:
       - install_dependencies
       - test
       - build_docker_image:
-                requires:
-                  - test
-                  - install_dependencies
+              filters:
+                tags:
+                  - /^v.*/  # Trigger only for tags starting with "v"
+                  - /^release-.*/  # This will trigger the job for tags like 'release-1.0', 'release-2.1',
+
+              requires:
+                - test
+                - install_dependencies
 
 
 
