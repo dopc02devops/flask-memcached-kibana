@@ -91,6 +91,7 @@ jobs:
             kubectl apply -f deployment/manifest-memcached/memcached-statefulset.yaml -n stage
             kubectl rollout status statefulset/memcached -n stage
 
+
 workflows:
   version: 2
   deploy_pipeline:
