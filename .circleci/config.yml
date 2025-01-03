@@ -86,6 +86,10 @@ workflows:
     jobs:
       - install_dependencies
       - test
+      - build_docker_image:
+                requires:
+                  - test
+                  - install_dependencies
 
 
 
