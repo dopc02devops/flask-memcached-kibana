@@ -66,6 +66,7 @@ jobs:
           path: ./report.html
           destination: reports-html
 
+
   build_docker_image:
     executor: machine_executor
     steps:
