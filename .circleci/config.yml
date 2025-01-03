@@ -97,9 +97,9 @@ workflows:
             - install_dependencies
           filters:
             branches:
-              only: main  # Only trigger for the 'main' branch
+              only: /.*/
             tags:
-              only: /.*/  # Trigger for any tag
+              only: /.*/
 
 
 
