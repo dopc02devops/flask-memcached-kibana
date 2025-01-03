@@ -5,6 +5,7 @@ executors:
     docker:
       - image: cimg/python:3.8  # Updated next-gen CircleCI Python image
       - image: docker:20.10-dind  # Docker-in-Docker image
+        privileged: true
     working_directory: ~/project
     environment:
       DOCKER_HOST: tcp://localhost:2375
