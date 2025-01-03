@@ -84,6 +84,7 @@ jobs:
       tags:
         - '/^(v.*|release-.*)/'  # Trigger for tags starting with 'v' or 'release-'
 
+
 workflows:
   version: 2
   main_workflow:
