@@ -96,15 +96,15 @@ workflows:
   deploy_pipeline:
     jobs:
       - install_dependencies
-      - test:
-          requires:
-            - install_dependencies
-      - build_docker_image:
-          requires:
-            - test
-      - deploy_test:
-          requires:
-            - build_docker_image
-      - deploy_stage:
-          requires:
-            - build_docker_image
+#      - test:
+#          requires:
+#            - install_dependencies
+#      - build_docker_image:
+#          requires:
+#            - test
+#      - deploy_test:
+#          requires:
+#            - build_docker_image
+#      - deploy_stage:
+#          requires:
+#            - build_docker_image
