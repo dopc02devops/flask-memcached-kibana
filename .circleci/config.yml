@@ -73,12 +73,12 @@ jobs:
       - run:
           name: Build Docker Image
           command: |
-            docker build -t your_docker_username/python-memcached:${CIRCLE_TAG} -f ./Dockerfile.app .
+            docker build -t $DOCKER_USERNAME/python-memcached:${CIRCLE_TAG} -f ./Dockerfile.app .
       - run:
           name: Push Docker Image
           command: |
             echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
-            docker push your_docker_username/python-memcached:${CIRCLE_TAG}
+            docker push $DOCKER_USERNAME/python-memcached:${CIRCLE_TAG}
 
 workflows:
   version: 2
