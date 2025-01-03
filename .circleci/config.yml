@@ -88,12 +88,12 @@ jobs:
       - run:
           name: Build Docker Image
           command: |
-            docker build -t $DOCKER_USERNAME/python-memcached:latest -f src/Dockerfile.app .
+            docker build -t $DOCKER_USERNAME/python-memcached:${CIRCLE_TAG} -f src/Dockerfile.app .
       - run:
           name: Push Docker Image
           command: |
             echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
-            docker push $DOCKER_USERNAME/python-memcached:${CIRCLE_TAG/v/''}
+            docker push $DOCKER_USERNAME/python-memcached:${CIRCLE_TAG}
 
 
 
