@@ -5,6 +5,10 @@ executors:
     machine:
       image: ubuntu-2204:current  # Use a full VM image (Ubuntu 22.04)
       docker_layer_caching: true  # Optional: Enable Docker layer caching for faster builds
+  python-executor:
+    docker:
+      - image: circleci/python:3.8
+    working_directory: ~/project
 
 commands:
   install_docker_compose:
@@ -95,6 +99,90 @@ jobs:
             echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
             docker push $DOCKER_USERNAME/python-memcached:${CIRCLE_TAG}
 
+  deploy_test_env:
+    executor: python-executor
+    steps:
+      - checkout
+      - run:
+          name: Set up Ansible
+          command: |
+            python -m pip install --upgrade pip
+            pip install ansible
+
+      - run:
+          name: Set SSH Connectivity
+          shell: /bin/bash
+          command: |
+            set -e
+            mkdir -p ~/.ssh
+            
+            if [ -z "$SSH_PRIVATE_KEY" ]; then
+              echo "Error: SSH_PRIVATE_KEY is not set."
+              exit 1
+            fi
+            
+            echo -e "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/$USER_KEY_PATH
+            chmod 600 ~/.ssh/$USER_KEY_PATH
+            
+            eval $(ssh-agent -s)
+            
+            if [ -z "$SSH_PASSPHRASE" ]; then
+              echo "Error: SSH_PASSPHRASE is not set."
+              exit 1
+            fi
+            
+            echo "$SSH_PASSPHRASE" | ssh-add ~/.ssh/$USER_KEY_PATH || exit 1
+
+      - run:
+          name: Test SSH Connection
+          command: |
+            ssh -o StrictHostKeyChecking=no -i ~/.ssh/$USER_KEY_PATH $KUBE_USER@$UBUNTU_GCP || exit 1
+
+      - run:
+          name: Ping GCP Server with Ansible
+          command: |
+            echo "[target]" > inventory
+            echo "$UBUNTU_GCP ansible_user=$KUBE_USER ansible_ssh_private_key_file=~/.ssh/$USER_KEY_PATH" >> inventory
+            ansible -i inventory target -m ping || exit 1
+
+      - run:
+          name: Add $KUBE_USER to Docker group
+          command: |
+            ssh -o StrictHostKeyChecking=no -i ~/.ssh/$USER_KEY_PATH $KUBE_USER@$UBUNTU_GCP "sudo groupadd -f docker && sudo usermod -aG docker $KUBE_USER" || exit 1
+
+      - run:
+          name: Restart session (optional)
+          command: |
+            ssh -o StrictHostKeyChecking=no -i ~/.ssh/$USER_KEY_PATH $KUBE_USER@$UBUNTU_GCP "newgrp docker" || exit 1
+
+      - run:
+          name: Create docker-compose volume on GCP Server
+          command: |
+            echo "[target]" > inventory
+            echo "$UBUNTU_GCP ansible_user=$KUBE_USER ansible_ssh_private_key_file=~/.ssh/$USER_KEY_PATH" >> inventory
+            ansible all -i inventory -m shell -a "sudo docker volume create flask-app-data" || exit 1
+            ansible all -i inventory -m shell -a "sudo docker volume create memcached-data" || exit 1
+
+      - run:
+          name: Copy docker-compose.yaml to GCP Server
+          command: |
+            echo "[target]" > inventory
+            echo "$UBUNTU_GCP ansible_user=$KUBE_USER ansible_ssh_private_key_file=~/.ssh/$USER_KEY_PATH" >> inventory
+            ansible -i inventory target -m copy -a "src=docker-compose.env.yml dest=/home/$KUBE_USER/docker-compose.env.yml mode=0644" || exit 1
+
+      - run:
+          name: Run docker-compose up -d and scale services
+          command: |
+            echo "[target]" > inventory
+            echo "$UBUNTU_GCP ansible_user=$KUBE_USER ansible_ssh_private_key_file=~/.ssh/$USER_KEY_PATH" >> inventory
+  
+            if [ -n "${CIRCLE_TAG}" ]; then
+              ansible -i inventory target -m shell -a \
+                "cd /home/$KUBE_USER && sudo VERSION=${CIRCLE_TAG} docker-compose -f docker-compose.env.yml up -d" || exit 1
+            else
+              ansible -i inventory target -m shell -a \
+                "cd /home/$KUBE_USER && sudo docker-compose -f docker-compose.env.yml up -d" || exit 1
+
 
 
 workflows:
@@ -109,13 +197,20 @@ workflows:
   build-tags:
     jobs:
       - build_docker_image_tag:
-          requires:
-            - test
           filters:
             tags:
               only: /.*/
             branches:
               ignore: /.*/
+      - deploy_test_env:
+          requires:
+            - build_docker_image_tag
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
+          
 
 
 
