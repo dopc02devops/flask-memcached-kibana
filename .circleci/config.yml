@@ -94,12 +94,11 @@ workflows:
       - build_docker_image:
           requires:
             - test
-            - install_dependencies
           filters:
             branches:
-              only: /.*/
+              ignore: /.*/  # Ignore all branches
             tags:
-              only: /.*/
+              only: /v.*/  # Trigger only for tags matching 'v*'
 
 
 
