@@ -70,6 +70,25 @@ jobs:
           path: ./report.html
           destination: reports-html
 
+  scan_docker_file:
+    executor: machine_executor
+    steps:
+      - checkout
+      - run:
+          name: Install Trivy scanner
+          command: |
+            set -e
+            sudo apt-get update
+            sudo apt-get install -y wget
+            sudo wget https://github.com/aquasecurity/trivy/releases/download/v0.29.1/trivy_0.29.1_Linux-64bit.deb
+            sudo dpkg -i trivy_0.29.1_Linux-64bit.deb
+
+      - run:
+          name: Scan Dockerfile
+          command: |
+            set -e
+            cd src
+            sudo trivy config --severity HIGH,CRITICAL ./Dockerfile.app || exit 1
 
   build_docker_image:
     executor: machine_executor
@@ -79,11 +98,7 @@ jobs:
           name: Build Docker Image latest
           command: |
             set -e
-            pwd
-            ls -la
             cd src
-            pwd
-            ls -la
             docker build -t $DOCKER_USERNAME/python-memcached:latest -f ./Dockerfile.app .
       - run:
           name: Push Docker Image latest
