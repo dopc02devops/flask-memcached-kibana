@@ -9,6 +9,10 @@ executors:
     docker:
       - image: circleci/python:3.8
     working_directory: ~/project
+  google-executor:
+    docker:
+      - image: google/cloud-sdk:latest
+    working_directory: ~/project
 
 commands:
   install_docker_compose:
@@ -129,9 +133,6 @@ jobs:
       SSH_PASSPHRASE: terraform
     steps:
       - checkout
-      - setup_remote_docker:
-          version: 20.10.6
-
       - add_ssh_keys:
           fingerprints:
             - "SHA256:E5222fhICNId9Z1YUdknmx+eax4SpL8p26sqEhtKjGQ"
@@ -193,9 +194,7 @@ jobs:
                 "cd /home/$KUBE_USER && sudo VERSION=${CIRCLE_TAG} docker-compose -f docker-compose.env.yml up -d" || exit 1
 
   deploy_to_kubernetes:
-    executor: python-executor
-    environment:
-      USER_KEY_PATH: id_kube_user_key
+    executor: google-executor
     steps:
       - checkout
       - run:
@@ -220,6 +219,7 @@ jobs:
           name: Deploy to Memcached GKE
           command: |
             kubectl apply -f deployment/manifest-rolling-flask/configmap.yaml -n $NAMESPACE
+            export VERSION=${CIRCLE_TAG}
             envsubst < deployment/manifest-rolling-flask/deployment.yaml | kubectl apply -f - -n $NAMESPACE
             kubectl rollout status deployment/flask-app-deployment -n $NAMESPACE --timeout=600s
             kubectl get pods -l app=flask-app -n $NAMESPACE
@@ -247,7 +247,7 @@ workflows:
             - build_docker_image_tag
           filters:
             tags:
-              only: /.*/
+              only: /^version.*/
             branches:
               ignore: /.*/
   build-release:

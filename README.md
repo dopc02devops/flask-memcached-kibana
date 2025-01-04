@@ -34,8 +34,8 @@
     # push to main with tag will trigger the below pipelines
         # - build_docker_image_tag
         # - deploy_test_env
-            # git tag v1.0
-            # git push origin v1.0
+            # git tag version-1.0
+            # git push origin version-1.0
     # push to main with release tag will trigger the below pipelines
         # - build_docker_image_tag
         # - deploy_test_env
