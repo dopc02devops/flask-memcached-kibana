@@ -197,6 +197,7 @@ workflows:
   build:
     jobs:
       - install_dependencies
+      - scan_docker_file
       - test
       - build_docker_image:
           requires:
