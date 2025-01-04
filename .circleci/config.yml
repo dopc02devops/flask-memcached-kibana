@@ -112,16 +112,27 @@ jobs:
       - run:
           name: Test SSH Connection
           command: |
-            # Ensure the SSH directory exists
+            # Stop execution on any error
             set -e
+
+            # Create the SSH directory if it doesn't exist
             mkdir -p ~/.ssh
-            
-            # Optional: Manually specify a private key if you want to use a different path
+
+            # Add the private SSH key to the specified path
             echo -e "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/$USER_KEY_PATH
             chmod 600 ~/.ssh/$USER_KEY_PATH
-            
-            # Test SSH connection with specific key
-            ssh -o StrictHostKeyChecking=no -i ~/.ssh/$USER_KEY_PATH $KUBE_USER@$UBUNTU_GCP || exit 1
+
+            # Start the SSH agent and add the key
+            eval $(ssh-agent -s)
+            ssh-add ~/.ssh/$USER_KEY_PATH
+
+            # Add host to known_hosts to prevent SSH errors
+            ssh-keyscan -H $UBUNTU_GCP >> ~/.ssh/known_hosts
+
+            # Test SSH connection with the specific key
+            ssh -o StrictHostKeyChecking=no -i ~/.ssh/$USER_KEY_PATH $KUBE_USER@$UBUNTU_GCP echo "Connection Successful" || exit 1
+      
+      
 
       - run:
           name: Set up Ansible
