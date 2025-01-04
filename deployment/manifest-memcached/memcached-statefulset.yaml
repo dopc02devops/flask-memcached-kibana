@@ -52,7 +52,7 @@ spec:
         resources:
           requests:
             storage: 1Gi
-        storageClassName: nfs-client  # Uncomment and adjust if necessary
+        storageClassName: standard # nfs-client  # Uncomment and adjust if necessary
 ---
 apiVersion: v1
 kind: Service

@@ -129,10 +129,12 @@ jobs:
       SSH_PASSPHRASE: terraform
     steps:
       - checkout
+      - setup_remote_docker:
+          version: 20.10.6
+
       - add_ssh_keys:
           fingerprints:
             - "SHA256:E5222fhICNId9Z1YUdknmx+eax4SpL8p26sqEhtKjGQ"
-
       - run:
           name: Set up Ansible
           command: |
@@ -190,7 +192,37 @@ jobs:
             ansible -i inventory target -m shell -a \
                 "cd /home/$KUBE_USER && sudo VERSION=${CIRCLE_TAG} docker-compose -f docker-compose.env.yml up -d" || exit 1
 
-
+  deploy_to_kubernetes:
+    executor: python-executor
+    environment:
+      USER_KEY_PATH: id_kube_user_key
+    steps:
+      - checkout
+      - run:
+          name: Authenticate GCP
+          command: |
+            echo $GOOGLE_AUTH > gcloud-service-key.json
+            gcloud auth activate-service-account --key-file=gcloud-service-key.json
+            gcloud config set project $GCP_PROJECT_ID
+            gcloud container clusters get-credentials $CLUSTER_NAME --region $REGION
+      - run:
+          name: Create Kubernetes Namespace
+          command: |
+            kubectl get namespace $NAMESPACE || kubectl create namespace $NAMESPACE
+      - run:
+          name: Deploy to Memcached GKE
+          command: |
+            kubectl apply -f deployment/manifest-memcached/configmap-memcached.yaml -n $NAMESPACE
+            kubectl apply -f deployment/manifest-memcached/memcached-statefulset.yaml -n $NAMESPACE
+            kubectl rollout status StatefulSet/memcached-statefulset -n $NAMESPACE --timeout=600s
+            kubectl get pods -l app=memcached -n $NAMESPACE
+      - run:
+          name: Deploy to Memcached GKE
+          command: |
+            kubectl apply -f deployment/manifest-rolling-flask/configmap.yaml -n $NAMESPACE
+            envsubst < deployment/manifest-rolling-flask/deployment.yaml | kubectl apply -f - -n $NAMESPACE
+            kubectl rollout status deployment/flask-app-deployment -n $NAMESPACE --timeout=600s
+            kubectl get pods -l app=flask-app -n $NAMESPACE
 
 workflows:
   version: 2
@@ -226,7 +258,7 @@ workflows:
               only: /^release.*/
             branches:
               only: main
-      - deploy_test_env:
+      - deploy_to_kubernetes:
           requires:
             - build_docker_image_tag
           filters:
