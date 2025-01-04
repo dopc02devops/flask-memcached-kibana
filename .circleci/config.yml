@@ -79,7 +79,11 @@ jobs:
           name: Build Docker Image latest
           command: |
             set -e
+            pwd
+            ls -la
             cd src
+            pwd
+            ls -la
             docker build -t $DOCKER_USERNAME/python-memcached:latest -f ./Dockerfile.app .
       - run:
           name: Push Docker Image latest
