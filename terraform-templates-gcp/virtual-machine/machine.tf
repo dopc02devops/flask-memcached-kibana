@@ -71,45 +71,58 @@ resource "google_compute_instance" "e2_micro_instance" {
     EOT
   }
 
-  tags = ["web", "ubuntu-test"]
+  tags = ["web", "ubuntu"]
 }
 
 # Enable SSH
-resource "google_compute_firewall" "allow_ssh" {
+resource "google_compute_firewall" "ssh" {
 #  count   = var.create_firewall ? 1 : 0
   name    = "allow-ssh"
   network = "default"
+  provider = google
+  allow {
+    protocol = "icmp"
+  }
   allow {
     protocol = "tcp"
     ports    = ["22"]
   }
   source_ranges = ["0.0.0.0/0"]
-  target_tags = ["ubuntu-test"]
+  target_tags = ["ubuntu"]
 }
 
-# Enable port 8091 (TCP)
-resource "google_compute_firewall" "allow_8091_tcp" {
-  name    = "allow-8091-tcp"
+# Enable 8096
+resource "google_compute_firewall" "http_8096" {
+  name    = "allow-flask-app"
   network = "default"
+  provider = google
+  allow {
+    protocol = "icmp"
+  }
+  allow {
+    protocol = "tcp"
+    ports    = ["8096"]
+  }
+  source_ranges = ["0.0.0.0/0"]
+  target_tags = ["ubuntu"]
+}
+
+# Enable 8091
+resource "google_compute_firewall" "http_8091" {
+  name    = "allow-flask-apps"
+  network = "default"
+  provider = google
+  allow {
+    protocol = "icmp"
+  }
   allow {
     protocol = "tcp"
     ports    = ["8091"]
   }
   source_ranges = ["0.0.0.0/0"]
-  target_tags = ["ubuntu-test"]
+  target_tags = ["ubuntu"]
 }
 
-# Enable port 8091 (UDP)
-resource "google_compute_firewall" "allow_8091_udp" {
-  name    = "allow-8091-udp"
-  network = "default"
-  allow {
-    protocol = "udp"
-    ports    = ["8091"]
-  }
-  source_ranges = ["0.0.0.0/0"]
-  target_tags = ["ubuntu-test"]
-}
 
 # Variable
 variable "create_firewall" {

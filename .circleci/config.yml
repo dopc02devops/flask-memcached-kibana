@@ -113,6 +113,7 @@ jobs:
           name: Test SSH Connection
           command: |
             # Ensure the SSH directory exists
+            set -e
             mkdir -p ~/.ssh
             
             # Optional: Manually specify a private key if you want to use a different path
