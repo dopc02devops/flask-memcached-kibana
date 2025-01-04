@@ -110,28 +110,34 @@ jobs:
           fingerprints:
             - "SHA256:E5222fhICNId9Z1YUdknmx+eax4SpL8p26sqEhtKjGQ"
       - run:
-          name: Test SSH Connection
+          name: Test Connection to GCP VM
           command: |
-            # Stop execution on any error
-            set -e
-
-            # Create the SSH directory if it doesn't exist
-            mkdir -p ~/.ssh
-
-            # Add the private SSH key to the specified path
-            echo -e "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/$USER_KEY_PATH
-            chmod 600 ~/.ssh/$USER_KEY_PATH
-
-            # Start the SSH agent and add the key
-            eval $(ssh-agent -s)
-            ssh-add ~/.ssh/$USER_KEY_PATH
-
-            # Add host to known_hosts to prevent SSH errors
-            ssh-keyscan -H $UBUNTU_GCP >> ~/.ssh/known_hosts
-
-            # Test SSH connection with the specific key
-            ssh -o StrictHostKeyChecking=no -i ~/.ssh/$USER_KEY_PATH $KUBE_USER@$UBUNTU_GCP echo "Connection Successful" || exit 1
-      
+            ssh -o StrictHostKeyChecking=no \
+            -i ~/.ssh/$USER_KEY_PATH \
+            $KUBE_USER@$UBUNTU_GCP "echo 'Connection to GCP VM successful!'" || exit 1
+#      - run:
+#          name: Test SSH Connection
+#          command: |
+#            # Stop execution on any error
+#            set -e
+#
+#            # Create the SSH directory if it doesn't exist
+#            mkdir -p ~/.ssh
+#
+#            # Add the private SSH key to the specified path
+#            echo -e "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/$USER_KEY_PATH
+#            chmod 600 ~/.ssh/$USER_KEY_PATH
+#
+#            # Start the SSH agent and add the key
+#            eval $(ssh-agent -s)
+#            ssh-add ~/.ssh/$USER_KEY_PATH
+#
+#            # Add host to known_hosts to prevent SSH errors
+#            ssh-keyscan -H $UBUNTU_GCP >> ~/.ssh/known_hosts
+#
+#            # Test SSH connection with the specific key
+#            ssh -o StrictHostKeyChecking=no -i ~/.ssh/$USER_KEY_PATH $KUBE_USER@$UBUNTU_GCP echo "Connection Successful" || exit 1
+#
       
 
       - run:
