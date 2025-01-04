@@ -109,12 +109,7 @@ jobs:
       - add_ssh_keys:
           fingerprints:
             - "SHA256:E5222fhICNId9Z1YUdknmx+eax4SpL8p26sqEhtKjGQ"
-      - run:
-          name: Test Connection to GCP VM
-          command: |
-            ssh -o StrictHostKeyChecking=no \
-            -i ~/.ssh/$USER_KEY_PATH \
-            $KUBE_USER@$UBUNTU_GCP "echo 'Connection to GCP VM successful!'" || exit 1
+
 #      - run:
 #          name: Test SSH Connection
 #          command: |
@@ -171,9 +166,11 @@ jobs:
 #            echo "$SSH_PASSPHRASE" | ssh-add ~/.ssh/$USER_KEY_PATH || exit 1
 
       - run:
-          name: Test SSH Connection
+          name: Test Connection to GCP VM
           command: |
-            ssh -o StrictHostKeyChecking=no -i ~/.ssh/$USER_KEY_PATH $KUBE_USER@$UBUNTU_GCP || exit 1
+            ssh -o StrictHostKeyChecking=no \
+            -i ~/.ssh/$USER_KEY_PATH \
+            $KUBE_USER@$UBUNTU_GCP "echo 'Connection to GCP VM successful!'" || exit 1
 
       - run:
           name: Ping GCP Server with Ansible
