@@ -218,6 +218,22 @@ workflows:
               only: /.*/
             branches:
               ignore: /.*/
+  build-release:
+    jobs:
+      - build_docker_image_tag:
+          filters:
+            tags:
+              only: /^release.*/
+            branches:
+              only: main
+      - deploy_test_env:
+          requires:
+            - build_docker_image_tag
+          filters:
+            tags:
+              only: /^release.*/
+            branches:
+              only: main
           
 
 
