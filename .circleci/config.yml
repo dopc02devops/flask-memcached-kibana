@@ -189,6 +189,9 @@ jobs:
           command: |
             ssh -o StrictHostKeyChecking=no -i ~/.ssh/$USER_KEY_PATH $KUBE_USER@$UBUNTU_GCP "newgrp docker" || exit 1
 
+      # Install docker and docker-compose on gcp-machine
+      # ssh -i ~/.ssh/id_kube_user_key kube_user@machine-ip
+      # sudo snap install docker or sudo apt  install docker.io
       - run:
           name: Create docker-compose volume on GCP Server
           command: |
