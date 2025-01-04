@@ -109,61 +109,12 @@ jobs:
       - add_ssh_keys:
           fingerprints:
             - "SHA256:E5222fhICNId9Z1YUdknmx+eax4SpL8p26sqEhtKjGQ"
-
-#      - run:
-#          name: Test SSH Connection
-#          command: |
-#            # Stop execution on any error
-#            set -e
-#
-#            # Create the SSH directory if it doesn't exist
-#            mkdir -p ~/.ssh
-#
-#            # Add the private SSH key to the specified path
-#            echo -e "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/$USER_KEY_PATH
-#            chmod 600 ~/.ssh/$USER_KEY_PATH
-#
-#            # Start the SSH agent and add the key
-#            eval $(ssh-agent -s)
-#            ssh-add ~/.ssh/$USER_KEY_PATH
-#
-#            # Add host to known_hosts to prevent SSH errors
-#            ssh-keyscan -H $UBUNTU_GCP >> ~/.ssh/known_hosts
-#
-#            # Test SSH connection with the specific key
-#            ssh -o StrictHostKeyChecking=no -i ~/.ssh/$USER_KEY_PATH $KUBE_USER@$UBUNTU_GCP echo "Connection Successful" || exit 1
-#
-      
-
+        
       - run:
           name: Set up Ansible
           command: |
             python -m pip install --upgrade pip
             pip install ansible
-
-#      - run:
-#          name: Set SSH Connectivity
-#          shell: /bin/bash
-#          command: |
-#            set -e
-#            mkdir -p ~/.ssh
-#
-#            if [ -z "$SSH_PRIVATE_KEY" ]; then
-#              echo "Error: SSH_PRIVATE_KEY is not set."
-#              exit 1
-#            fi
-#
-#            echo -e "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/$USER_KEY_PATH
-#            chmod 600 ~/.ssh/$USER_KEY_PATH
-#
-#            eval $(ssh-agent -s)
-#
-#            if [ -z "$SSH_PASSPHRASE" ]; then
-#              echo "Error: SSH_PASSPHRASE is not set."
-#              exit 1
-#            fi
-#
-#            echo "$SSH_PASSPHRASE" | ssh-add ~/.ssh/$USER_KEY_PATH || exit 1
 
       - run:
           name: Test Connection to GCP VM
@@ -212,13 +163,9 @@ jobs:
           command: |
             echo "[target]" > inventory
             echo "$UBUNTU_GCP ansible_user=$KUBE_USER ansible_ssh_private_key_file=~/.ssh/$USER_KEY_PATH" >> inventory
-  
-            if [ -n "${CIRCLE_TAG}" ]; then
-              ansible -i inventory target -m shell -a \
+            
+            ansible -i inventory target -m shell -a \
                 "cd /home/$KUBE_USER && sudo VERSION=${CIRCLE_TAG} docker-compose -f docker-compose.env.yml up -d" || exit 1
-            else
-              ansible -i inventory target -m shell -a \
-                "cd /home/$KUBE_USER && sudo docker-compose -f docker-compose.env.yml up -d" || exit 1
 
 
 
