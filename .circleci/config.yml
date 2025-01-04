@@ -76,11 +76,13 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Build Docker Image
+          name: Build Docker Image latest
           command: |
-            docker build -t $DOCKER_USERNAME/python-memcached:latest -f src/Dockerfile.app .
+            set -e
+            cd src
+            docker build -t $DOCKER_USERNAME/python-memcached:latest -f ./Dockerfile.app .
       - run:
-          name: Push Docker Image
+          name: Push Docker Image latest
           command: |
             echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
             docker push $DOCKER_USERNAME/python-memcached:latest
@@ -90,11 +92,13 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Build Docker Image
+          name: Build Docker Image tagged
           command: |
-            docker build -t $DOCKER_USERNAME/python-memcached:${CIRCLE_TAG} -f src/Dockerfile.app .
+            set -e
+            cd src
+            docker build -t $DOCKER_USERNAME/python-memcached:${CIRCLE_TAG} -f ./Dockerfile.app .
       - run:
-          name: Push Docker Image
+          name: Push Docker Image tagged
           command: |
             echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
             docker push $DOCKER_USERNAME/python-memcached:${CIRCLE_TAG}
@@ -109,7 +113,7 @@ jobs:
       - add_ssh_keys:
           fingerprints:
             - "SHA256:E5222fhICNId9Z1YUdknmx+eax4SpL8p26sqEhtKjGQ"
-        
+
       - run:
           name: Set up Ansible
           command: |
