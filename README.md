@@ -50,7 +50,6 @@
 
 
 # create cluster
-
 gcloud container clusters create my-cluster \
 --num-nodes=2 \
 --region europe-west2-a \
@@ -59,8 +58,27 @@ gcloud container clusters create my-cluster \
 --machine-type "e2-small" \
 --enable-ip-alias
 
+# list firewalls
+- gcloud compute firewall-rules list
+
+# get machines
+- gcloud compute instances list --zones europe-west2-a
+
+# get machine tags
+- gcloud compute instances describe <node-name> --format="get(tags.items)"
+
+# tag machine
+gcloud compute instances add-tags <node-name> --tags gke-my-cluster
+
+# open firewall
+gcloud compute firewall-rules create allow-ssh-and-custom-ports \
+--allow tcp:22,tcp:8096,tcp:8091,tcp:8095 \
+--target-tags gke-my-cluster \
+--description "Allow SSH and custom ports access to GKE nodes" \
+--direction INGRESS \
+--priority 1000
+
+# get credentials
 gcloud container clusters get-credentials my-cluster --region europe-west2-a
-
-
-NAME        LOCATION        MASTER_VERSION      MASTER_IP     MACHINE_TYPE  NODE_VERSION        NUM_NODES  STATUS
-my-cluster  europe-west2-a  1.30.5-gke.1699000  35.246.86.81  e2-small      1.30.5-gke.1699000  2          RUNNING
+# describe machine
+gcloud compute instances describe my-vm --zone europe-west2-a --project superb-gear-443409-t3

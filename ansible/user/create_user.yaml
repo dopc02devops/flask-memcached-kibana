@@ -4,7 +4,7 @@
 ---
 
 - name: Create Users playbook
-  hosts: all
+  hosts: master
   remote_user: ubuntu
   become: yes
   become_user: root
