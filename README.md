@@ -80,5 +80,16 @@ gcloud compute firewall-rules create allow-ssh-and-custom-ports \
 
 # get credentials
 gcloud container clusters get-credentials my-cluster --region europe-west2-a
+
 # describe machine
 gcloud compute instances describe my-vm --zone europe-west2-a --project superb-gear-443409-t3
+
+# login to cluster
+- go to cluster and copy connect command
+- gcloud container clusters get-credentials my-cluster --zone europe-west2-a --project superb-gear-443409-t3
+- kubectl get pods -n stage
+- kubectl get pod <pod-name> -n stage
+- kubectl logs <pod-name> -n stage
+- kubectl get pvc -n stage
+- 
+
