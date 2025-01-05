@@ -209,18 +209,18 @@ jobs:
           command: |
             kubectl get namespace $NAMESPACE || kubectl create namespace $NAMESPACE
       - run:
-          name: Deploy to Memcached GKE
+          name: Deploy Memcached to GKE
           command: |
             kubectl apply -f deployment/manifest-memcached/configmap-memcached.yaml -n $NAMESPACE
             kubectl apply -f deployment/manifest-memcached/memcached-statefulset.yaml -n $NAMESPACE
             kubectl rollout status StatefulSet/memcached-statefulset -n $NAMESPACE --timeout=600s
             kubectl get pods -l app=memcached -n $NAMESPACE
       - run:
-          name: Deploy to Memcached GKE
+          name: Deploy flask to  GKE
           command: |
             kubectl apply -f deployment/manifest-rolling-flask/configmap.yaml -n $NAMESPACE
             export VERSION=${CIRCLE_TAG}
-            envsubst < deployment/manifest-rolling-flask/deployment.yaml | kubectl apply -f - -n $NAMESPACE
+            sed "s|\${VERSION}|${VERSION}|g" deployment/manifest-rolling-flask/deployment.yaml | kubectl apply -f - -n $NAMESPACE
             kubectl rollout status deployment/flask-app-deployment -n $NAMESPACE --timeout=600s
             kubectl get pods -l app=flask-app -n $NAMESPACE
 

@@ -59,5 +59,8 @@ gcloud container clusters create my-cluster \
 --machine-type "e2-small" \
 --enable-ip-alias
 
+gcloud container clusters get-credentials my-cluster --region europe-west2-a
+
+
 NAME        LOCATION        MASTER_VERSION      MASTER_IP     MACHINE_TYPE  NODE_VERSION        NUM_NODES  STATUS
 my-cluster  europe-west2-a  1.30.5-gke.1699000  35.246.86.81  e2-small      1.30.5-gke.1699000  2          RUNNING
