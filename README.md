@@ -91,5 +91,5 @@ gcloud compute instances describe my-vm --zone europe-west2-a --project superb-g
 - kubectl get pod <pod-name> -n stage
 - kubectl logs <pod-name> -n stage
 - kubectl get pvc -n stage
-- 
+- kubectl describe pod <pod-name> -n stage
 
