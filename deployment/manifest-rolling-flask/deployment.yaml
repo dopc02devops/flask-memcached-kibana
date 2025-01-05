@@ -26,11 +26,11 @@ spec:
                 name: flask-app-resources
           resources:
             requests:
-              memory: "128Mi"
-              cpu: "250m"
+              memory: "64Mi"  # Reduced from 128Mi to 64Mi
+              cpu: "125m"     # Reduced from 250m to 125m
             limits:
-              memory: "256Mi"
-              cpu: "500m"
+              memory: "128Mi" # Reduced from 256Mi to 128Mi
+              cpu: "250m"     # Reduced from 500m to 250m
           readinessProbe:
             httpGet:
               path: /
@@ -43,6 +43,13 @@ spec:
               port: 8095
             initialDelaySeconds: 15
             periodSeconds: 20
+      #     volumeMounts:
+      #       - name: flask-app-volume
+      #         mountPath: /app/data
+      # volumes:
+      #   - name: flask-app-volume
+      #     persistentVolumeClaim:
+      #       claimName: flask-app-volume
       terminationGracePeriodSeconds: 30
   strategy:
     type: RollingUpdate
