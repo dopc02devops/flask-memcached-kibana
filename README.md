@@ -93,4 +93,6 @@ gcloud compute instances describe my-vm --zone europe-west2-a --project superb-g
 - kubectl get pvc -n stage
 - kubectl describe pod <pod-name> -n stage
 - kubectl get events -n stage
+- kubectl describe deployment flask-app-deployment -n stage
+- 
 
