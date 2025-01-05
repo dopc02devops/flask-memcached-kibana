@@ -218,6 +218,7 @@ jobs:
       - run:
           name: Deploy flask to  GKE
           command: |
+            kubectl apply -f deployment/manifest-rolling-flask/pvc.yaml -n $NAMESPACE
             kubectl apply -f deployment/manifest-rolling-flask/configmap.yaml -n $NAMESPACE
             export VERSION=${CIRCLE_TAG}
             sed "s|\${VERSION}|${VERSION}|g" deployment/manifest-rolling-flask/deployment.yaml | kubectl apply -f - -n $NAMESPACE

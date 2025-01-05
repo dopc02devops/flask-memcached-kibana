@@ -21,7 +21,7 @@ spec:
             - containerPort: 8095
           envFrom:
             - configMapRef:
-                name: flask-app-config 
+                name: flask-app-config
             - configMapRef:
                 name: flask-app-resources
           resources:
@@ -45,24 +45,17 @@ spec:
             periodSeconds: 20
           volumeMounts:
             - name: flask-app-volume
-              mountPath: /app/data # Mount path inside the container
+              mountPath: /app/data
+      volumes:
+        - name: flask-app-volume
+          persistentVolumeClaim:
+            claimName: flask-app-volume
       terminationGracePeriodSeconds: 30
-  volumeClaimTemplates:
-    - metadata:
-        name: flask-app-volume
-      spec:
-        accessModes:
-          - ReadWriteOnce
-        resources:
-          requests:
-            storage: 1Gi
-        storageClassName: standard # nfs-client
   strategy:
     type: RollingUpdate
     rollingUpdate:
       maxSurge: 1
       maxUnavailable: 1
-
 
 ---
 apiVersion: v1
