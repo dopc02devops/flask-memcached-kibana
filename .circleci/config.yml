@@ -222,7 +222,7 @@ jobs:
             kubectl apply -f deployment/manifest-rolling-flask/configmap.yaml -n $NAMESPACE
             export VERSION=${CIRCLE_TAG}
             sed "s|\${VERSION}|${VERSION}|g" deployment/manifest-rolling-flask/deployment.yaml | kubectl apply -f - -n $NAMESPACE
-            kubectl rollout status deployment/flask-app-deployment -n $NAMESPACE --timeout=600s
+            kubectl rollout status deployment/flask-app-deployment -n $NAMESPACE --timeout=300s
             kubectl get pods -l app=flask-app -n $NAMESPACE
 
 workflows:
