@@ -87,6 +87,8 @@ gcloud compute instances describe my-vm --zone europe-west2-a --project superb-g
 # login to cluster
 - go to cluster and copy connect command
 - gcloud container clusters get-credentials my-cluster --zone europe-west2-a --project superb-gear-443409-t3
+
+# commands for debugging
 - kubectl get pods -n stage
 - kubectl get pod <pod-name> -n stage
 - kubectl logs <pod-name> -n stage
@@ -94,5 +96,10 @@ gcloud compute instances describe my-vm --zone europe-west2-a --project superb-g
 - kubectl describe pod <pod-name> -n stage
 - kubectl get events -n stage
 - kubectl describe deployment flask-app-deployment -n stage
-- 
+
+# access application
+- kubectl get svc -n stage
+- get the external ip of the service
+- go to ur browser and enter
+- externalip:port to access application
 

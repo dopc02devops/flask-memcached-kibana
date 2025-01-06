@@ -2,7 +2,7 @@
 # NOTE: Don't provide the playbook filename in the shebang. It is added automatically.
 ---
 
-- name: Configure Grafana Playbook
+- name: Configure Kubernetes Dashboard Playbook
   hosts: master
   remote_user: kube_user
   become: yes
@@ -74,10 +74,10 @@
         groups: docker
         append: yes
 
-    - name: Copy loki directory to /home/kube_user
+    - name: Copy dashboard directory to /home/kube_user
       synchronize:
-        src: ../../loki/
-        dest: /home/kube_user/loki
+        src: ../../k8-dashboard/
+        dest: /home/kube_user/k8-dashboard
         mode: push
         recursive: yes
         owner: yes
@@ -88,7 +88,7 @@
       shell: |
         docker compose up -d
       args:
-        chdir: /home/kube_user/loki
+        chdir: /home/kube_user/k8-dashboard
       become: yes
       become_user: kube_user
 
@@ -96,14 +96,27 @@
       shell: |
         docker compose ps
       args:
-        chdir: /home/kube_user/loki
+        chdir: /home/kube_user/k8-dashboard
       register: docker_compose_status
       become: yes
       become_user: kube_user
 
-    - name: Check if all services are up
+    - name: Verify if the service kubernetes-dashboard is running
+      ansible.builtin.assert:
+        that:
+          - "'Up' in docker_compose_status.stdout"
+          - "'kubernetes-dashboard' in docker_compose_status.stdout"
+        fail_msg: "The kubernetes-dashboard service is not running!"
+        success_msg: "The kubernetes-dashboard service is up and running!"
+    
+    - name: Generate token for admin-user
+      command: kubectl -n kube-system create token admin-user
+      register: token_output
+      become: yes
+      become_user: kube_user
+
+    - name: Display generated token
       debug:
-        msg: "{{ docker_compose_status.stdout }}"
-      failed_when: "'Up' not in docker_compose_status.stdout"
+        msg: "Generated Token: {{ token_output.stdout }}"
 
     
