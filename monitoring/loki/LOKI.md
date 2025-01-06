@@ -1,10 +1,4 @@
 
-
-# https://grafana.com/docs/loki/latest/setup/install/helm/
-# install loki using docker-compose localhost
-- cd loki
-- docker-compose up -d
-
 # Components
 - Loki: Access Loki at http://localhost:3100
     Loki is a log aggregation system developed by Grafana Labs
@@ -50,17 +44,6 @@
 │           └── datasources.yml
 └── promtail-config.yaml
 
-# install grafana ansible
-- cd ansible
-- ansible-playbook grafana/install_grafana.yaml
-- ssh -L 3000:localhost:3000 kube_user@ip
-- ssh -f -N -L 3000:localhost:3000 kube_user@ip (run in back-ground)
-- http://localhost:3000 to access grafana
-# Install kubernetes dashboard
-- cd ansible k8-dashboard/create_dashboard.yaml
-- copy token
-- ssh -L 8001:localhost:8001 kube_user@ip
-
-docker-compose -f docker-compose.dashboard.yml up -d
-kubectl -n kubernetes-dashboard create token admin-user
-http://localhost:8001
+# install loki using docker-compose localhost
+- cd loki
+- docker-compose up -d

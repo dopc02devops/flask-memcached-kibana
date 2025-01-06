@@ -50,6 +50,7 @@
 
 
 # create cluster
+# e2 small
 gcloud container clusters create my-cluster \
 --num-nodes=2 \
 --region europe-west2-a \
@@ -57,6 +58,15 @@ gcloud container clusters create my-cluster \
 --disk-type=pd-standard \
 --machine-type "e2-small" \
 --enable-ip-alias
+# e2-medium
+gcloud container clusters create my-cluster \
+--num-nodes=2 \
+--region europe-west2-a \
+--release-channel "stable" \
+--disk-type=pd-standard \
+--machine-type "e2-medium" \
+--enable-ip-alias
+
 
 # list firewalls
 - gcloud compute firewall-rules list
@@ -87,6 +97,11 @@ gcloud compute instances describe my-vm --zone europe-west2-a --project superb-g
 # login to cluster
 - go to cluster and copy connect command
 - gcloud container clusters get-credentials my-cluster --zone europe-west2-a --project superb-gear-443409-t3
+
+# Trigger cirleci pipeline
+- git tag release-1.0
+- git push origin release-1.0
+
 
 # commands for debugging
 - kubectl get pods -n stage
