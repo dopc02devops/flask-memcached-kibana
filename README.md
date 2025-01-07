@@ -48,6 +48,15 @@
       git commit --allow-empty -m "Trigger build"
       git push origin ur-branch
 
+# install nfs server
+- helm repo add nfs-provisioner https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner/
+- helm repo update
+- kubectl apply -f nfs-server/nfs.yaml
+- helm install nfs-provisioner nfs-provisioner/nfs-subdir-external-provisioner \
+  --namespace storage \
+  --set nfs.server=nfs-server.storage.svc.cluster.local \
+  --set nfs.path=/nfsshare
+- helm list -n storage
 
 # create cluster
 # e2 small
@@ -129,6 +138,7 @@ gcloud compute instances describe my-vm --zone europe-west2-a --project superb-g
 - kubectl delete deployment flask-app-deployment -n stage
 - kubectl delete service flask-app-service -n stage
 - kubectl delete pvc flask-app-volume -n stage
+- kubectl delete pvc flask-app-volume --force --grace-period=0 -n stage
 
 # access application
 - kubectl get svc -n stage
