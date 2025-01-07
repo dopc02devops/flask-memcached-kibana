@@ -113,6 +113,7 @@ gcloud compute instances describe my-vm --zone europe-west2-a --project superb-g
 # Trigger cirleci pipeline
 - git tag release-1.0
 - git push origin release-1.0
+- git commit --allow-empty -m "Trigger build"
 
 
 # commands for debugging
@@ -127,6 +128,7 @@ gcloud compute instances describe my-vm --zone europe-west2-a --project superb-g
 - kubectl delete pods -l app=flask-app -n stage
 - kubectl delete deployment flask-app-deployment -n stage
 - kubectl delete service flask-app-service -n stage
+- kubectl delete pvc flask-app-volume -n stage
 
 # access application
 - kubectl get svc -n stage
