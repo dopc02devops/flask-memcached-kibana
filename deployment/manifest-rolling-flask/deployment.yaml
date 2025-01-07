@@ -51,11 +51,11 @@ spec:
           persistentVolumeClaim:
             claimName: flask-app-volume
       terminationGracePeriodSeconds: 30
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 1
+#  strategy:
+#    type: RollingUpdate
+#    rollingUpdate:
+#      maxSurge: 1
+#      maxUnavailable: 1
 
 ---
 apiVersion: v1
