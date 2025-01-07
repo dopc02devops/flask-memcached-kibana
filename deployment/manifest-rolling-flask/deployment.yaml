@@ -35,14 +35,14 @@ spec:
             httpGet:
               path: /
               port: 8095
-            initialDelaySeconds: 5
-            periodSeconds: 10
+            initialDelaySeconds: 10
+            periodSeconds: 15
           livenessProbe:
             httpGet:
               path: /
               port: 8095
-            initialDelaySeconds: 15
-            periodSeconds: 20
+            initialDelaySeconds: 20
+            periodSeconds: 300
           volumeMounts:
             - name: flask-app-volume
               mountPath: /app/data
@@ -50,7 +50,12 @@ spec:
         - name: flask-app-volume
           persistentVolumeClaim:
             claimName: flask-app-volume
-      terminationGracePeriodSeconds: 7
+      terminationGracePeriodSeconds: 20
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
 
 ---
 apiVersion: v1
