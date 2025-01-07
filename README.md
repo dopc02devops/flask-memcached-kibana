@@ -66,7 +66,19 @@ gcloud container clusters create my-cluster \
 --disk-type=pd-standard \
 --machine-type "e2-medium" \
 --enable-ip-alias
-
+# e2-standard-2
+gcloud container clusters create my-cluster \
+--num-nodes=3 \
+--region europe-west2-a \
+--release-channel "stable" \
+--disk-type=pd-standard \
+--machine-type "e2-standard-2" \
+--enable-ip-alias
+# costs
+Machine Type	vCPUs	Memory	Hourly Cost (USD)	Monthly Cost (USD)
+e2-small	     2	    2 GB	    $0.016	                $12.23
+e2-medium	     2	    4 GB	    $0.033	                $24.46
+e2-standard-2	 2	    8 GB	    $0.067	                $48.92
 
 # list firewalls
 - gcloud compute firewall-rules list
@@ -111,6 +123,7 @@ gcloud compute instances describe my-vm --zone europe-west2-a --project superb-g
 - kubectl describe pod <pod-name> -n stage
 - kubectl get events -n stage
 - kubectl describe deployment flask-app-deployment -n stage
+- kubectl get pods --all-namespaces
 
 # access application
 - kubectl get svc -n stage
