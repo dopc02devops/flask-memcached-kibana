@@ -225,16 +225,6 @@ jobs:
             sed "s|\${VERSION}|${VERSION}|g" deployment/manifest-rolling-flask/deployment.yaml | kubectl apply -f - -n $NAMESPACE
             kubectl rollout status deployment/flask-app-deployment -n $NAMESPACE --timeout=300s
             kubectl get pods -l app=flask-app -n $NAMESPACE
-      - run:
-          name: Deploy loki to  GKE
-          command: |
-            kubectl apply -f deployment/manifest-loki/pvc.yaml -n $MONITORING
-            kubectl apply -f deployment/manifest-loki/monitoring-stack.yaml -n $MONITORING
-            kubectl rollout status statefulset/loki -n $MONITORING --timeout=300s
-            kubectl rollout status deployment/prometheus -n $MONITORING --timeout=300s
-            kubectl rollout status deployment/grafana -n $MONITORING --timeout=300s
-            kubectl rollout status daemonset/promtail -n $MONITORING --timeout=300s
-            kubectl get pods -n $MONITORING
 
 workflows:
   version: 2

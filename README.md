@@ -126,6 +126,7 @@ gcloud compute instances describe my-vm --zone europe-west2-a --project superb-g
 - kubectl get pods --all-namespaces
 - kubectl delete pods -l app=flask-app -n stage
 - kubectl delete deployment flask-app-deployment -n stage
+- kubectl delete service flask-app-service -n stage
 
 # access application
 - kubectl get svc -n stage
