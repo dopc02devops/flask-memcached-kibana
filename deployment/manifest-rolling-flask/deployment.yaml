@@ -48,8 +48,14 @@ spec:
               mountPath: /app/data
       volumes:
         - name: flask-app-volume
-          persistentVolumeClaim:
-            claimName: flask-app-volume
+          # persistentVolumeClaim:
+          #   claimName: flask-app-volume
+          nfs:
+            server: "nfs-service.storage.svc.cluster.local"
+            path: "/nfs-direct" # "nfs-direct" folder must exist inside "/exports" directory of NFS server
+            # Here, we have mounted /exports/nfs-direct directory of NFS server into /app/data directory. Now, 
+            # if we write anything in /demo/data directory of this pod, it will be written on /exports/nfs-direct 
+            # directory of the NFS server.
       terminationGracePeriodSeconds: 20
   strategy:
     type: RollingUpdate

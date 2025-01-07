@@ -57,8 +57,17 @@
   --set nfs.server=nfs-server.storage.svc.cluster.local \
   --set nfs.path=/nfsshare
 - helm list -n storage
+- kubectl get pvc -n storage
+- kubectl get pods -n storage
 - kubectl delete deployment nfs-server -n storage
 - helm delete nfs-provisioner -n storage
+- kubectl delete deployment nfs-server -n storage
+- kubectl delete storageclass nfs-provisioner
+- kubectl delete pvc --all -n storage
+- 
+- kubectl delete pods --all -n storage
+
+
 
 
 
