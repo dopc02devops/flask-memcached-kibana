@@ -57,6 +57,10 @@
   --set nfs.server=nfs-server.storage.svc.cluster.local \
   --set nfs.path=/nfsshare
 - helm list -n storage
+- kubectl delete deployment nfs-server -n storage
+- helm delete nfs-provisioner -n storage
+
+
 
 # create cluster
 # e2 small

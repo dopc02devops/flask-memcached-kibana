@@ -1,9 +1,10 @@
-
+# Namespace for storage resources
 apiVersion: v1
 kind: Namespace
 metadata:
   name: storage
 ---
+# NFS Server Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -40,7 +41,8 @@ spec:
       volumes:
         - name: nfs-data
           emptyDir: {}
---- 
+---
+# NFS Server Service (Headless)
 apiVersion: v1
 kind: Service
 metadata:
@@ -60,3 +62,26 @@ spec:
   selector:
     app: nfs-server
   clusterIP: None # Headless service for stable networking
+---
+# StorageClass for NFS Provisioner
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: nfs-provisioner
+provisioner: nfs-provisioner.provisioner.k8s.io
+reclaimPolicy: Retain
+volumeBindingMode: WaitForFirstConsumer
+---
+# PersistentVolumeClaim for Flask App
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: flask-app-volume
+  namespace: storage
+spec:
+  accessModes:
+    - ReadWriteMany  # NFS supports ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: nfs-provisioner  # Use the NFS provisioner for dynamic volume provisioning
