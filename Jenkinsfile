@@ -1,7 +1,5 @@
 pipeline {
-   agent {
-       docker { image 'python:3.7' }
-   }
+   agent any
 
     parameters {
         string(name: 'BRANCH', defaultValue: 'main', description: 'Branch to build from')
@@ -9,64 +7,70 @@ pipeline {
     }
 
     stages {
-        stage('Extract Git Tag') {
-            steps {
-                script {
-                    if (env.GIT_TAG) {
-                        currentBuild.displayName = "Build for tag: ${env.GIT_TAG}"
-                        echo "Detected Git tag: ${env.GIT_TAG}"
-                        params.DOCKER_TAG = env.GIT_TAG
-                    } else {
-                        echo "No Git tag detected, using specified tag or default (latest)"
-                        if (!params.DOCKER_TAG) {
-                            params.DOCKER_TAG = 'latest'
+            stage('Start Docker Daemon') {
+                steps {
+                    script {
+                        sh '''
+                        sudo systemctl start docker  # Start Docker daemon in the machine executor
+                        sudo systemctl enable docker  # Enable Docker to start on boot
+                        sleep 5  # Wait for Docker daemon to fully initialize
+                        docker ps  # Test if Docker is running
+                        docker --version  # Check Docker version
+                        docker-compose --version  # Check docker-compose version
+                        '''
+                    }
+                }
+            }
+
+            stage('Extract Git Tag') {
+                steps {
+                    script {
+                        if (env.GIT_TAG) {
+                            currentBuild.displayName = "Build for tag: ${env.GIT_TAG}"
+                            echo "Detected Git tag: ${env.GIT_TAG}"
+                            params.DOCKER_TAG = env.GIT_TAG
+                        } else {
+                            echo "No Git tag detected, using specified tag or default (latest)"
+                            if (!params.DOCKER_TAG) {
+                                params.DOCKER_TAG = 'latest'
+                            }
                         }
                     }
                 }
             }
-        }
 
-        stage('Start Docker Daemon') {
-            steps {
-                echo "Checking Docker status"
-                script {
-                    sh '''
-                    docker ps  # Test if Docker is running
-                    docker --version  # Check Docker version
-                    docker-compose --version  # Check docker-compose version
-                    '''
+            stage('Checkout Code') {
+                steps {
+                    echo "Checking out source code"
+                    script {
+                        checkout([
+                            $class: 'GitSCM',
+                            branches: [[name: "*/${params.BRANCH}"]],
+                            userRemoteConfigs: [[url: 'https://github.com/dopc02devops/flask-memcached-kibana.git']]
+                        ])
+                    }
                 }
             }
-        }
 
-        // Uncomment and complete the remaining stages as needed
-        // stage('Checkout Code') {
-        //     steps {
-        //         echo "Checking out source code"
-        //         script {
-        //             checkout([
-        //                 $class: 'GitSCM',
-        //                 branches: [[name: "*/${params.BRANCH}"]],
-        //                 userRemoteConfigs: [[url: 'https://github.com/dopc02devops/flask-memcached-kibana.git']]
-        //             ])
-        //         }
-        //     }
-        // }
+            stage('Scan Dockerfile with Trivy') {
+                steps {
+                    echo "Scanning Dockerfile with Trivy"
+                    script {
+                        sh '''
+                        # Install Trivy if not already installed
+                        if ! command -v trivy > /dev/null; then
+                            sudo apt-get update
+                            sudo apt-get install -y wget
+                            sudo wget https://github.com/aquasecurity/trivy/releases/download/v0.29.1/trivy_0.29.1_Linux-64bit.deb
+                            sudo dpkg -i trivy_0.29.1_Linux-64bit.deb
+                        fi
+                        cd src
+                        sudo trivy config --severity HIGH,CRITICAL ./Dockerfile.app || exit 1
+                        '''
+                    }
+                }
+            }
 
-        // stage('Scan Dockerfile with Trivy') {
-        //     steps {
-        //         echo "Scanning Dockerfile with Trivy"
-        //         script {
-        //             sh '''
-        //             if ! command -v trivy &>/dev/null; then
-        //                 echo "Trivy not found, installing..."
-        //                 curl -sfL https://github.com/aquasecurity/trivy/releases/download/v0.29.0/trivy_0.29.0_Linux-x86_64.tar.gz | tar -xzv -C /usr/local/bin trivy
-        //             fi
-        //             trivy config --no-progress --severity HIGH,CRITICAL --format table --output reports-xml/dockerfile_scan_report.txt ./Dockerfile.app || exit 1
-        //             '''
-        //         }
-        //     }
-        // }
 
         // stage('Setup and Run Tests') {
         //     steps {

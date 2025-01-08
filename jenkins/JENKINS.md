@@ -11,8 +11,10 @@
         email: dopc02devops@gmail.com
     login and configure node
     Remote root directory: /home/jenkins
-    Labels: docker-agent
+    Labels: docker-agent/any
     copy key: pbcopy < ~/.ssh/id_kube_user_key
+
+35.197.250.0
 # Build
     select pipeline as job type
     
@@ -20,9 +22,10 @@
 # Agent configuration
     sudo apt update
     sudo apt install openjdk-17-jdk
+    snap install docker
 # Verify the installation:
     java -version
     export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
     export PATH=$JAVA_HOME/bin:$PATH
 
-    
+

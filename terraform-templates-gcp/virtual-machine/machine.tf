@@ -4,6 +4,12 @@ provider "google" {
   zone    = "europe-west2-a"
 }
 
+# Reserve a static IP
+resource "google_compute_address" "static_ip" {
+  name   = "static-ip-build-machine"
+  region = "europe-west2"
+}
+
 # Create virtual machine
 resource "google_compute_instance" "e2_micro_instance" {
   name         = "build-machine"
@@ -19,6 +25,7 @@ resource "google_compute_instance" "e2_micro_instance" {
   network_interface {
     network = "default"
     access_config {
+      nat_ip = google_compute_address.static_ip.address  # Use the reserved static IP
     }
   }
 
@@ -76,7 +83,6 @@ resource "google_compute_instance" "e2_micro_instance" {
 
 # Enable SSH
 resource "google_compute_firewall" "ssh" {
-#  count   = var.create_firewall ? 1 : 0
   name    = "allow-ssh"
   network = "default"
   provider = google
@@ -123,7 +129,6 @@ resource "google_compute_firewall" "http_8091" {
   target_tags = ["ubuntu"]
 }
 
-
 # Variable
 variable "create_firewall" {
   type    = bool
@@ -134,15 +139,22 @@ variable "create_firewall" {
 output "instance_name_ip" {
   value = {
     name = google_compute_instance.e2_micro_instance.name
-    ip   = google_compute_instance.e2_micro_instance.network_interface[0].access_config[0].nat_ip
+    ip   = google_compute_address.static_ip.address
   }
-  description = "The name and public IP of the VM instance"
+  description = "The name and static public IP of the VM instance"
 }
+
+# Output the reserved static IP
+output "static_ip" {
+  value       = google_compute_address.static_ip.address
+  description = "The reserved static IP address for the build-machine."
+}
+
 
 # Instructions:
 # 1. ssh-keygen -t rsa -b 4096 -C "terraform" -f ~/.ssh/id_gcp_key
 # 2. ls -l ~/.ssh/id_gcp_key*
-# 3. ssh -i ~/.ssh/id_gcp_key kube_user@remote_ip to ssh into instance
+# 3. ssh -i ~/.ssh/id_gcp_key kube_user@<static_ip> to ssh into instance
 # 4. terraform init
 # 5. terraform plan
 # 6. terraform apply
