@@ -11,9 +11,6 @@ pipeline {
                 steps {
                     script {
                         sh '''
-                        sudo systemctl start docker  # Start Docker daemon in the machine executor
-                        sudo systemctl enable docker  # Enable Docker to start on boot
-                        sleep 5  # Wait for Docker daemon to fully initialize
                         docker ps  # Test if Docker is running
                         docker --version  # Check Docker version
                         docker-compose --version  # Check docker-compose version
