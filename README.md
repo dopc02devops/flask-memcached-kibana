@@ -47,6 +47,11 @@
       git checkout ur-branch
       git commit --allow-empty -m "Trigger build"
       git push origin ur-branch
+      git commit --no-verify -m "added commands.txt file"
+      git commit -q -m "Your commit message"
+      git push -q origin main
+      git push origin main --no-verify
+
 
 # create cluster
 
