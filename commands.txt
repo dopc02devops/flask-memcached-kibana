@@ -65,6 +65,7 @@ gcloud compute instances describe my-vm --zone europe-west2-a --project superb-g
         git push origin release-1.0
         git commit --allow-empty -m "Trigger build"
 
+
 # commands for debugging
         kubectl get pods -n stage
         kubectl get pod <pod-name> -n stage
