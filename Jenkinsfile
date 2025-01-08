@@ -71,7 +71,7 @@ pipeline {
 
         stage('Setup and Run Tests') {
             steps {
-                echo "Setting up Docker environment and running tests"
+                echo "Running tests"
                 script {
                     sh '''
                     mkdir -p reports-xml reports-html
