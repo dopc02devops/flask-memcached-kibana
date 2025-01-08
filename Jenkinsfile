@@ -128,6 +128,7 @@ pipeline {
             }
         }
 
+
         stage('Push Docker Image') {
             steps {
                 echo "Pushing Docker image: ${params.DOCKER_TAG}"
