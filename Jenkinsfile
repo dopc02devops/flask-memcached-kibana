@@ -7,7 +7,7 @@ pipeline {
     }
 
     stages {
-            stage('Start Docker Daemon') {
+            stage('Check Docker is running') {
                 steps {
                     script {
                         sh '''
@@ -69,19 +69,19 @@ pipeline {
             }
 
 
-        // stage('Setup and Run Tests') {
-        //     steps {
-        //         echo "Setting up Docker environment and running tests"
-        //         script {
-        //             sh '''
-        //             mkdir -p reports-xml reports-html
-        //             pip install pytest pytest-html pytest-xml
-        //             pytest --junitxml=reports-xml/test_report.xml --html=reports-html/test_report.html --self-contained-html || exit 1
-        //             docker-compose -f docker-compose.test.yml up --build test-app || exit 1
-        //             '''
-        //         }
-        //     }
-        // }
+        stage('Setup and Run Tests') {
+            steps {
+                echo "Setting up Docker environment and running tests"
+                script {
+                    sh '''
+                    mkdir -p reports-xml reports-html
+                    pip install pytest pytest-html pytest-xml
+                    pytest --junitxml=reports-xml/test_report.xml --html=reports-html/test_report.html --self-contained-html || exit 1
+                    sudo docker-compose -f docker-compose.test.yml up --build test-app || exit 1
+                    '''
+                }
+            }
+        }
 
         // stage('Archive Test Reports') {
         //     steps {
