@@ -11,9 +11,9 @@ pipeline {
                 steps {
                     script {
                         sh '''
-                        docker ps  # Test if Docker is running
-                        docker --version  # Check Docker version
-                        docker-compose --version  # Check docker-compose version
+                        sudo docker ps  # Test if Docker is running
+                        sudo docker --version  # Check Docker version
+                        sudo docker-compose --version  # Check docker-compose version
                         '''
                     }
                 }
