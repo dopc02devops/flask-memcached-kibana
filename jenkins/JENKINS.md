@@ -23,8 +23,8 @@
     sudo apt update
     sudo apt install openjdk-17-jdk
     snap install docker
-    sudo apt update
     sudo apt install -y docker.io
+    sudo apt install python3 -y
 
 # Verify the installation:
     java -version

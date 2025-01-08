@@ -13,54 +13,13 @@ pipeline {
                 script {
                     sh '''
                     set -e
-                    echo "Verifying Docker and dependencies..."
-
-                    # Check if python3 and pip are installed, install if missing
-                    if ! command -v python3 > /dev/null; then
-                        echo "python3 not found, installing..."
-                        sudo apt update
-                        sudo apt install python3 -y
-                    else
-                        echo "python3 is already installed."
-                    fi
-
-                    if ! command -v pip3 > /dev/null; then
-                        echo "pip3 not found, installing..."
-                        sudo apt install python3-pip -y
-                    else
-                        echo "pip3 is already installed."
-                    fi
-
-                    # Verify Docker is installed
-                    if ! command -v docker > /dev/null; then
-                        echo "Docker is not installed. Please install Docker before running this pipeline."
-                        exit 1
-                    else
-                        echo "Docker is installed. Version:"
-                        sudo docker --version
-                    fi
-
-                    # Verify docker-compose is installed
-                    if ! command -v docker-compose > /dev/null; then
-                        echo "docker-compose is not installed. Please install docker-compose before running this pipeline."
-                        exit 1
-                    else
-                        echo "docker-compose is installed. Version:"
-                        sudo docker-compose --version
-                    fi
-
-                    # Check if Docker daemon is running
-                    if ! sudo docker ps > /dev/null 2>&1; then
-                        echo "Docker daemon is not running. Please start the Docker service."
-                        exit 1
-                    else
-                        echo "Docker daemon is running."
-                    fi
+                    sudo docker ps
+                    sudo docker --version
+                    sudo docker-compose --version
                     '''
                 }
             }
         }
-
 
         stage('Extract Git Tag') {
             steps {
