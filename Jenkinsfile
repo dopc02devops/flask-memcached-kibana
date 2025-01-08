@@ -13,18 +13,54 @@ pipeline {
                 script {
                     sh '''
                     set -e
-                    echo "Checking Docker and dependencies..."
-                    sudo apt update
-                    sudo apt install python3 python3-pip -y
+                    echo "Verifying Docker and dependencies..."
 
-                    # Verify Docker and docker-compose
-                    sudo docker ps
-                    sudo docker --version
-                    sudo docker-compose --version
+                    # Check if python3 and pip are installed, install if missing
+                    if ! command -v python3 > /dev/null; then
+                        echo "python3 not found, installing..."
+                        sudo apt update
+                        sudo apt install python3 -y
+                    else
+                        echo "python3 is already installed."
+                    fi
+
+                    if ! command -v pip3 > /dev/null; then
+                        echo "pip3 not found, installing..."
+                        sudo apt install python3-pip -y
+                    else
+                        echo "pip3 is already installed."
+                    fi
+
+                    # Verify Docker is installed
+                    if ! command -v docker > /dev/null; then
+                        echo "Docker is not installed. Please install Docker before running this pipeline."
+                        exit 1
+                    else
+                        echo "Docker is installed. Version:"
+                        sudo docker --version
+                    fi
+
+                    # Verify docker-compose is installed
+                    if ! command -v docker-compose > /dev/null; then
+                        echo "docker-compose is not installed. Please install docker-compose before running this pipeline."
+                        exit 1
+                    else
+                        echo "docker-compose is installed. Version:"
+                        sudo docker-compose --version
+                    fi
+
+                    # Check if Docker daemon is running
+                    if ! sudo docker ps > /dev/null 2>&1; then
+                        echo "Docker daemon is not running. Please start the Docker service."
+                        exit 1
+                    else
+                        echo "Docker daemon is running."
+                    fi
                     '''
                 }
             }
         }
+
 
         stage('Extract Git Tag') {
             steps {
@@ -85,16 +121,14 @@ pipeline {
                 script {
                     sh '''
                     set -e
-                    mkdir -p reports-xml reports-html
-
-                    # Install Python dependencies
-                    pip install pytest pytest-html pytest-xml
-
-                    # Run Pytest
-                    pytest --junitxml=reports-xml/test_report.xml --html=reports-html/test_report.html --self-contained-html || exit 1
-
-                    # Run Docker Compose tests
+                    sudo docker volume create app_volume
+                    pip install pytest-html
                     sudo docker-compose -f docker-compose.test.yml up --build test-app || exit 1
+
+                    mkdir -p reports-xml
+                    mkdir -p reports-html
+                    sudo docker cp flask-tests-container:/app/report.xml ./report.xml
+                    sudo docker cp flask-tests-container:/app/report.html ./report.html
                     '''
                 }
             }
