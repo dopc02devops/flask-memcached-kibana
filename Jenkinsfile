@@ -1,6 +1,6 @@
 pipeline {
     agent {
-        docker { image 'docker:19.03.12' }
+        label 'docker-agent'
     }
 
     parameters {
@@ -37,14 +37,14 @@ pipeline {
                         echo "Checking Docker status"
                         script {
                             sh '''
+                            docker ps  # Test if Docker is running
                             docker --version  # Check Docker version
                             docker-compose --version  # Check docker-compose version
-                            docker ps  # Test if Docker is running
                             '''
                         }
                     }
                 }
-              }
+            }
 
 //         stage('Checkout Code') {
 //             steps {
