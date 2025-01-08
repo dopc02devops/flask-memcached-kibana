@@ -1,9 +1,9 @@
 services:
   jenkins:
-    image: jenkins/jenkins:lts
+    image: jenkins/jenkins:latest
     container_name: jenkins
     environment:
-      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false  # Skip the setup wizard
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=true  # Skip the setup wizard
       - JENKINS_USER=admin  # Define the Jenkins admin username
       - JENKINS_PASSWORD=admin123  # Define the Jenkins admin password
     ports:

@@ -24,7 +24,7 @@ resource "google_compute_instance" "e2_micro_instance" {
 
   metadata = {
     # Create user and copy ssh key
-    ssh-keys             = "kube_user:${file("~/.ssh/id_kube_user_key.pub")}"
+    ssh-keys             = "jenkins:${file("~/.ssh/id_kube_user_key.pub")}"
     metadata_startup_script = <<-EOT
       #!/bin/bash
 

@@ -12,3 +12,6 @@ analysis-core
 slack
 email-ext
 ssh-agent
+ssh-credentials
+ssh-slaves
+publish-over-ssh

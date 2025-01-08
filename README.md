@@ -21,10 +21,8 @@
         Edit docker-compose.env and set image: flask-image:v-22
         docker-compose -f docker-compose.env.yml up -d
 
-# run jenkins
-    docker-compose -f docker-compose.jenkins.yml down
-    docker-compose -f docker-compose.jenkins.yml up -d
-    http://localhost:8080
+# ssh
+    ssh -i ~/.ssh/id_kube_user_key jenkins@ip
 
 # create cluster
 
@@ -41,4 +39,4 @@
 
 
 
-/home/jenkins/
+
