@@ -49,6 +49,7 @@
       git push origin ur-branch
       git commit --no-verify -m "added commands.txt file"
       git commit -q -m "Your commit message"
+      git commit -m "Update docs [ci skip]"
       git push -q origin main
       git push origin main --no-verify
 
