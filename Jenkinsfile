@@ -99,41 +99,40 @@ pipeline {
                 }
             }
         }
-//
-//         stage('Archive Test Reports') {
-//             steps {
-//                 echo "Archiving test reports..."
-//                 archiveArtifacts artifacts: 'reports-xml/test_report.xml, reports-html/test_report.html', allowEmptyArchive: false
-//             }
-//         }
-//
-//         stage('Build Docker Image') {
-//             steps {
-//                 echo "Building Docker image: ${params.DOCKER_TAG}..."
-//                 script {
-//                     sh '''
-//                     set -e
-//                     cd src
-//                     docker build -t $DOCKER_USERNAME/python-memcached:${params.DOCKER_TAG} -f ./Dockerfile.app .
-//                     '''
-//                 }
-//             }
-//         }
-//
-//         stage('Push Docker Image') {
-//             steps {
-//                 echo "Pushing Docker image: ${params.DOCKER_TAG}..."
-//                 script {
-//                     sh '''
-//                     set -e
-//                     echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
-//                     docker push $DOCKER_USERNAME/python-memcached:${params.DOCKER_TAG}
-//                     '''
-//                 }
-//             }
-//         }
-//
-//     }
+
+        stage('Archive Test Reports') {
+            steps {
+                echo "Archiving test reports..."
+                archiveArtifacts artifacts: 'reports-xml/test_report.xml, reports-html/test_report.html', allowEmptyArchive: false
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                echo "Building Docker image: ${params.DOCKER_TAG}..."
+                script {
+                    sh '''
+                    set -e
+                    cd src
+                    docker build -t $DOCKER_USERNAME/python-memcached:${params.DOCKER_TAG} -f ./Dockerfile.app .
+                    '''
+                }
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                echo "Pushing Docker image: ${params.DOCKER_TAG}..."
+                script {
+                    sh '''
+                    set -e
+                    echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+                    docker push $DOCKER_USERNAME/python-memcached:${params.DOCKER_TAG}
+                    '''
+                }
+            }
+        }
+    }
 
     post {
         always {
