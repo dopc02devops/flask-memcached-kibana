@@ -1,6 +1,6 @@
 pipeline {
     agent {
-        label 'docker-agent'
+        docker { image 'docker:19.03.12' }
     }
 
     parameters {
@@ -31,20 +31,19 @@ pipeline {
             }
         }
 
-        stage('Start Docker Daemon') {
-            steps {
-                echo "Starting Docker Daemon"
-                script {
-                    sh '''
-                    dockerd &  # Start Docker Daemon in the background
-                    sleep 5    # Wait for the daemon to initialize
-                    docker ps  # Test if Docker is running
-                    docker --version
-                    docker-compose --version
-                    '''
+        stages {
+                stage('Start Docker Daemon') {
+                    steps {
+                        echo "Checking Docker status"
+                        script {
+                            sh '''
+                            docker --version  # Check Docker version
+                            docker-compose --version  # Check docker-compose version
+                            docker ps  # Test if Docker is running
+                            '''
+                        }
+                    }
                 }
-            }
-        }
 
 //         stage('Checkout Code') {
 //             steps {
