@@ -13,6 +13,9 @@
     Remote root directory: /home/jenkins
     Labels: docker-agent
     copy key: pbcopy < ~/.ssh/id_kube_user_key
+# Build
+    select pipeline as job type
+    
 
 # Agent configuration
     sudo apt update

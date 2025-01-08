@@ -1,10 +1,6 @@
 pipeline {
     agent {
         label 'docker-agent'  // Specify the label of the remote machine (agent)
-        docker {
-            image 'docker:20.10.25-dind'  // Use Docker-in-Docker image
-            args '--privileged -v /var/run/docker.sock:/var/run/docker.sock' // Enable Docker socket
-        }
     }
 
     parameters {
