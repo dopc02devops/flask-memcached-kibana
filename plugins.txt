@@ -1,0 +1,14 @@
+git
+docker
+pipeline
+blueocean
+job-dsl
+credentials-binding
+build-name-setter
+junit
+git-client
+pipeline-stage-view
+analysis-core
+slack
+email-ext
+ssh-agent

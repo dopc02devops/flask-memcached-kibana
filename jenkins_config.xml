@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<jenkins>
+    <securityRealm class="hudson.security.HudsonPrivateSecurityRealm" plugin="jenkins@2.303.2">
+        <disableSignup>false</disableSignup>
+        <adminUserName>admin</adminUserName>
+        <adminPassword>admin123</adminPassword>
+    </securityRealm>
+    <authorizationStrategy class="hudson.security.FullControlOnceLoggedInAuthorizationStrategy" plugin="jenkins@2.303.2">
+        <denyAnonymousReadAccess>false</denyAnonymousReadAccess>
+    </authorizationStrategy>
+</jenkins>

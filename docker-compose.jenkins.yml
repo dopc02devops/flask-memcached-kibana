@@ -1,0 +1,21 @@
+services:
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
+    environment:
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false  # Skip the setup wizard
+      - JENKINS_USER=admin  # Define the Jenkins admin username
+      - JENKINS_PASSWORD=admin123  # Define the Jenkins admin password
+    ports:
+      - "8080:8080"  # Expose Jenkins web interface
+      - "50000:50000" # Expose Jenkins agent port
+    volumes:
+      - jenkins_home:/var/jenkins_home  # Persistent volume for Jenkins data
+      - ./plugins.txt:/usr/share/jenkins/ref/plugins.txt  # Volume to load plugin list
+      - ./jenkins_config.xml:/var/jenkins_home/jenkins.config.xml  # Custom config file to disable anonymous access
+    restart: unless-stopped  # Restart the container unless it is stopped manually
+    entrypoint: "/bin/bash -c '/usr/local/bin/jenkins.sh && /usr/local/bin/install-plugins.sh < /usr/share/jenkins/ref/plugins.txt'"
+    user: "jenkins"  # Run Jenkins as the non-root user 'jenkins' (if not already configured)
+
+volumes:
+  jenkins_home:  # Define the volume that will persist Jenkins data
