@@ -1,7 +1,10 @@
 pipeline {
-    agent {
-        label 'docker-agent'
-    }
+   agent {
+       docker {
+           label 'docker'
+           image 'python:3.7'
+       }
+   }
 
     parameters {
         string(name: 'BRANCH', defaultValue: 'main', description: 'Branch to build from')
