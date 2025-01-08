@@ -11,6 +11,9 @@ pipeline {
                 steps {
                     script {
                         sh '''
+                        sudo apt update
+                        sudo apt install python3 python3-pip -y
+
                         sudo docker ps  # Test if Docker is running
                         sudo docker --version  # Check Docker version
                         sudo docker-compose --version  # Check docker-compose version
@@ -114,5 +117,12 @@ pipeline {
         //         }
         //     }
         // }
+
+        post {
+                always {
+                    echo 'Pipeline completed. Cleaning workspace again.'
+                    cleanWs() // Clean workspace after pipeline execution
+                }
+            }
     }
 }
