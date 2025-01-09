@@ -108,14 +108,14 @@ pipeline {
                 echo "Building Docker image: ${params.DOCKER_TAG}..."
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-credentials-id', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                        sh '''
+                        sh """
                         set -e
                         cd src
-                        echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
-                        docker build -t $DOCKER_USERNAME/python-memcached:${params.DOCKER_TAG} -f ./Dockerfile.app .
-                        docker push $DOCKER_USERNAME/python-memcached:${params.DOCKER_TAG}
+                        echo \$DOCKER_PASSWORD | docker login -u \$DOCKER_USERNAME --password-stdin
+                        docker build -t \$DOCKER_USERNAME/python-memcached:${params.DOCKER_TAG} -f ./Dockerfile.app .
+                        docker push \$DOCKER_USERNAME/python-memcached:${params.DOCKER_TAG}
                         docker logout
-                        '''
+                        """
                     }
                 }
             }
