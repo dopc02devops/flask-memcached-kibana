@@ -75,22 +75,23 @@ pipeline {
         }
 
         stage('Setup and Run Tests') {
-                    steps {
-                        echo "Setting up and running tests..."
-                        script {
-                            sh '''
-                            set -e
-                            mkdir -p reports-xml reports-html
+            steps {
+                echo "Setting up and running tests..."
+                script {
+                    sh '''
+                    set -e
+                    mkdir -p reports-xml reports-html
 
-                            # Install Python dependencies
-                            pip install pytest pytest-html pytest-xml
+                    # Install Python dependencies (only install necessary packages)
+                    pip install pytest pytest-html
 
-                            # Run Pytest
-                            pytest --junitxml=reports-xml/report.xml --html=reports-html/report.html --self-contained-html || exit 1
-                            '''
-                        }
-                    }
+                    # Run Pytest and generate XML and HTML reports
+                    pytest --junitxml=reports-xml/report.xml --html=reports-html/report.html --self-contained-html || exit 1
+                    '''
                 }
+            }
+        }
+
 
 
         stage('Store Test Reports') {
