@@ -91,20 +91,17 @@ pipeline {
                     # Run Pytest, capture the exit code
                     pytest --junitxml=reports-xml/report.xml --html=reports-html/report.html --self-contained-html || echo "Tests failed but proceeding with the pipeline"
                     '''
-
                 }
             }
         }
 
-
-
         stage('Store Test Reports') {
-                    steps {
-                        echo "Storing test reports..."
-                        archiveArtifacts artifacts: 'reports-xml/report.xml', allowEmptyArchive: false
-                        archiveArtifacts artifacts: 'reports-html/report.html', allowEmptyArchive: false
-                    }
-                }
+            steps {
+                echo "Storing test reports..."
+                archiveArtifacts artifacts: 'reports-xml/report.xml', allowEmptyArchive: false
+                archiveArtifacts artifacts: 'reports-html/report.html', allowEmptyArchive: false
+            }
+        }
 
         stage('Build Docker Image') {
             steps {
@@ -123,9 +120,7 @@ pipeline {
                 }
             }
         }
-
-
-
+    }
 
     post {
         always {
