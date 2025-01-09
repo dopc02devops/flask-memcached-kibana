@@ -110,28 +110,22 @@ pipeline {
             steps {
                 echo "Building Docker image: ${params.DOCKER_TAG}..."
                 script {
-                    sh '''
-                    set -e
-                    cd src
-                    docker build -t $DOCKER_USERNAME/python-memcached:${params.DOCKER_TAG} -f ./Dockerfile.app .
-                    '''
+                    withCredentials([usernamePassword(credentialsId: 'docker-credentials-id', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        sh '''
+                        set -e
+                        cd src
+                        echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+                        docker build -t $DOCKER_USERNAME/python-memcached:${params.DOCKER_TAG} -f ./Dockerfile.app .
+                        docker push $DOCKER_USERNAME/python-memcached:${params.DOCKER_TAG}
+                        docker logout
+                        '''
+                    }
                 }
             }
         }
 
-        stage('Push Docker Image') {
-            steps {
-                echo "Pushing Docker image: ${params.DOCKER_TAG}..."
-                script {
-                    sh '''
-                    set -e
-                    echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
-                    docker push $DOCKER_USERNAME/python-memcached:${params.DOCKER_TAG}
-                    '''
-                }
-            }
-        }
-    }
+
+
 
     post {
         always {
