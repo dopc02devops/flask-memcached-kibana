@@ -75,30 +75,31 @@ pipeline {
         }
 
         stage('Setup and Run Tests') {
-            steps {
-                echo "Setting up and running tests..."
-                script {
-                    sh '''
-                    set -e
-                    sudo docker volume create app_volume
-                    pip install pytest-html
-                    sudo docker-compose -f docker-compose.test.yml up --build test-app || exit 1
+                    steps {
+                        echo "Setting up and running tests..."
+                        script {
+                            sh '''
+                            set -e
+                            mkdir -p reports-xml reports-html
 
-                    mkdir -p reports-xml
-                    mkdir -p reports-html
-                    sudo docker cp flask-tests-container:/app/report.xml ./report.xml
-                    sudo docker cp flask-tests-container:/app/report.html ./report.html
-                    '''
+                            # Install Python dependencies
+                            pip install pytest pytest-html pytest-xml
+
+                            # Run Pytest
+                            pytest --junitxml=reports-xml/report.xml --html=reports-html/report.html --self-contained-html || exit 1
+                            '''
+                        }
+                    }
                 }
-            }
-        }
 
-        stage('Archive Test Reports') {
-            steps {
-                echo "Archiving test reports..."
-                archiveArtifacts artifacts: 'reports-xml/test_report.xml, reports-html/test_report.html', allowEmptyArchive: false
-            }
-        }
+
+        stage('Store Test Reports') {
+                    steps {
+                        echo "Storing test reports..."
+                        archiveArtifacts artifacts: 'reports-xml/report.xml', allowEmptyArchive: false
+                        archiveArtifacts artifacts: 'reports-html/report.html', allowEmptyArchive: false
+                    }
+                }
 
         stage('Build Docker Image') {
             steps {
