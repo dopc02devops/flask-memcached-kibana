@@ -121,21 +121,22 @@ pipeline {
             }
         }
 
-        stage('Setup Docker Volumes and Start Services') {
-            steps {
-                echo "Creating Docker volumes and starting services..."
-                script {
-                    sh '''
-                    set -e
-                    sudo docker volume create flask-app-data || exit 1
-                    sudo docker volume create memcached-data || exit 1
-                    sudo VERSION=params.DOCKER_TAG docker-compose -f docker-compose.env.yml up -d || exit 1
-                    '''
+    stage('Setup Docker Volumes and Start Services') {
+                steps {
+                    echo "Creating Docker volumes and starting services..."
+                    script {
+                        withCredentials([usernamePassword(credentialsId: 'docker-credentials-id', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                            sh """
+                            set -e
+                            sudo docker volume create flask-app-data || exit 1
+                            sudo docker volume create memcached-data || exit 1
+                            sudo VERSION=params.DOCKER_TAG docker-compose -f docker-compose.env.yml up -d || exit 1
+                            docker logout
+                            """
+                        }
+                    }
                 }
             }
-        }
-
-    }
 
     post {
         always {
