@@ -83,11 +83,12 @@ pipeline {
                     mkdir -p reports-xml reports-html
 
                     # Install Python dependencies (only install necessary packages)
-                    pip install pytest pytest-html
+                    pip install --user pytest pytest-html
 
-                    # Run Pytest and generate XML and HTML reports
-                    pytest --junitxml=reports-xml/report.xml --html=reports-html/report.html --self-contained-html || exit 1
+                    # Run Pytest with full path
+                    ~/.local/bin/pytest --junitxml=reports-xml/report.xml --html=reports-html/report.html --self-contained-html || exit 1
                     '''
+
                 }
             }
         }
