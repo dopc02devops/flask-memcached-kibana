@@ -27,11 +27,11 @@ pipeline {
                     if (env.GIT_TAG) {
                         currentBuild.displayName = "Build for tag: ${env.GIT_TAG}"
                         echo "Detected Git tag: ${env.GIT_TAG}"
-                        params.DOCKER_TAG = env.GIT_TAG
+                        env.DOCKER_TAG = env.GIT_TAG
                     } else {
                         echo "No Git tag detected, using specified tag or default (latest)"
-                        if (!params.DOCKER_TAG) {
-                            params.DOCKER_TAG = 'latest'
+                        if (!env.DOCKER_TAG) {
+                            env.DOCKER_TAG = 'latest'
                         }
                     }
                 }
@@ -57,7 +57,6 @@ pipeline {
                 script {
                     sh '''
                     set -e
-                    # Install Trivy if not already installed
                     if ! command -v trivy > /dev/null; then
                         echo "Installing Trivy..."
                         sudo apt-get update
@@ -82,13 +81,10 @@ pipeline {
                     set -e
                     mkdir -p reports-xml reports-html
 
-                    # Install Python dependencies
                     pip install --user pytest pytest-html
 
-                    # Add ~/.local/bin to PATH
                     export PATH=$HOME/.local/bin:$PATH
 
-                    # Run Pytest, capture the exit code
                     pytest --junitxml=reports-xml/report.xml --html=reports-html/report.html --self-contained-html || echo "Tests failed but proceeding with the pipeline"
                     '''
                 }
@@ -98,22 +94,22 @@ pipeline {
         stage('Store Test Reports') {
             steps {
                 echo "Storing test reports..."
-                archiveArtifacts artifacts: 'reports-xml/report.xml', allowEmptyArchive: false
-                archiveArtifacts artifacts: 'reports-html/report.html', allowEmptyArchive: false
+                archiveArtifacts artifacts: 'reports-xml/report.xml', allowEmptyArchive: true
+                archiveArtifacts artifacts: 'reports-html/report.html', allowEmptyArchive: true
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                echo "Building Docker image: ${params.DOCKER_TAG}..."
+                echo "Building Docker image: ${env.DOCKER_TAG}..."
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-credentials-id', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
                         sh """
                         set -e
                         cd src
                         echo \$DOCKER_PASSWORD | docker login -u \$DOCKER_USERNAME --password-stdin
-                        docker build -t \$DOCKER_USERNAME/python-memcached:${params.DOCKER_TAG} -f ./Dockerfile.app .
-                        docker push \$DOCKER_USERNAME/python-memcached:${params.DOCKER_TAG}
+                        docker build -t \$DOCKER_USERNAME/python-memcached:${env.DOCKER_TAG} -f ./Dockerfile.app .
+                        docker push \$DOCKER_USERNAME/python-memcached:${env.DOCKER_TAG}
                         docker logout
                         """
                     }
@@ -121,27 +117,29 @@ pipeline {
             }
         }
 
-    stage('Setup Docker Volumes and Start Services') {
-                steps {
-                    echo "Creating Docker volumes and starting services..."
-                    script {
-                        withCredentials([usernamePassword(credentialsId: 'docker-credentials-id', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                            sh """
-                            set -e
-                            sudo docker volume create flask-app-data || exit 1
-                            sudo docker volume create memcached-data || exit 1
-                            sudo VERSION=params.DOCKER_TAG docker-compose -f docker-compose.env.yml up -d || exit 1
-                            docker logout
-                            """
-                        }
+        stage('Setup Docker Volumes and Start Services') {
+            steps {
+                echo "Creating Docker volumes and starting services..."
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'docker-credentials-id', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        sh """
+                        set -e
+                        sudo docker volume create flask-app-data || true
+                        sudo docker volume create memcached-data || true
+                        export VERSION=${env.DOCKER_TAG}
+                        sudo docker-compose -f docker-compose.env.yml up -d
+                        docker logout
+                        """
                     }
                 }
             }
+        }
+    }
 
     post {
         always {
             echo 'Pipeline completed. Cleaning workspace...'
-            cleanWs() // Clean workspace after pipeline execution
+            cleanWs()
         }
     }
 }
