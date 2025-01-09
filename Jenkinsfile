@@ -126,8 +126,7 @@ pipeline {
                         set -e
                         sudo docker volume create flask-app-data || true
                         sudo docker volume create memcached-data || true
-                        export VERSION=${env.DOCKER_TAG}
-                        sudo docker-compose -f docker-compose.env.yml up -d
+                        sudo VERSION=${env.DOCKER_TAG} docker-compose -f docker-compose.env.yml up -d
                         docker logout
                         """
                     }
