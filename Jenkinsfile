@@ -120,23 +120,22 @@ pipeline {
                 }
             }
         }
-    }
 
-    stage('Setup Docker Volumes and Start Services') {
-                steps {
-                    script {
-                        try {
-                            echo 'Creating Docker volumes...'
-                            sh '''
-                            sudo docker volume create flask-app-data || exit 1
-                            sudo docker volume create memcached-data || exit 1
-                            sudo VERSION=params.DOCKER_TAG docker-compose -f docker-compose.env.yml up -d || exit 1
-                            '''
-                        } catch (Exception e) {
-                            error "Failed to set up Docker volumes or start services: ${e.message}"
-                        }
-                    }
+        stage('Setup Docker Volumes and Start Services') {
+            steps {
+                echo "Creating Docker volumes and starting services..."
+                script {
+                    sh '''
+                    set -e
+                    sudo docker volume create flask-app-data || exit 1
+                    sudo docker volume create memcached-data || exit 1
+                    sudo VERSION=params.DOCKER_TAG docker-compose -f docker-compose.env.yml up -d || exit 1
+                    '''
                 }
+            }
+        }
+
+    }
 
     post {
         always {
@@ -144,5 +143,4 @@ pipeline {
             cleanWs() // Clean workspace after pipeline execution
         }
     }
-}
 }
