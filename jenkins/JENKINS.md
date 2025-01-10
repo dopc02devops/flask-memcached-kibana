@@ -31,7 +31,12 @@
     export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
     export PATH=$JAVA_HOME/bin:$PATH
 # add user to docker group
-sudo groupadd docker
-sudo usermod -aG docker jenkins
-groups jenkins
+    sudo groupadd docker
+    sudo usermod -aG docker jenkins
+    groups jenkins
 
+
+# ducker
+docker system prune -a (removes all unused images)
+docker system prune
+docker system prune -a --volumes

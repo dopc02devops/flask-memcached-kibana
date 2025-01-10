@@ -1,6 +1,11 @@
 pipeline {
     agent any
 
+    environment {
+            AWS_REGION = 'us-west-2'
+            CLUSTER_NAME = 'your-eks-cluster-name'
+        }
+
     parameters {
         string(name: 'BRANCH', defaultValue: 'main', description: 'Branch to build from')
         string(name: 'DOCKER_TAG', defaultValue: 'latest', description: 'Docker image tag (defaults to latest if not provided)')
@@ -126,7 +131,7 @@ pipeline {
                         set -e
                         sudo docker volume create flask-app-data || true
                         sudo docker volume create memcached-data || true
-                        sudo VERSION=${env.DOCKER_TAG} docker-compose -f docker-compose.env.yml up -d
+                        sudo VERSION=${env.DOCKER_TAG} docker-compose -f docker-compose.env.yml up -d --remove-orphans
                         docker logout
                         """
                     }
@@ -134,6 +139,41 @@ pipeline {
             }
         }
     }
+
+    stages {
+            stage('Install AWS CLI and Kubectl') {
+                steps {
+                    sh """
+                    # Install AWS CLI
+                    curl "https://awscli.amazonaws.com/aws-cli-v2-linux-x86_64.zip" -o "awscliv2.zip"
+                    unzip awscliv2.zip
+                    sudo ./aws/install
+
+                    # Install kubectl
+                    curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+                    chmod +x kubectl
+                    sudo mv kubectl /usr/local/bin/
+                    """
+                }
+            }
+
+    stages {
+            stage('Authenticate with EKS') {
+                steps {
+                    script {
+                        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
+                                          credentialsId: 'aws-credentials-id']]) { // install aws plugin and add keys
+                            sh """
+                            # Configure AWS CLI
+                            aws configure set region $AWS_REGION
+
+                            # Retrieve the EKS cluster credentials
+                            aws eks update-kubeconfig --name $CLUSTER_NAME --region $AWS_REGION
+                            """
+                        }
+                    }
+                }
+            }
 
     post {
         always {

@@ -94,12 +94,12 @@ resource "google_compute_firewall" "ssh" {
     ports    = ["22"]
   }
   source_ranges = ["0.0.0.0/0"]
-  target_tags = ["ubuntu"]
+  target_tags = ["web", "ubuntu"]
 }
 
 # Enable 8096
-resource "google_compute_firewall" "http_8096" {
-  name    = "allow-flask-app"
+resource "google_compute_firewall" "http_8096_tcp" {
+  name    = "allow-flask-app_tcp"
   network = "default"
   provider = google
   allow {
@@ -110,7 +110,22 @@ resource "google_compute_firewall" "http_8096" {
     ports    = ["8096"]
   }
   source_ranges = ["0.0.0.0/0"]
-  target_tags = ["ubuntu"]
+  target_tags = ["web", "ubuntu"]
+}
+
+resource "google_compute_firewall" "http_8096_udp" {
+  name    = "allow-flask-app_udp"
+  network = "default"
+  provider = google
+  allow {
+    protocol = "icmp"
+  }
+  allow {
+    protocol = "udp"
+    ports    = ["8096"]
+  }
+  source_ranges = ["0.0.0.0/0"]
+  target_tags = ["web", "ubuntu"]
 }
 
 # Enable 8091
@@ -126,7 +141,7 @@ resource "google_compute_firewall" "http_8091" {
     ports    = ["8091"]
   }
   source_ranges = ["0.0.0.0/0"]
-  target_tags = ["ubuntu"]
+  target_tags = ["web", "ubuntu"]
 }
 
 # Variable
@@ -152,8 +167,8 @@ output "static_ip" {
 
 
 # Instructions:
-# 1. ssh-keygen -t rsa -b 4096 -C "terraform" -f ~/.ssh/id_gcp_key
-# 2. ls -l ~/.ssh/id_gcp_key*
+# 1. ssh-keygen -t rsa -b 4096 -C "terraform" -f ~/.ssh/id_kube_user_key
+# 2. ls -l ~/.ssh/id_kube_user_key*
 # 3. ssh -i ~/.ssh/id_gcp_key kube_user@<static_ip> to ssh into instance
 # 4. terraform init
 # 5. terraform plan
