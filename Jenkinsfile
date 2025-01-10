@@ -180,7 +180,7 @@ pipeline {
     post {
         always {
             echo 'Pipeline completed. Cleaning workspace...'
-            cleanWs()
+            //cleanWs()
         }
     }
 }
