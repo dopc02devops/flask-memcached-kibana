@@ -4,7 +4,7 @@ pipeline {
     environment {
         AWS_REGION = 'us-west-2'
         CLUSTER_NAME = 'your-eks-cluster-name'
-        DOCKER_BUILDKIT = "1"  // Enable BuildKit for this pipeline
+//         DOCKER_BUILDKIT = "1"  // Enable BuildKit for this pipeline
     }
 
     parameters {
