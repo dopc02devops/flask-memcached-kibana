@@ -22,6 +22,17 @@ pipeline {
                     sudo apt-get update
                     sudo apt-get install -y curl
 
+                    # Install Docker (in case it's not already installed)
+                    if ! command -v docker &> /dev/null
+                    then
+                        echo "Docker is not installed. Installing..."
+                        sudo apt-get install -y docker.io
+                    fi
+
+                    # Enable Docker BuildKit
+                    export DOCKER_CLI_EXPERIMENTAL=enabled
+                    export DOCKER_BUILDKIT=1
+
                     # Download and install buildx component
                     mkdir -p ~/.docker/cli-plugins
                     curl -LO https://github.com/docker/buildx/releases/download/v0.8.0/buildx-v0.8.0.linux-amd64
@@ -29,7 +40,7 @@ pipeline {
                     mv buildx-v0.8.0.linux-amd64 ~/.docker/cli-plugins/buildx
 
                     # Check if buildx is properly installed
-                    docker buildx version
+                    docker buildx version || { echo "Docker Buildx installation failed"; exit 1; }
                     '''
                 }
             }
