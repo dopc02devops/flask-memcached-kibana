@@ -98,3 +98,7 @@ gcloud compute instances describe my-vm --zone europe-west2-a --project superb-g
 # Copy ssh keys
      pbcopy < ~/.ssh/id_kube_user_key.pub
      pbcopy < ~/.ssh/id_kube_user_key
+
+# kill ports
+sudo lsof -i :11211
+sudo kill <PID>
