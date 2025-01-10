@@ -103,7 +103,7 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Build and Push Docker Image') {
             steps {
                 echo "Building Docker image..."
                 script {
@@ -111,6 +111,7 @@ pipeline {
                         withEnv(["DOCKER_TAG=${env.DOCKER_TAG}"]) {
                             sh '''
                             set -e
+                            cd src
                             echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
                             docker build -t $DOCKER_USERNAME/python-memcached:$DOCKER_TAG -f ./Dockerfile.app .
                             docker push $DOCKER_USERNAME/python-memcached:$DOCKER_TAG
