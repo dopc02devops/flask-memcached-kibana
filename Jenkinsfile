@@ -135,7 +135,8 @@ pipeline {
                             set -e
                             sudo docker volume create flask-app-data || true
                             sudo docker volume create memcached-data || true
-                            sudo VERSION=${VERSION} docker-compose -f docker-compose.env.yml up -d --remove-orphans
+                            sudo docker-compose -f docker-compose.env.yml down --remove-orphans
+                            sudo VERSION=${VERSION} docker-compose -f docker-compose.env.yml up -d
                             '''
                         }
                     }
