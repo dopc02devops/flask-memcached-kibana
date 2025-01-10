@@ -25,6 +25,7 @@
     snap install docker
     sudo apt install -y docker.io
     sudo apt install python3 -y
+    sudo apt-get install unzip
 
 # Verify the installation:
     java -version
