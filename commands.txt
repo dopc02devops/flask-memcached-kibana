@@ -102,3 +102,9 @@ gcloud compute instances describe my-vm --zone europe-west2-a --project superb-g
 # kill ports
 sudo lsof -i :11211
 sudo kill <PID>
+
+# switch user root
+sudo -i
+sudo usermod -aG docker <your-username>
+sudo usermod -aG sudo <your-username>
+id jenkins
