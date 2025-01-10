@@ -148,7 +148,7 @@ pipeline {
             steps {
                 sh '''
                 # Install AWS CLI
-                curl "https://awscli.amazonaws.com/aws-cli-v2-linux-x86_64.zip" -o "awscliv2.zip"
+                curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-2.0.30.zip" -o "awscliv2.zip"
                 unzip awscliv2.zip
                 sudo ./aws/install
 
