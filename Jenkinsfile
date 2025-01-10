@@ -4,6 +4,7 @@ pipeline {
     environment {
         AWS_REGION = 'us-west-2'
         CLUSTER_NAME = 'your-eks-cluster-name'
+        DOCKER_BUILDKIT = "1"  // Enable BuildKit for this pipeline
     }
 
     parameters {
@@ -131,6 +132,7 @@ pipeline {
                         withEnv(["VERSION=${env.DOCKER_TAG}"]) {
                             sh '''
                             set -e
+                            export VERSION=${VERSION}
                             sudo docker volume create flask-app-data || true
                             sudo docker volume create memcached-data || true
                             sudo docker-compose -f docker-compose.env.yml up -d --remove-orphans
