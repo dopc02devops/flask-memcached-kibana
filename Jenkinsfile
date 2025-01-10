@@ -105,17 +105,18 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                echo "Building Docker image: ${env.DOCKER_TAG}..."
+                echo "Building Docker image..."
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-credentials-id', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                        sh """
-                        set -e
-                        cd src
-                        echo \$DOCKER_PASSWORD | docker login -u \$DOCKER_USERNAME --password-stdin
-                        docker build -t \$DOCKER_USERNAME/python-memcached:\${env.DOCKER_TAG} -f ./Dockerfile.app .
-                        docker push \$DOCKER_USERNAME/python-memcached:\${env.DOCKER_TAG}
-                        docker logout
-                        """
+                        withEnv(["DOCKER_TAG=${env.DOCKER_TAG}"]) {
+                            sh '''
+                            set -e
+                            echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+                            docker build -t $DOCKER_USERNAME/python-memcached:$DOCKER_TAG -f ./Dockerfile.app .
+                            docker push $DOCKER_USERNAME/python-memcached:$DOCKER_TAG
+                            docker logout
+                            '''
+                        }
                     }
                 }
             }
@@ -126,12 +127,14 @@ pipeline {
                 echo "Creating Docker volumes and starting services..."
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-credentials-id', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                        sh """
-                        set -e
-                        sudo docker volume create flask-app-data || true
-                        sudo docker volume create memcached-data || true
-                        sudo VERSION=\${env.DOCKER_TAG} docker-compose -f docker-compose.env.yml up -d --remove-orphans
-                        """
+                        withEnv(["VERSION=${env.DOCKER_TAG}"]) {
+                            sh '''
+                            set -e
+                            sudo docker volume create flask-app-data || true
+                            sudo docker volume create memcached-data || true
+                            sudo docker-compose -f docker-compose.env.yml up -d --remove-orphans
+                            '''
+                        }
                     }
                 }
             }
@@ -156,15 +159,14 @@ pipeline {
         stage('Authenticate with EKS') {
             steps {
                 script {
-                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
-                                      credentialsId: 'aws-credentials-id']]) {
-                        sh """
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials-id']]) {
+                        sh '''
                         # Configure AWS CLI
-                        aws configure set region \${AWS_REGION}
+                        aws configure set region $AWS_REGION
 
                         # Retrieve the EKS cluster credentials
-                        aws eks update-kubeconfig --name \${CLUSTER_NAME} --region \${AWS_REGION}
-                        """
+                        aws eks update-kubeconfig --name $CLUSTER_NAME --region $AWS_REGION
+                        '''
                     }
                 }
             }
