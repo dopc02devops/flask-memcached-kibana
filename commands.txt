@@ -108,3 +108,19 @@ sudo -i
 sudo usermod -aG docker <your-username>
 sudo usermod -aG sudo <your-username>
 id jenkins
+
+# install aws cli
+https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
+aws configure
+
+# create policy
+aws iam create-role --role-name eksClusterRole \
+--assume-role-policy-document file:aws-files/trust-policy.json
+
+
+aws iam create-role \
+    --role-name EKSClusterRole \
+    --assume-role-policy-document file://trust-policy.json
+
+
+

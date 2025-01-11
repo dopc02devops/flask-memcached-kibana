@@ -1,0 +1,16 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowFullS3Access",
+      "Effect": "Allow",
+      "Action": "s3:*",
+      "Resource": "*",
+      "Condition": {
+        "IpAddress": {
+          "aws:SourceIp": "80.177.15.194/32"
+        }
+      }
+    }
+  ]
+}

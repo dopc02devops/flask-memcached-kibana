@@ -1,0 +1,65 @@
+
+########################
+Root Level: AWS Account
+########################
+Account
+    Users
+        User1
+            Groups: Group1, Group2
+            Policies: Policy1 (inline), Policy2 (managed)
+            Attached Policies: Policy3 (managed)
+        User2
+            Groups: Group2
+            Policies: Policy4 (inline)
+    Groups
+        Group1
+            Members: User1
+            Attached Policies: Policy5 (managed)
+        Group2
+            Members: User1, User2
+            Attached Policies: Policy6 (managed)
+    Roles
+        Role1
+            Attached Policies: Policy7 (managed)
+            Trusted Entities: EC2 Service
+        Role2
+            Attached Policies: Policy8 (inline)
+            Trusted Entities: Lambda Service
+    Policies
+    Policy1 (inline for User1)
+    Policy2 (managed and attached to User1)
+    Policy3 (managed and attached to User1)
+    Policy4 (inline for User2)
+    Policy5 (managed and attached to Group1)
+    Policy6 (managed and attached to Group2)
+    Policy7 (managed and attached to Role1)
+    Policy8 (inline for Role2)
+
+########
+Users:
+########
+Individual IAM identities
+Can belong to groups and have inline or managed policies attached directly
+########
+Groups:
+########
+Collections of users.
+Groups can have policies attached, which then apply to all users in the group
+########
+Roles:
+########
+Used by AWS services or external entities (e.g., federated users or applications)
+Have trust relationships and policies defining permissions
+########
+Policies:
+########
+Define permissions using JSON syntax.
+Can be inline (directly attached to a user, group, or role) or managed (standalone and reusable)
+
+#################
+Trusted Entities:
+#################
+In AWS IAM, Trusted Entities refer to the entities that are allowed to assume a particular role
+When you create a role, you define a trust policy that specifies the trusted entities
+These trusted entities are typically AWS services, other AWS accounts, or specific users and applications
+that are permitted to assume the role

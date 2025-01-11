@@ -1,0 +1,22 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowInstanceControl",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:StartInstances",
+        "ec2:StopInstances",
+        "ec2:DescribeInstances"
+      ],
+      "Resource": [
+        "arn:aws:ec2:region:account-id:instance/instance-id"
+      ],
+      "Condition": {
+        "IpAddress": {
+          "aws:SourceIp": "80.177.15.194"
+        }
+      }
+    }
+  ]
+}

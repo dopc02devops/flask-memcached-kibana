@@ -1,0 +1,261 @@
+
+cd aws-files/roles to create roles
+
+######################
+Create a Role for EKS
+######################
+aws iam create-role \
+    --role-name EKSClusterRole \
+    --assume-role-policy-document file://eks-trust-policy.json
+
+    ######################
+    Attach the policies
+    ######################
+    aws iam attach-role-policy --role-name EKSClusterRole \
+    --policy-arn arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
+    aws iam attach-role-policy --role-name EKSClusterRole \
+    --policy-arn arn:aws:iam::aws:policy/AmazonEKSServicePolicy
+
+
+######################
+Create Role for EKSNode
+######################
+aws iam create-role --role-name eksNodeRole \
+--assume-role-policy-document file://ec2-eks-trust-policy.json
+
+    ######################
+    Attach the policies
+    ######################
+    aws iam attach-role-policy --role-name eksNodeRole \
+    --policy-arn arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
+    aws iam attach-role-policy --role-name eksNodeRole \
+    --policy-arn arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+    aws iam attach-role-policy --role-name eksNodeRole \
+    --policy-arn arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
+    aws iam attach-role-policy --role-name eksNodeRole \
+    --policy-arn arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+    aws iam attach-role-policy --role-name eksNodeRole \
+    --policy-arn arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
+
+# Verify the Role
+aws iam get-role --role-name eksNodeRole
+
+########################################################################################################################
+
+########################################################################################################################
+#################################
+Trust policy eks-trust-policy
+#################################
+This IAM policy allows the Amazon EKS service (eks.amazonaws.com) to assume a specified IAM role
+Effect: "Allow"
+    Grants permission for the action to occur
+Principal: "Service": "eks.amazonaws.com"
+    Specifies that the principal (entity) allowed to assume the role is Amazon EKS service.
+Action: "sts:AssumeRole"
+    Enables EKS to assume the specified IAM role
+    This policy is typically used in Amazon EKS cluster setups to allow EKS control plane components to
+    interact with other AWS services on your behalf
+
+#################################
+Trust policy ec2-eks-trust-policy
+#################################
+The policy grants the EC2 service permission to assume a specific IAM role, in enabling Amazon EKS (Elastic Kubernetes
+Service). The sts:AssumeRole action is central to this policy, as it allows the EC2 service to acquire temporary
+credentials associated with a role
+
+Effect: "Allow"
+  Grants permission for the action to occur
+Principal: "Service": "ec2.amazonaws.com"
+  Specifies the AWS service EC2 as the entity that can assume the role
+Action: "sts:AssumeRole"
+  This action is typically required when an EC2 instance needs to access AWS resources on your behalf
+Condition:
+  Includes an additional constraint to restrict how and when the role can be assumed
+The StringEquals condition specifies: "sts:ExternalId": "eks-node"
+  This external ID is used to prevent unintended entities from assuming the role
+
+EKS uses EC2 instances as worker nodes to run applications.
+The EKS-managed nodes require IAM roles to interact with AWS services (like pulling images from ECR, logging to
+CloudWatch, etc.).
+The external ID (eks-node) acts as a security mechanism to ensure that only intended entities can assume the role.
+########################################################################################################################
+
+######################
+Create SG
+######################
+aws ec2 create-security-group \
+    --group-name K8sSecurityGroup \
+    --description "Security group for Kubernetes cluster" \
+    --vpc-id vpc-0bcc7205ac3507ed6 \
+    --region eu-west-2
+
+######################
+List sg
+######################
+aws ec2 describe-security-groups --region eu-west-2
+aws ec2 delete-security-group --group-id sg-0f1c8db2d3355da0d
+
+######################
+Describe vpc
+######################
+aws ec2 describe-vpcs --region eu-west-2
+
+# For API Server Communication
+aws ec2 authorize-security-group-ingress \
+    --group-id sg-0f1c8db2d3355da0d \
+    --protocol tcp \
+    --port 6443 \
+    --cidr 0.0.0.0/0
+
+# For Worker Nodes Communication (NodePort/ClusterIP)
+aws ec2 authorize-security-group-ingress \
+    --group-id sg-0f1c8db2d3355da0d \
+    --protocol tcp \
+    --port 10250-10255 \
+    --cidr 0.0.0.0/0
+
+aws ec2 authorize-security-group-ingress \
+    --group-id sg-0f1c8db2d3355da0d \
+    --protocol tcp \
+    --port 30000-32767 \
+    --cidr 0.0.0.0/0
+
+# Enable all traffic within the security group for internal communication
+aws ec2 authorize-security-group-ingress \
+    --group-id sg-0f1c8db2d3355da0d \
+    --protocol all \
+    --source-group sg-0f1c8db2d3355da0d
+
+# Allow all outbound traffic if not restricted
+aws ec2 authorize-security-group-egress \
+    --group-id sg-0f1c8db2d3355da0d \
+    --protocol all \
+    --cidr 0.0.0.0/0
+
+# Check the security group rules to ensure they are properly configured
+aws ec2 describe-security-groups --group-ids sg-0f1c8db2d3355da0d
+
+
+Protocol	   Port Range	Purpose
+TCP	6443	   Kubernetes   API server
+TCP	           10250-10255	kubelet communication
+TCP	           30000-32767	NodePort services
+All	           All (Internal)	Internal cluster communication
+
+
+######################
+List subnets
+######################
+aws ec2 describe-subnets --region eu-west-2
+aws ec2 describe-subnets --region eu-west-2 --query "Subnets[*].{SubnetId:SubnetId,AvailabilityZone:AvailabilityZone}"
+
+######################
+Create a Cluster
+######################
+aws eks create-cluster \
+--name MyEKSCluster \
+--region eu-west-2 \
+--kubernetes-version 1.28 \
+--role-arn arn:aws:iam::908027384199:role/EKSClusterRole \
+--resources-vpc-config subnetIds=subnet-0f63b4f01d0bec499,subnet-05888a03e0511ede0,securityGroupIds=sg-0f1c8db2d3355da0d
+
+aws eks delete-cluster --name MyEKSCluster
+
+######################
+Describe cluster
+######################
+aws eks describe-cluster --name MyEKSCluster --region eu-west-2
+
+######################
+Create SG for nodes
+######################
+aws ec2 create-security-group \
+    --group-name K8sNodeSecurityGroup \
+    --description "Security group for Kubernetes nodes" \
+    --vpc-id vpc-0bcc7205ac3507ed6 \
+    --region eu-west-2
+
+aws ec2 authorize-security-group-ingress \
+    --group-id sg-0eab8786c734218b1 \
+    --protocol tcp \
+    --port 22 \
+    --cidr 0.0.0.0/0
+
+######################
+Launch Template
+######################
+aws ec2 create-launch-template \
+    --region eu-west-2 \
+    --launch-template-name my-ubuntu-template \
+    --version-description "Launch template for EKS" \
+    --launch-template-data '{
+        "ImageId": "ami-000b29500ea1d73a3",
+        "InstanceType": "t2.micro",
+        "SecurityGroupIds": ["sg-0eab8786c734218b1"],
+        "TagSpecifications": [
+            {
+                "ResourceType": "instance",
+                "Tags": [
+                    {"Key": "Environment", "Value": "Dev"}
+                ]
+            }
+        ],
+        "UserData": "'"$(echo '#!/bin/bash
+# Create a custom user
+useradd -m -s /bin/bash kube_user
+
+# Add the public SSH key
+mkdir -p /home/kube_user/.ssh
+echo \"'"$(cat ~/.ssh/id_kube_user_key.pub)"'\" > /home/kube_user/.ssh/authorized_keys
+chown -R kube_user:kube_user /home/kube_user/.ssh
+chmod 700 /home/kube_user/.ssh
+chmod 600 /home/kube_user/.ssh/authorized_keys
+
+# Add user to sudoers
+echo \"kube_user ALL=(ALL) NOPASSWD:ALL\" >> /etc/sudoers' | base64 -w 0)"'",
+        "BlockDeviceMappings": [
+            {
+                "DeviceName": "/dev/sda1",
+                "Ebs": {
+                    "VolumeSize": 8,
+                    "VolumeType": "gp2"
+                }
+            }
+        ]
+    }'
+
+
+######################
+Create a Node Group
+######################
+aws eks create-nodegroup \
+--cluster-name MyEKSCluster \
+--nodegroup-name MyNodeGroup \
+--subnets subnet-0f63b4f01d0bec499 subnet-05888a03e0511ede0 \
+--node-role arn:aws:iam::908027384199:role/eksNodeRole \
+--scaling-config minSize=1,maxSize=4,desiredSize=2 \
+--launch-template name=my-ubuntu-template,version=1 \
+--region eu-west-2
+
+aws eks describe-nodegroup \
+    --cluster-name MyEKSCluster \
+    --nodegroup-name MyNodeGroup
+
+aws eks delete-nodegroup \
+    --cluster-name MyEKSCluster \
+    --nodegroup-name MyNodeGroup
+    --region eu-west-2
+
+
+
+######################
+Connect to the Cluster
+######################
+aws eks update-kubeconfig --region us-west-2 --name MyEKSCluster
+kubectl get svc
+kubectl get pods
+
+######################
+Decode message
+######################
+aws sts decode-authorization-message --encoded-message "your_encoded_message_here"

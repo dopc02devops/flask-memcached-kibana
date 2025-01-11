@@ -1,0 +1,22 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowReadOnlyAccessToSpecificFolder",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:ListBucket"
+      ],
+      "Resource": [
+        "arn:aws:s3:::example-bucket",
+        "arn:aws:s3:::example-bucket/example-folder/*"
+      ],
+      "Condition": {
+        "IpAddress": {
+          "aws:SourceIp": "80.177.15.194/32"
+        }
+      }
+    }
+  ]
+}

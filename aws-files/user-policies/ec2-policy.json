@@ -1,0 +1,16 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowFullEC2Access",
+      "Effect": "Allow",
+      "Action": "ec2:*",
+      "Resource": "*",
+      "Condition": {
+        "IpAddress": {
+          "aws:SourceIp": "80.177.15.194"
+        }
+      }
+    }
+  ]
+}
