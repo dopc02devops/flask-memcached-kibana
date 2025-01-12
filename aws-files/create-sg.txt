@@ -1,0 +1,84 @@
+######################
+Create SG
+######################
+aws ec2 create-security-group \
+    --group-name K8sSecurityGroup \
+    --description "Security group for Kubernetes cluster" \
+    --vpc-id vpc-0bcc7205ac3507ed6 \
+    --region eu-west-2
+
+######################
+List sg
+######################
+aws ec2 describe-security-groups --region eu-west-2
+aws ec2 delete-security-group --group-id sg-0f1c8db2d3355da0d
+
+######################
+Describe vpc
+######################
+aws ec2 describe-vpcs --region eu-west-2
+
+# For API Server Communication
+aws ec2 authorize-security-group-ingress \
+    --group-id sg-0f1c8db2d3355da0d \
+    --protocol tcp \
+    --port 6443 \
+    --cidr 0.0.0.0/0
+
+# For Worker Nodes Communication (NodePort/ClusterIP)
+aws ec2 authorize-security-group-ingress \
+    --group-id sg-0f1c8db2d3355da0d \
+    --protocol tcp \
+    --port 10250-10255 \
+    --cidr 0.0.0.0/0
+
+aws ec2 authorize-security-group-ingress \
+    --group-id sg-0f1c8db2d3355da0d \
+    --protocol tcp \
+    --port 30000-32767 \
+    --cidr 0.0.0.0/0
+
+# Enable all traffic within the security group for internal communication
+aws ec2 authorize-security-group-ingress \
+    --group-id sg-0f1c8db2d3355da0d \
+    --protocol all \
+    --source-group sg-0f1c8db2d3355da0d
+
+# Allow all outbound traffic if not restricted
+aws ec2 authorize-security-group-egress \
+    --group-id sg-0f1c8db2d3355da0d \
+    --protocol all \
+    --cidr 0.0.0.0/0
+
+# Check the security group rules to ensure they are properly configured
+aws ec2 describe-security-groups --group-ids sg-0f1c8db2d3355da0d
+
+
+Protocol	   Port Range	Purpose
+TCP	6443	   Kubernetes   API server
+TCP	           10250-10255	kubelet communication
+TCP	           30000-32767	NodePort services
+All	           All (Internal)	Internal cluster communication
+
+
+######################
+List subnets
+######################
+aws ec2 describe-subnets --region eu-west-2
+aws ec2 describe-subnets --region eu-west-2 --query "Subnets[*].{SubnetId:SubnetId,AvailabilityZone:AvailabilityZone}"
+
+
+######################
+Create SG for nodes
+######################
+aws ec2 create-security-group \
+    --group-name K8sNodeSecurityGroup \
+    --description "Security group for Kubernetes nodes" \
+    --vpc-id vpc-0bcc7205ac3507ed6 \
+    --region eu-west-2
+
+aws ec2 authorize-security-group-ingress \
+    --group-id sg-0eab8786c734218b1 \
+    --protocol tcp \
+    --port 22 \
+    --cidr 0.0.0.0/0

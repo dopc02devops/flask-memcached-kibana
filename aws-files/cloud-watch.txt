@@ -1,0 +1,76 @@
+
+#################
+Amazon CloudWatch
+#################
+    It is a monitoring and observability service provided by AWS (Amazon Web Services). It helps you monitor and
+    manage the performance, health, and operational state of your AWS resources and applications in real-time.
+    CloudWatch can be used to collect and track metrics, log files, set alarms, and automate responses based on
+    predefined thresholds
+
+- Monitoring and Metrics
+- Log Management
+- Alarming and Automation
+- CloudWatch Dashboards
+- CloudWatch Events
+- CloudWatch Logs Insights
+- CloudWatch Synthetics
+
+aws logs describe-log-groups --region eu-west-2
+
+aws logs describe-log-streams \
+    --log-group-name "/aws/eks/MyEKSCluster/cluster" \
+    --region eu-west-2 \
+    --output text
+
+aws logs get-log-events \
+    --log-group-name "/aws/eks/MyEKSCluster/cluster" \
+    --log-stream-name "<log-stream-name>" \
+    --region eu-west-2 \
+    --output text
+
+aws logs start-query \
+    --log-group-name "/aws/eks/MyEKSCluster/cluster" \
+    --start-time $(($(date +%s) - 3600)) \
+    --end-time $(date +%s) \
+    --query-string "fields @timestamp, @message | sort @timestamp desc | limit 20" \
+    --region eu-west-2
+
+aws cloudwatch put-metric-alarm \
+    --alarm-name "HighCPUUtilization" \
+    --metric-name "CPUUtilization" \
+    --namespace "AWS/EC2" \
+    --statistic "Average" \
+    --period 300 \
+    --threshold 80 \
+    --comparison-operator "GreaterThanThreshold" \
+    --evaluation-periods 1 \
+    --alarm-actions arn:aws:sns:eu-west-2:123456789012:MySNSTopic \
+    --dimensions "Name=InstanceId,Value=i-1234567890abcdef0" \
+    --region eu-west-2
+
+aws cloudwatch put-metric-alarm \
+    --alarm-name "ErrorLogAlarm" \
+    --metric-name "errorCount" \
+    --namespace "CloudWatchLogs" \
+    --statistic "Sum" \
+    --period 300 \
+    --threshold 5 \
+    --comparison-operator "GreaterThanThreshold" \
+    --evaluation-periods 1 \
+    --alarm-actions arn:aws:sns:eu-west-2:123456789012:MySNSTopic \
+    --dimensions "Name=LogGroupName,Value=/aws/eks/MyEKSCluster/cluster" \
+    --region eu-west-2
+
+
+aws cloudwatch put-metric-alarm \
+    --alarm-name "HighCPUUsage" \
+    --metric-name "CPUUtilization" \
+    --namespace "AWS/EC2" \
+    --statistic "Average" \
+    --period 300 \
+    --threshold 80 \
+    --comparison-operator "GreaterThanThreshold" \
+    --evaluation-periods 1 \
+    --alarm-actions arn:aws:sns:eu-west-2:123456789012:MySNSTopic \
+    --dimensions "Name=InstanceId,Value=i-1234567890abcdef0" \
+    --region eu-west-2

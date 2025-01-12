@@ -1,0 +1,39 @@
+
+###############
+AWS CloudTrail
+###############
+    It enables you to monitor and log activity across your AWS account. It records all API calls and related events
+    made within your account, offering a detailed record of changes, operations, and access to your AWS resources.
+    These logs help with security analysis, auditing, compliance monitoring, and troubleshooting.
+
+    CloudTrail records API calls made to AWS services. These API calls could come from the AWS Management Console,
+    AWS SDKs, AWS Command Line Interface (CLI), or other AWS services.
+    It logs actions like CreateInstance, DeleteBucket, RunInstances, etc., along with metadata like the identity
+    of the user or service that made the call, timestamp, and the specific resource affected.
+    Trail:
+
+    CloudTrail events are stored in S3 buckets for easy access and review.
+    You can use tools like Amazon Athena to query logs or third-party tools to perform in-depth analysis of activity
+    over time.
+
+
+aws cloudtrail lookup-events \
+    --lookup-attributes AttributeKey=ResourceName,AttributeValue=i-06738ec16620cedc9 \
+    --region eu-west-2 \
+    --output text
+
+aws cloudtrail lookup-events \
+    --lookup-attributes AttributeKey=ResourceName,AttributeValue=i-06738ec16620cedc9 \
+    --region eu-west-2 \
+    --output json | grep -i "error"
+
+
+aws ec2 get-console-output \
+    --instance-id i-06738ec16620cedc9 \
+    --region eu-west-2 \
+    --output text
+
+aws ec2 get-console-output \
+    --instance-id i-06738ec16620cedc9 \
+    --region eu-west-2 \
+    --output text | grep -i "error"

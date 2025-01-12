@@ -1,5 +1,5 @@
 
-# Installation
+# Start Jenkins
     docker-compose -f docker-compose.jenkins.yml up -d
     docker-compose -f docker-compose.jenkins.yml up --build -d (no cache)
     docker-compose -f docker-compose.jenkins.yml down
@@ -12,9 +12,15 @@
     login and configure node
     Remote root directory: /home/jenkins
     Labels: docker-agent/any
+    user: jenkins
     copy key: pbcopy < ~/.ssh/id_kube_user_key
+    machine-elastic-ip: 35.197.250.0
+    plugins:
+        AWS Credentials
+    Add aws keys
+    Add git keys
 
-35.197.250.0
+
 # Build
     select pipeline as job type
     

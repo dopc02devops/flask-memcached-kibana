@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         AWS_REGION = 'us-west-2'
-        CLUSTER_NAME = 'your-eks-cluster-name'
+        CLUSTER_NAME = 'MyEKSCluster'
         //DOCKER_BUILDKIT = '1' // Enable BuildKit for this pipeline
         // Docker versions 19.03 and higher
     }

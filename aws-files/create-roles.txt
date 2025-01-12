@@ -1,0 +1,96 @@
+
+######################
+Create a Role for EKS
+######################
+aws iam create-role \
+    --role-name EKSClusterRole \
+    --assume-role-policy-document file://eks-trust-policy.json
+
+    ######################
+    Attach the policies
+    ######################
+    aws iam attach-role-policy --role-name EKSClusterRole \
+    --policy-arn arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
+    aws iam attach-role-policy --role-name EKSClusterRole \
+    --policy-arn arn:aws:iam::aws:policy/AmazonEKSServicePolicy
+
+
+######################
+Create Role for EKSNode
+######################
+aws iam create-role --role-name eksNodeRole \
+--assume-role-policy-document file://ec2-eks-trust-policy.json
+
+    ######################
+    Attach the policies
+    ######################
+    aws iam attach-role-policy --role-name eksNodeRole \
+    --policy-arn arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
+    aws iam attach-role-policy --role-name eksNodeRole \
+    --policy-arn arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+    aws iam attach-role-policy --role-name eksNodeRole \
+    --policy-arn arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
+    aws iam attach-role-policy --role-name eksNodeRole \
+    --policy-arn arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+    aws iam attach-role-policy --role-name eksNodeRole \
+    --policy-arn arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
+
+# Verify the Role
+aws iam get-role --role-name eksNodeRole
+
+##########################
+Create role for CloudWatch
+##########################
+aws iam create-role \
+  --role-name CloudWatchAgentServerRole \
+  --assume-role-policy-document file://cloudwatch-trust-policy.json
+    ######################
+    Attach the policy
+    ######################
+    aws iam attach-role-policy \
+      --role-name CloudWatchAgentServerRole \
+      --policy-arn arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
+    aws iam attach-role-policy \
+      --role-name CloudWatchAgentServerRole \
+      --policy-arn arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+
+
+########################################################################################################################
+
+########################################################################################################################
+#################################
+Trust policy eks-trust-policy
+#################################
+This IAM policy allows the Amazon EKS service (eks.amazonaws.com) to assume a specified IAM role
+Effect: "Allow"
+    Grants permission for the action to occur
+Principal: "Service": "eks.amazonaws.com"
+    Specifies that the principal (entity) allowed to assume the role is Amazon EKS service.
+Action: "sts:AssumeRole"
+    Enables EKS to assume the specified IAM role
+    This policy is typically used in Amazon EKS cluster setups to allow EKS control plane components to
+    interact with other AWS services on your behalf
+
+#################################
+Trust policy ec2-eks-trust-policy
+#################################
+The policy grants the EC2 service permission to assume a specific IAM role, in enabling Amazon EKS (Elastic Kubernetes
+Service). The sts:AssumeRole action is central to this policy, as it allows the EC2 service to acquire temporary
+credentials associated with a role
+
+Effect: "Allow"
+  Grants permission for the action to occur
+Principal: "Service": "ec2.amazonaws.com"
+  Specifies the AWS service EC2 as the entity that can assume the role
+Action: "sts:AssumeRole"
+  This action is typically required when an EC2 instance needs to access AWS resources on your behalf
+Condition:
+  Includes an additional constraint to restrict how and when the role can be assumed
+The StringEquals condition specifies: "sts:ExternalId": "eks-node"
+  This external ID is used to prevent unintended entities from assuming the role
+
+EKS uses EC2 instances as worker nodes to run applications.
+The EKS-managed nodes require IAM roles to interact with AWS services (like pulling images from ECR, logging to
+CloudWatch, etc.).
+The external ID (eks-node) acts as a security mechanism to ensure that only intended entities can assume the role.
+########################################################################################################################
