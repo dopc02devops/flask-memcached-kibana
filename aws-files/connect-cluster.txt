@@ -1,0 +1,29 @@
+#####################################
+cd aws-files/roles to create roles
+#####################################
+
+####################
+# install aws cli
+####################
+https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
+aws configure
+
+1: Create a Role for EKS
+2: Create Role for EKSNode
+3: Create SG
+4: Create a Cluster
+5: Create SG for nodes
+6: Launch Template
+7: Create a Node Group
+8: install cloudwatch agent
+######################
+Connect to the Cluster
+######################
+aws eks update-kubeconfig --region us-west-2 --name MyEKSCluster
+kubectl get svc
+kubectl get pods
+
+######################
+Decode message
+######################
+aws sts decode-authorization-message --encoded-message "your_encoded_message_here"

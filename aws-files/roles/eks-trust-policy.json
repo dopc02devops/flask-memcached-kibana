@@ -7,6 +7,13 @@
         "Service": "eks.amazonaws.com"
       },
       "Action": "sts:AssumeRole"
+    },
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::908027384199:user/dopc02devops1aws_user"
+      },
+      "Action": "sts:AssumeRole"
     }
   ]
 }

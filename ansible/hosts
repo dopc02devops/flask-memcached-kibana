@@ -3,5 +3,5 @@
 kube_master ansible_host=34.147.152.212 ansible_ssh_private_key_file=~/.ssh/id_kube_user_key
 
 [worker]
-kube_worker1 ansible_host=3.10.83.115 ansible_ssh_private_key_file=~/.ssh/id_kube_user_key
-kube_worker2 ansible_host=13.43.172.226 ansible_ssh_private_key_file=~/.ssh/id_kube_user_key
+kube_worker1 ansible_host=3.8.135.212 ansible_ssh_private_key_file=~/.ssh/id_kube_user_key
+kube_worker2 ansible_host=13.40.45.109 ansible_ssh_private_key_file=~/.ssh/id_kube_user_key

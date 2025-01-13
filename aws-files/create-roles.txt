@@ -1,4 +1,5 @@
 
+cd roles dir
 ######################
 Create a Role for EKS
 ######################
@@ -21,6 +22,10 @@ Create Role for EKSNode
 aws iam create-role --role-name eksNodeRole \
 --assume-role-policy-document file://ec2-eks-trust-policy.json
 
+aws iam update-assume-role-policy --role-name eksNodeRole \
+--policy-document file://ec2-eks-trust-policy.json
+
+
     ######################
     Attach the policies
     ######################
@@ -34,6 +39,13 @@ aws iam create-role --role-name eksNodeRole \
     --policy-arn arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
     aws iam attach-role-policy --role-name eksNodeRole \
     --policy-arn arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
+    # added cloud watch policies to eksNodeRole
+    aws iam attach-role-policy \
+      --role-name eksNodeRole \
+      --policy-arn arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
+    aws iam attach-role-policy \
+      --role-name eksNodeRole \
+      --policy-arn arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
 
 # Verify the Role
 aws iam get-role --role-name eksNodeRole
@@ -41,6 +53,8 @@ aws iam get-role --role-name eksNodeRole
 ##########################
 Create role for CloudWatch
 ##########################
+# I removed the instance profile from the lunch-template because eks uses the eksNodeRole to create the instance
+# profile. Thus i added the cloudwatch agent policies on the eksNodeRole
 aws iam create-role \
   --role-name CloudWatchAgentServerRole \
   --assume-role-policy-document file://cloudwatch-trust-policy.json
@@ -56,6 +70,33 @@ aws iam create-role \
 
 
 ########################################################################################################################
+The sts:AssumeRole
+##################
+    It is a key part of AWS Identity and Access Management (IAM) and AWS Security Token Service
+(STS). It allows an IAM entity (like a user, group, or service) to temporarily assume a role with permissions
+specified in that role's policy.
+####################################
+Example Use Case for sts:AssumeRole
+####################################
+EC2 Instance Role:
+    When launching an EC2 instance in an EKS node group, the instance assumes an IAM role to access AWS resources (e.g.,
+    EKS, S3, or CloudWatch). The sts:AssumeRole action is required in the trust relationship of the role, allowing
+    EC2 to assume it.
+Cross-Account Access:
+    You have two AWS accounts, and you want a user or service in one account to access resources in another. You create
+    a role in the second account, allowing sts:AssumeRole for the user or service in the first account.
+Temporary Credentials for Automation:
+    Applications or scripts use sts:AssumeRole to acquire temporary credentials to perform tasks.
+
+
+update-role
+    aws iam update-assume-role-policy \
+        --role-name EKSClusterRole \
+        --policy-document file://eks-trust-policy.json
+Token
+    aws sts assume-role \
+      --role-arn arn:aws:iam::908027384199:role/EKSClusterRole \
+      --role-session-name Session
 
 ########################################################################################################################
 #################################

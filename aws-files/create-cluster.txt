@@ -1,20 +1,6 @@
 
-#####################################
-cd aws-files/roles to create roles
-#####################################
-
-####################
-# install aws cli
-####################
-https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
-aws configure
-
-
-1: Create a Role for EKS
-2: Create Role for EKSNode
-3: Create SG
 ######################
-4: Create a Cluster
+Create a Cluster
 ######################
 aws eks create-cluster \
 --name MyEKSCluster \
@@ -24,54 +10,13 @@ aws eks create-cluster \
 --resources-vpc-config subnetIds=subnet-0f63b4f01d0bec499,subnet-05888a03e0511ede0,securityGroupIds=sg-0f1c8db2d3355da0d
 
 ######################
-Describe cluster
+cluster commands
 ######################
+aws eks --region eu-west-2 update-kubeconfig --name MyEKSCluster
 aws eks describe-cluster --name MyEKSCluster --region eu-west-2
 aws eks describe-cluster --name MyEKSCluster --region eu-west-2 --query "cluster.status" --output text
 aws eks delete-cluster --name MyEKSCluster
-5: Create SG for nodes
-6: Launch Template
-######################
-7: Create a Node Group
-######################
-aws eks create-nodegroup \
---cluster-name MyEKSCluster \
---nodegroup-name MyNodeGroup \
---subnets subnet-0f63b4f01d0bec499 subnet-05888a03e0511ede0 \
---node-role arn:aws:iam::908027384199:role/eksNodeRole \
---scaling-config minSize=1,maxSize=4,desiredSize=2 \
---launch-template name=my-ubuntu-template,version=2 \
---region eu-west-2
 
-# make sure to edit template version
-
-aws eks describe-nodegroup \
-    --cluster-name MyEKSCluster \
-    --nodegroup-name MyNodeGroup
-
-aws eks describe-nodegroup \
-    --cluster-name MyEKSCluster \
-    --nodegroup-name MyNodeGroup \
-    --region eu-west-2 \
-    --query "nodegroup.status" \
-    --output text
-
-aws eks delete-nodegroup \
-    --cluster-name MyEKSCluster \
-    --nodegroup-name MyNodeGroup
-    --region eu-west-2
-
-######################
-8: Connect to the Cluster
-######################
-aws eks update-kubeconfig --region us-west-2 --name MyEKSCluster
-kubectl get svc
-kubectl get pods
-
-######################
-Decode message
-######################
-aws sts decode-authorization-message --encoded-message "your_encoded_message_here"
 
 
 

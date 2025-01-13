@@ -23,6 +23,7 @@
 
 # ssh
     ssh -i ~/.ssh/id_kube_user_key jenkins@ip
+    copy key: pbcopy < ~/.ssh/id_kube_user_key
 
 # create cluster
 
@@ -36,7 +37,5 @@
 - go to ur browser and enter
 - externalip:port to access application
 
-
-
-
-
+# host file
+sudo vim /Users/elvisngwesse/.ssh/known_hosts

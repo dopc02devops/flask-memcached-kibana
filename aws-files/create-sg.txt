@@ -82,3 +82,8 @@ aws ec2 authorize-security-group-ingress \
     --protocol tcp \
     --port 22 \
     --cidr 0.0.0.0/0
+aws ec2 authorize-security-group-ingress \
+    --group-id sg-0eab8786c734218b1 \
+    --protocol icmp \
+    --port -1 \
+    --cidr 0.0.0.0/0

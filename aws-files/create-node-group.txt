@@ -1,0 +1,34 @@
+######################
+Create a Node Group
+######################
+# make sure to edit template version
+aws eks create-nodegroup \
+--cluster-name MyEKSCluster \
+--nodegroup-name MyNodeGroup \
+--subnets subnet-0f63b4f01d0bec499 subnet-05888a03e0511ede0 \
+--node-role arn:aws:iam::908027384199:role/eksNodeRole \
+--scaling-config minSize=1,maxSize=4,desiredSize=2 \
+--launch-template name=my-ubuntu-template,version=14 \
+--region eu-west-2
+
+aws eks describe-nodegroup \
+    --cluster-name MyEKSCluster \
+    --nodegroup-name MyNodeGroup
+
+aws eks describe-nodegroup \
+    --cluster-name MyEKSCluster \
+    --nodegroup-name MyNodeGroup \
+    --region eu-west-2 \
+    --query "nodegroup.status" \
+    --output text
+
+aws eks delete-nodegroup \
+    --cluster-name MyEKSCluster \
+    --nodegroup-name MyNodeGroup
+    --region eu-west-2
+###########
+Check logs
+###########
+- sudo journalctl | grep -i error
+- sudo journalctl -u amazon-ssm-agent
+

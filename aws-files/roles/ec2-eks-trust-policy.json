@@ -4,14 +4,12 @@
     {
       "Effect": "Allow",
       "Principal": {
-        "Service": "ec2.amazonaws.com"
+        "Service": [
+          "ec2.amazonaws.com",
+          "eks.amazonaws.com"
+        ]
       },
-      "Action": "sts:AssumeRole",
-      "Condition": {
-        "StringEquals": {
-          "sts:ExternalId": "eks-node"
-        }
-      }
+      "Action": "sts:AssumeRole"
     }
   ]
 }

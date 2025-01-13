@@ -61,3 +61,12 @@
 docker system prune -a (removes all unused images)
 docker system prune
 docker system prune -a --volumes
+
+
+host file
+sudo vim /Users/elvisngwesse/.ssh/known_hosts
+
+vim /etc/ssh/sshd_config
+PubkeyAuthentication yes
+AuthorizedKeysFile %h/.ssh/authorized_keys
+sudo systemctl restart sshd
