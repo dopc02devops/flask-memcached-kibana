@@ -1,0 +1,19 @@
+
+
+aws ec2 create-launch-template \
+    --launch-template-name MyLaunchTemplate \
+    --version-description "Version 1" \
+    --launch-template-data file://launch-template.json
+
+
+aws ec2 run-instances \
+    --launch-template LaunchTemplateName=MyLaunchTemplate,Version=1
+
+
+aws ec2 describe-instances --filters "Name=tag:Name,Values=MyInstance"
+
+aws ec2 create-launch-template-version \
+    --launch-template-id lt-0abcd1234efgh5678 \
+    --version-description "Updated version with t3.micro instance type" \
+    --launch-template-data file://launch-template.json
+

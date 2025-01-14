@@ -54,3 +54,23 @@ Launch Configuration
   options
 - Doesn't support setting things like Placement Groups, multiple instance types in Auto Scaling, or advanced EBS
   settings
+
+
+
+eksctl create cluster \
+  --name my-cluster \                  # Name of the EKS cluster
+  --region eu-west-2 \                 # AWS region where the cluster will be created
+  --with-oidc \                        # Enable OIDC for service account IAM roles
+  --nodegroup-name eks-nodes \              # Name of the node group
+  --nodes 2 \                          # Desired number of nodes
+  --nodes-max 5 \                      # Maximum number of nodes (for autoscaling)
+  --nodes-min 2 \                      # Minimum number of nodes (for autoscaling)
+  --ssh-access \                       # Enable SSH access to nodes
+  --enable-ssm \                       # Enable AWS Systems Manager for the nodes
+  --node-private-networking \          # Launch nodes in private subnets
+  --managed \                          # Use managed node groups
+  --instance-types t2.micro \         # Instance type for the nodes
+  --asg-access \                       # Enable access to Auto Scaling Groups for cluster components
+  --external-dns-access \              # Grant permissions for external-dns
+  --full-ecr-access \                  # Grant full access to Amazon Elastic Container Registry (ECR)
+  --version 1.27                       # Kubernetes version

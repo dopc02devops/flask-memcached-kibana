@@ -29,6 +29,15 @@ aws eks delete-nodegroup \
 ###########
 Check logs
 ###########
+- sudo journalctl
 - sudo journalctl | grep -i error
 - sudo journalctl -u amazon-ssm-agent
+- sudo journalctl | grep 'kube_user'
+- sudo journalctl --since today
+- sudo journalctl -n 50
+- sudo journalctl -f
 
+#############
+Spot pricing
+#############
+aws ec2 describe-spot-price-history --instance-types t2.micro --product-description "Linux/UNIX" --start-time $(date -u +"%Y-%m-%dT%H:%M:%SZ") --region us-west-2

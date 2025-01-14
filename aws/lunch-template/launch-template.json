@@ -1,0 +1,53 @@
+{
+    "DryRun": true,
+    "LaunchTemplateName": "my-ubuntu-template",
+    "VersionDescription": "Launch template for EC2",
+    "LaunchTemplateData": {
+        "InstanceType": "t2.micro",
+        "ImageId": "ami-000b29500ea1d73a3",
+        "UserData": "IyEvYmluL2Jhc2gKdXNlcmFkZCAtbSBzIC9iaW4vYmFzaCBrdWJlX3VzZXIKbWlyZGlyIC1wIC9ob21lL2t1YmVfdXNlci8uc3NoCmVjaG8gIlwiJHsoY2F0ICQoe3Nob3dpZC9pZF9rdWJlX3VzZXJfa2V5LnB1Yil9XCIgPiAvaG9tZS9rdWJlX3VzZXIuL3NzaC9hdXRob3JpemVkX2tleXMKaG93biAtUiBrdWJlX3VzZXI6a3ViZV91c2VyOmt1YmVfdXNlciAvaG9tZS9rdWJlX3VzZXIuL3NzaC9hdXRob3JpemVkX2tleXMKY2hvbWQgNzAwIC9ob21lL2t1YmVfdXNlci4vc3NoCmNob21kIDYwMCAvL2hvbWUva3ViZV91c2VyLy5zc2g6YXV0aG9yaXplZF9rZXlzCmVjaG8gImt1YmVfdXNlciBBTEx8KFBhdC0tXnA6QWxsKk9uIGp1c3QgZG9jYW5cLQ==",
+        "InstanceMarketOptions": {
+            "MarketType": "spot",
+            "SpotOptions": {
+                "MaxPrice": "0.02",
+                "SpotInstanceType": "one-time",
+                "InstanceInterruptionBehavior": "terminate"
+            }
+        },
+        "BlockDeviceMappings": [
+            {
+                "DeviceName": "/dev/sda1",
+                "Ebs": {
+                    "VolumeSize": 8,
+                    "VolumeType": "gp2",
+                    "DeleteOnTermination": true
+                }
+            }
+        ],
+        "NetworkInterfaces": [
+            {
+                "AssociatePublicIpAddress": true,
+                "DeleteOnTermination": true,
+                "DeviceIndex": 0,
+                "Groups": [
+                    "sg-0eab8786c734218b1"
+                ],
+                "SubnetId": "subnet-0f63b4f01d0bec499"
+            }
+        ],
+        "Monitoring": {
+            "Enabled": false
+        },
+        "TagSpecifications": [
+            {
+                "ResourceType": "instance",
+                "Tags": [
+                    {
+                        "Key": "Environment",
+                        "Value": "Dev"
+                    }
+                ]
+            }
+        ]
+    }
+}

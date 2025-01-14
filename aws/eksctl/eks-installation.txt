@@ -1,0 +1,85 @@
+
+##################
+Install the below
+##################
+- eksctl: The CLI tool for creating and managing EKS clusters
+- AWS CLI: To authenticate and manage AWS resources
+- kubectl: Kubernetes CLI for interacting with your cluster
+- aws configure: The AWS cli tool
+
+
+####################
+SSM Parameter Store
+####################
+ This is a secure and scalable service provided by AWS for managing configuration 
+ data and secrets used by applications or systems. It helps streamline configuration 
+ management by enabling you to centralize, secure, and easily retrieve parameters 
+ for use in your AWS environment
+
+* Store the below configuration in the SSM Parameter Store
+#######################
+Create an SSM Parameter
+#######################
+
+aws ssm put-parameter \
+  --name "AmazonCloudWatchAgentConfig" \
+  --type "String" \
+  --value '{
+      "agent": {
+          "metrics_collection_interval": 60,
+          "run_as_user": "cwagent"
+      },
+      "metrics": {
+          "append_dimensions": {
+              "AutoScalingGroupName": "${aws:AutoScalingGroupName}",
+              "ImageId": "${aws:ImageId}",
+              "InstanceId": "${aws:InstanceId}",
+              "InstanceType": "${aws:InstanceType}"
+          },
+          "metrics_collected": {
+              "disk": {
+                  "measurement": [
+                      "used_percent"
+                  ],
+                  "metrics_collection_interval": 60,
+                  "resources": [
+                      "*"
+                  ]
+              },
+              "mem": {
+                  "measurement": [
+                      "mem_used_percent"
+                  ],
+                  "metrics_collection_interval": 60
+              }
+          }
+      }
+  }' \
+  --region eu-west-2
+
+####################
+Verify the Paramete
+####################
+- aws ssm get-parameter --name "AmazonCloudWatchAgentConfig" --region eu-west-2
+
+##############
+Create cluster
+##############
+- eksctl create cluster -f cluster-config.yaml
+- This will create a cloudformation stack 
+
+kubectl config current-context
+
+kubectl get nodes
+
+
+ssh -i <your-private-key.pem> ubuntu@<node-ip>
+sudo systemctl status amazon-cloudwatch-agent
+
+sudo systemctl status amazon-ssm-agent
+
+id kube_user
+
+eksctl delete cluster -f cluster-config.yaml
+
+

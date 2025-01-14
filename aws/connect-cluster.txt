@@ -27,3 +27,9 @@ kubectl get pods
 Decode message
 ######################
 aws sts decode-authorization-message --encoded-message "your_encoded_message_here"
+
+
+
+cd ansible
+ansible-playbook aws/install_cloudwatch-agent.yaml
+ansible-playbook aws/install-ssm-agent.yaml

@@ -1,0 +1,64 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+metadata:
+  name: k8-cluster
+  region: eu-west-2
+  version: "1.24"  # Ensure that Kubernetes version 1.24 is supported in your region
+managedNodeGroups:
+  - name: k8-node-group
+    minSize: 2
+    maxSize: 4
+    desiredCapacity: 2
+    volumeSize: 8
+    instanceType: t2.micro
+    # ami: ami-000b29500ea1d73a3
+    amiFamily: Ubuntu2004
+    preBootstrapCommands:
+      - sudo apt-get update -y
+      - sudo apt-get install -y amazon-ssm-agent
+      - sudo systemctl enable amazon-ssm-agent
+      - sudo systemctl start amazon-ssm-agent
+      - sudo apt-get install -y amazon-cloudwatch-agent
+      - |
+        sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+        -a fetch-config \
+        -m ec2 \
+        -s \
+        -c ssm:AmazonCloudWatchAgentConfig
+      - |
+        #!/bin/bash
+        USERNAME="kube_user"
+        SSH_KEY="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCVG5b1Eb1+VRWgWm7rVYk6SwqTClBkqYGN728UkOnuIsk698KIQvFDiGSFkMGGvkNB8loK9cnW4o9jLJIWAuv8HviaOthb0YtNY32plzAQigKT322JjC2iCuomMCfZqQJK/BO5Dzh2wZN3/IzhytCPkScPSKQ27Ra/bRhpxbUxKRazOAB02wT2Zed5XUsP13L+paDQG5f/iIePqLUN5kVna8QXHHFKT98ZpmRII7M6PmxuCpdSuCaq6FFiK8kJ/RoYjZ8K3BuxySni1iuvqM8ESb8eE23vtxOHqRZqUw7lGwvKQeZwWToiPZcgBTpdDf/19fARjv9CWywaVyv0kKRSGBBOpotHxazOY+u8t94gLVwD0fRtMqrSvtisSbJTEq36l9udREPZQ2DcKwrXtyozIbTus5fVs3xeTtgkwolU+qH+xOUCv4uaYOy9U0dY6qe5PhQURckGjUqu0KXJIysSK68YQhfAAVDXnB6k6Lt6T3CzFEaNFtMbTrrlShh80cZX9uVkPLJ7KSqFoIT8mliLwCiGKnYi/v619CRl45vKXJPvMd/daWmVr+7SQndKsdUxBM7eyVYeJpujpZlEdbzgqVDwkVfa3jdzrKDMnMKAWQe9iuUCWuPD8CybOaZIpj1ipSq2zjDsMK3yMn5fCNJUg4PHHwbmkuFlm41YITKTMw== terraform"
+        
+        # Check if user exists
+        if id "$USERNAME" &>/dev/null; then
+            echo "User '$USERNAME' already exists."
+            exit 1
+        fi
+        
+        # Add user and set up SSH access
+        useradd -m -s /bin/bash "$USERNAME" || { echo "Error: Failed to create user."; exit 1; }
+        mkdir -p /home/"$USERNAME"/.ssh
+        echo "$SSH_KEY" > /home/"$USERNAME"/.ssh/authorized_keys
+        chown -R "$USERNAME":"$USERNAME" /home/"$USERNAME"/.ssh
+        chmod 700 /home/"$USERNAME"/.ssh
+        chmod 600 /home/"$USERNAME"/.ssh/authorized_keys
+        
+        # Grant sudo privileges
+        echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" | EDITOR='tee -a' visudo
+        
+        # Output status
+        echo "SSH user '$USERNAME' created and configured successfully."
+    iam:
+      # Specify the custom IAM role name
+      #roleName: "eksNodeRole"
+      attachPolicyARNs:
+        - arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
+        - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+        - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+    securityGroups:
+      # Attach the default security group to the nodes
+      attachIDs:
+        - sg-0eab8786c734218b1  # Use your default security group ID
