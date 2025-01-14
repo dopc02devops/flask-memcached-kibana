@@ -23,7 +23,7 @@
 
 # ssh
     ssh -i ~/.ssh/id_kube_user_key jenkins@ip
-    copy key: pbcopy < ~/.ssh/id_kube_user_key
+    copy key: pbcopy < ~/.ssh/id_kube_user_key.pub
 
 # create cluster
 

@@ -15,4 +15,4 @@ account-info.txt
 /id_gcp_key.pub
 /src/hosts
 .pem
-/aws-files/templates/user-data.sh
+/aws/templates/user-data.sh

@@ -8,7 +8,9 @@ def logger():
     os.dup2(sys.stdout.fileno(), 0)
     os.dup2(sys.stderr.fileno(), 1)
     # Set up basic configuration for logging
+    log_file_path = "/var/log/flask.log"
     logging.basicConfig(
+        filename=log_file_path,
         level=logging.DEBUG,
         format='%(asctime)s: %(levelname)s: %(message)s',
         datefmt='%m/%d/%Y %I:%M:%S %p',
