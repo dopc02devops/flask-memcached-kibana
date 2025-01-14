@@ -1,0 +1,52 @@
+
+###############
+System-Manager
+###############
+    Amazon SSM (Systems Manager) is a service provided by Amazon Web Services (AWS) that helps you
+manage your cloud and on-premises infrastructure securely and efficiently. It simplifies system 
+administration tasks by offering a centralized interface for automation, configuration, and 
+operational data insights. Here's an overview of its core features and functionalities
+
+Automation:
+Session Manager:
+Patch Manager:
+Run Command:
+State Manager:
+Parameter Store:
+Inventory:
+OpsCenter:
+Compliance:
+
+################################
+Sending Commands to an Instance
+################################
+aws ssm send-command \
+  --document-name "AWS-RunShellScript" \
+  --targets "Key=instanceIds,Values=i-1234567890abcdef0" \
+  --parameters 'commands=["ls -la"]' \
+  --region eu-west-2
+
+################
+Start a Session
+################
+aws ssm start-session --target i-1234567890abcdef0
+
+##########################
+List All Managed Instances
+##########################
+aws ssm describe-instance-information
+
+##########################
+ Patch a Managed Instance
+##########################
+aws ssm send-command \
+  --document-name "AWS-RunPatchBaseline" \
+  --targets "Key=instanceIds,Values=i-1234567890abcdef0" \
+  --parameters '{"Operation":["Install"]}'
+
+#############
+Get Inventory
+#############
+aws ssm list-inventory-entries \
+  --instance-id i-1234567890abcdef0 \
+  --type-name "AWS:Application"

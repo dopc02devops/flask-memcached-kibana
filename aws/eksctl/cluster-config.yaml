@@ -3,32 +3,32 @@ kind: ClusterConfig
 metadata:
   name: k8-cluster
   region: eu-west-2
-  version: "1.24"  # Ensure that Kubernetes version 1.24 is supported in your region
+  version: "1.27"
+availabilityZones: ["eu-west-2a", "eu-west-2b", "eu-west-2c"]
 managedNodeGroups:
   - name: k8-node-group
     minSize: 2
     maxSize: 4
     desiredCapacity: 2
-    volumeSize: 8
-    instanceType: t2.micro
-    # ami: ami-000b29500ea1d73a3
-    amiFamily: Ubuntu2004
+    volumeSize: 20
+    ssh:
+      allow: true
+      publicKeyPath: ~/.ssh/id_kube_user_key.pub
+    labels: {role: worker}
+    tags:
+      nodegroup-role: worker
+    instanceTypes: ["t2.micro"] # Specify instance types here without instancesDistribution
+    availabilityZones: ["eu-west-2a"]
     preBootstrapCommands:
-      - sudo apt-get update -y
-      - sudo apt-get install -y amazon-ssm-agent
-      - sudo systemctl enable amazon-ssm-agent
-      - sudo systemctl start amazon-ssm-agent
-      - sudo apt-get install -y amazon-cloudwatch-agent
-      - |
-        sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
-        -a fetch-config \
-        -m ec2 \
-        -s \
-        -c ssm:AmazonCloudWatchAgentConfig
-      - |
+    - sudo yum install amazon-ssm-agent -y
+    - sudo systemctl enable amazon-ssm-agent
+    - sudo systemctl start amazon-ssm-agent
+    - sudo yum install amazon-cloudwatch-agent -y
+    - sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c ssm:AmazonCloudwatch-linux
+    - |
         #!/bin/bash
         USERNAME="kube_user"
-        SSH_KEY="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCVG5b1Eb1+VRWgWm7rVYk6SwqTClBkqYGN728UkOnuIsk698KIQvFDiGSFkMGGvkNB8loK9cnW4o9jLJIWAuv8HviaOthb0YtNY32plzAQigKT322JjC2iCuomMCfZqQJK/BO5Dzh2wZN3/IzhytCPkScPSKQ27Ra/bRhpxbUxKRazOAB02wT2Zed5XUsP13L+paDQG5f/iIePqLUN5kVna8QXHHFKT98ZpmRII7M6PmxuCpdSuCaq6FFiK8kJ/RoYjZ8K3BuxySni1iuvqM8ESb8eE23vtxOHqRZqUw7lGwvKQeZwWToiPZcgBTpdDf/19fARjv9CWywaVyv0kKRSGBBOpotHxazOY+u8t94gLVwD0fRtMqrSvtisSbJTEq36l9udREPZQ2DcKwrXtyozIbTus5fVs3xeTtgkwolU+qH+xOUCv4uaYOy9U0dY6qe5PhQURckGjUqu0KXJIysSK68YQhfAAVDXnB6k6Lt6T3CzFEaNFtMbTrrlShh80cZX9uVkPLJ7KSqFoIT8mliLwCiGKnYi/v619CRl45vKXJPvMd/daWmVr+7SQndKsdUxBM7eyVYeJpujpZlEdbzgqVDwkVfa3jdzrKDMnMKAWQe9iuUCWuPD8CybOaZIpj1ipSq2zjDsMK3yMn5fCNJUg4PHHwbmkuFlm41YITKTMw== terraform"
+        SSH_KEY="ssh-rsa LLLLLLLAAAAB3NzaC1yc2EAAAADAQABAAACAQCVG5b1Eb1+VRWgWm7rVYk6SwqTClBkqYGN728UkOnuIsk698KIQvFDiGSFkMGGvkNB8loK9cnW4o9jLJIWAuv8HviaOthb0YtNY32plzAQigKT322JjC2iCuomMCfZqQJK/BO5Dzh2wZN3/IzhytCPkScPSKQ27Ra/bRhpxbUxKRazOAB02wT2Zed5XUsP13L+paDQG5f/iIePqLUN5kVna8QXHHFKT98ZpmRII7M6PmxuCpdSuCaq6FFiK8kJ/RoYjZ8K3BuxySni1iuvqM8ESb8eE23vtxOHqRZqUw7lGwvKQeZwWToiPZcgBTpdDf/19fARjv9CWywaVyv0kKRSGBBOpotHxazOY+u8t94gLVwD0fRtMqrSvtisSbJTEq36l9udREPZQ2DcKwrXtyozIbTus5fVs3xeTtgkwolU+qH+xOUCv4uaYOy9U0dY6qe5PhQURckGjUqu0KXJIysSK68YQhfAAVDXnB6k6Lt6T3CzFEaNFtMbTrrlShh80cZX9uVkPLJ7KSqFoIT8mliLwCiGKnYi/v619CRl45vKXJPvMd/daWmVr+7SQndKsdUxBM7eyVYeJpujpZlEdbzgqVDwkVfa3jdzrKDMnMKAWQe9iuUCWuPD8CybOaZIpj1ipSq2zjDsMK3yMn5fCNJUg4PHHwbmkuFlm41YITKTMw== terraform"
         
         # Check if user exists
         if id "$USERNAME" &>/dev/null; then
@@ -44,21 +44,41 @@ managedNodeGroups:
         chmod 700 /home/"$USERNAME"/.ssh
         chmod 600 /home/"$USERNAME"/.ssh/authorized_keys
         
-        # Grant sudo privileges
+        # Grant sudo privileges to kube_user
         echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" | EDITOR='tee -a' visudo
         
+        # Grant sudo privileges to cwagent
+        echo "cwagent ALL=(ALL) NOPASSWD:ALL" | EDITOR='tee -a' visudo
+        
         # Output status
-        echo "SSH user '$USERNAME' created and configured successfully."
+        echo "SSH user '$USERNAME' and 'cwagent' user have been granted sudo privileges."
+        
+        # Fix CloudWatch Agent permissions for cwagent user
+        # Ensure CloudWatch Agent installation directory is accessible by cwagent
+        sudo chown -R cwagent:cwagent /opt/aws/amazon-cloudwatch-agent
+        sudo chmod -R 755 /opt/aws/amazon-cloudwatch-agent
+        
+        # Grant permissions on containerd and kubelet directories
+        sudo chmod -R 755 /run/containerd /var/lib/kubelet
+        sudo chown -R cwagent:cwagent /run/containerd /var/lib/kubelet
+        
+        # Optional: Fix other CloudWatch-related directories if needed
+        sudo chmod -R 755 /var/log/amazon/ /var/log/aws/
+        sudo chown -R cwagent:cwagent /var/log/amazon/ /var/log/aws/
+
+        echo "CloudWatch Agent permissions added"
     iam:
-      # Specify the custom IAM role name
-      #roleName: "eksNodeRole"
+      withAddonPolicies:
+        externalDNS: true
+        certManager: true
       attachPolicyARNs:
         - arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
         - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
         - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
         - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
-    securityGroups:
-      # Attach the default security group to the nodes
-      attachIDs:
-        - sg-0eab8786c734218b1  # Use your default security group ID
+        - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
+        - arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+        - arn:aws:iam::aws:policy/CloudWatchAgentAdminPolicy
+        - arn:aws:iam::aws:policy/AmazonSSMFullAccess

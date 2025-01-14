@@ -1,0 +1,57 @@
+{
+    "agent": {
+        "metrics_collection_interval": 60,
+        "run_as_user": "root"
+    },
+    "metrics": {
+        "append_dimensions": {
+            "AutoScalingGroupName": "${aws:AutoScalingGroupName}",
+            "ImageId": "${aws:ImageId}",
+            "InstanceId": "${aws:InstanceId}",
+            "InstanceType": "${aws:InstanceType}"
+        },
+        "metrics_collected": {
+            "disk": {
+                "measurement": [
+                    "used_percent"
+                ],
+                "metrics_collection_interval": 60,
+                "resources": [
+                    "*"
+                ]
+            },
+            "mem": {
+                "measurement": [
+                    "mem_used_percent"
+                ],
+                "metrics_collection_interval": 60
+            }
+        }
+    },
+    "logs": {
+        "logs_collected": {
+            "files": {
+                "collect_list": [
+                    {
+                        "file_path": "/var/log/cloud-init-output.log", 
+                        "log_group_name": "k8-log-group",
+                        "log_stream_name": "k8-log-stream", 
+                        "timestamp_format": "%b %d %H:%M:%S"
+                    },
+                    {
+                        "file_path": "/var/log/flask.log",
+                        "log_group_name": "flask-log-group",
+                        "log_stream_name": "flask-log-stream",
+                        "timestamp_format": "%b %d %H:%M:%S"
+                    },
+                    {
+                        "file_path": "/var/log/memcached.log",
+                        "log_group_name": "memcached-log-group",
+                        "log_stream_name": "memcached-log-stream", 
+                        "timestamp_format": "%b %d %H:%M:%S"
+                    }
+                ]
+            }
+        }
+    }
+}

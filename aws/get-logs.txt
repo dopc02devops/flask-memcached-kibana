@@ -1,6 +1,0 @@
-
-
-aws ec2 get-console-output \
-    --instance-id i-06738ec16620cedc9 \
-    --region eu-west-2 \
-    --output text

@@ -20,66 +20,102 @@ SSM Parameter Store
 #######################
 Create an SSM Parameter
 #######################
+aws ssm put-parameter \
+  --name "AmazonCloudwatch-linux" \
+  --type "String" \
+  --value file://ssm-config.json \
+  --region eu-west-2
 
 aws ssm put-parameter \
-  --name "AmazonCloudWatchAgentConfig" \
+  --name "AmazonCloudwatch-linux" \
   --type "String" \
-  --value '{
-      "agent": {
-          "metrics_collection_interval": 60,
-          "run_as_user": "cwagent"
-      },
-      "metrics": {
-          "append_dimensions": {
-              "AutoScalingGroupName": "${aws:AutoScalingGroupName}",
-              "ImageId": "${aws:ImageId}",
-              "InstanceId": "${aws:InstanceId}",
-              "InstanceType": "${aws:InstanceType}"
-          },
-          "metrics_collected": {
-              "disk": {
-                  "measurement": [
-                      "used_percent"
-                  ],
-                  "metrics_collection_interval": 60,
-                  "resources": [
-                      "*"
-                  ]
-              },
-              "mem": {
-                  "measurement": [
-                      "mem_used_percent"
-                  ],
-                  "metrics_collection_interval": 60
-              }
-          }
-      }
-  }' \
-  --region eu-west-2
+  --value file://ssm-config.json \
+  --region eu-west-2 \
+  --overwrite
+
+aws ssm get-parameter \
+  --name "AmazonCloudwatch-linux" \
+  --region eu-west-2 \
+  --with-decryption \
+  --query "Parameter.Value" \
+  --output text > ssm-config.json
 
 ####################
 Verify the Paramete
 ####################
-- aws ssm get-parameter --name "AmazonCloudWatchAgentConfig" --region eu-west-2
+- aws ssm get-parameter --name "AmazonCloudwatch-linux" --region eu-west-2
+- aws ssm describe-parameters --region eu-west-2
+- aws ssm delete-parameter --name "AmazonCloudWatchAgentConfig" --region eu-west-2
+- aws ssm delete-parameters --names "AmazonCloudWatchAgentConfig" "AmazonCloudwatch-linux" --region eu-west-2
 
 ##############
 Create cluster
 ##############
 - eksctl create cluster -f cluster-config.yaml
+- eksctl upgrade cluster -f cluster-config.yaml
+
 - This will create a cloudformation stack 
 
-kubectl config current-context
+##################
+Enable OIDC 
+#################
+In Kubernetes, OpenID Connect (OIDC) is commonly used to integrate external identity 
+providers (IdPs) for authentication. Kubernetes itself does not handle user authentication 
+directly but relies on external systems to verify identities. By configuring Kubernetes 
+to use OIDC, you can authenticate users and manage access through identity providers 
+such as Google, Azure AD, Keycloak, Okta, or others
 
-kubectl get nodes
+- aws eks describe-cluster \
+    --name k8-cluster \
+    --region eu-west-2 \
+    --query "cluster.identity.oidc.issuer" \
+    --output text
 
+#############
+Update addons 
+#############
+eksctl update addon \
+    --cluster k8-cluster \
+    --name vpc-cni \
+    --region eu-west-2 \
+    --config-file cluster-config.yaml
 
-ssh -i <your-private-key.pem> ubuntu@<node-ip>
-sudo systemctl status amazon-cloudwatch-agent
+- eksctl get addon --cluster k8-cluster --region eu-west-2
+- kubectl get pods -n kube-system
 
-sudo systemctl status amazon-ssm-agent
+###################
+Verify installation
+###################
+- kubectl config current-context
+- kubectl get nodes
+- ssh -i ~/.ssh/id_kube_user_key kube_user@<node-ip>
+- sudo systemctl status amazon-cloudwatch-agent
+- sudo systemctl status amazon-ssm-agent
+- id kube_user
 
-id kube_user
+###########
+Check logs
+###########
+- sudo journalctl
+- sudo journalctl | grep -i error
+- sudo journalctl -u amazon-ssm-agent
+- sudo journalctl -u amazon-cloudwatch-agent
+- sudo journalctl | grep 'kube_user'
+- sudo journalctl --since today
+- sudo journalctl -n 50
+- sudo journalctl -f
+- sudo cat /opt/aws/amazon-cloudwatch-agent/logs/amazon-cloudwatch-agent.log
+- cat /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.d/ssm_AmazonCloudwatch-linux
+- sudo tail -f /var/log/amazon/amazon-cloudwatch-agent/amazon-cloudwatch-agent.log
 
-eksctl delete cluster -f cluster-config.yaml
+##############
+Delete cluster
+##############
+- eksctl delete cluster -f cluster-config.yaml
+
+######################
+Decode message
+######################
+aws sts decode-authorization-message --encoded-message "your_encoded_message_here"
 
 

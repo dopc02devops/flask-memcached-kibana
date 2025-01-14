@@ -18,18 +18,18 @@ Amazon CloudWatch
 aws logs describe-log-groups --region eu-west-2
 
 aws logs describe-log-streams \
-    --log-group-name "/aws/eks/MyEKSCluster/cluster" \
+    --log-group-name "k8-log-group" \
     --region eu-west-2 \
     --output text
 
 aws logs get-log-events \
-    --log-group-name "/aws/eks/MyEKSCluster/cluster" \
-    --log-stream-name "<log-stream-name>" \
+    --log-group-name "k8-log-group" \
+    --log-stream-name "k8-log-stream" \
     --region eu-west-2 \
     --output text
 
 aws logs start-query \
-    --log-group-name "/aws/eks/MyEKSCluster/cluster" \
+    --log-group-name "k8-log-group" \
     --start-time $(($(date +%s) - 3600)) \
     --end-time $(date +%s) \
     --query-string "fields @timestamp, @message | sort @timestamp desc | limit 20" \
