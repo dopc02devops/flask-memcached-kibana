@@ -1,0 +1,10 @@
+apiVersion: v2
+name: flask-memcached-chart
+description: flask memcached application for caching and setting ttl
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+dependencies:
+  - name: memcached-chart
+    version: 0.1.0
+    repository: "https://dopc02devops.github.io/helms_artifacts"

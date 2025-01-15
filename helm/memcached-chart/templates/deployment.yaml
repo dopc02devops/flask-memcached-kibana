@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Values.StatefulSet.metadata.name }}
+  labels:
+    app: memcached
+spec:
+  serviceName: "memcached-service" 
+  replicas: {{ .Values.spec.replicas.count }}
+  selector:
+    matchLabels:
+      app: memcached
+  template:
+    metadata:
+      labels:
+        app: memcached
+    spec:
+      containers:
+        - name: {{ .Values.spec.container.name }}
+          image: {{ .Values.spec.container.image }}  # Use a specific version
+          ports:
+            - containerPort: {{ .Values.spec.container.port.number }}
+          resources:
+            requests:
+              memory: "64Mi"  # Reduced from 128Mi to 64Mi
+              cpu: "125m"     # Reduced from 250m to 125m
+            limits:
+              memory: "128Mi" # Reduced from 256Mi to 128Mi
+              cpu: "250m"     # Reduced from 500m to 250m
+          envFrom:
+            - configMapRef:
+                name: {{ .Values.config.metadata.resource.name }}
+          readinessProbe:  # Ensure the pod is ready before accepting traffic
+            tcpSocket:
+              port: 11211
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:  # Restart the pod if it becomes unresponsive
+            tcpSocket:
+              port: 11211
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          volumeMounts:
+            - name: {{ .Values.spec.container.volume.name }}
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata:
+        name: {{ .Values.spec.container.volume.name }}
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: {{ .Values.spec.container.volume.resources.storage }} 
+        storageClassName: {{ .Values.spec.container.volume.storageclass.name }} # nfs-client  # Uncomment and adjust if necessary
+

@@ -1,0 +1,25 @@
+
+- helm repo list
+- helm repo list -o json | jq -r '.[].name' | xargs -n1 helm repo remove
+- helm dashboard --port 8087 (default is without port number)
+############
+create chart
+############
+- cd helm 
+- helm create flask-memcached-chart
+- helm create memcached-chart
+############
+edit chart
+############
+- remove unecessary files
+- copy paste service.yaml, config.yaml, secret.yaml, deployment.yaml
+############
+package
+############
+- kubectl create namespace stage
+- helm package ./memcached-chart
+- helm repo index --url https://dopc02devops.github.io/helms_artifacts/ .
+- helm dependency update flask-memcached-chart
+
+
+- helm uninstall flask-memcached-chart

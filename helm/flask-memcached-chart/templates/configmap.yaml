@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.config.metadata.resource.name }}
+  labels:
+    app: flask-app
+data:
+  memory-request: {{ .Values.config.data.memory-request }}
+  memory-limit: {{ .Values.config.data.memory-limit }}
+  cpu-request: {{ .Values.config.data.cpu-request }}
+  cpu-limit: {{ .Values.config.data.cpu-limit }}
+--- 
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.config.metadata.env.name }}
+  labels:
+    app: flask-app
+data:
+  MEMCACHED_HOST: {{ .Values.config.data.host }}
+  MEMCACHED_PORT: {{ .Values.config.data.port }}
+  OPERATING_SYSTEM: {{ .Values.config.data.os }}

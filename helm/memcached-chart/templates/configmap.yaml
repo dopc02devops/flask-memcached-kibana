@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.config.metadata.resource.name }}
+  labels:
+    app: memcached
+data:
+  memory-request: {{ .Values.config.data.memory-request }}
+  memory-limit: {{ .Values.config.data.memory-limit }}
+  cpu-request: {{ .Values.config.data.cpu-request }}
+  cpu-limit: {{ .Values.config.data.cpu-limit }}
