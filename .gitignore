@@ -16,3 +16,5 @@ account-info.txt
 /src/hosts
 .pem
 /aws/templates/user-data.sh
+*.tgz
+/helm/download/index.yaml

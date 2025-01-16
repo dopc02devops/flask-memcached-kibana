@@ -39,3 +39,4 @@
 
 # host file
 sudo vim /Users/elvisngwesse/.ssh/known_hosts
+
