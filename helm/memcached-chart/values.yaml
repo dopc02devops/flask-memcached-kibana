@@ -7,10 +7,10 @@ config:
     resource:
       name: memcached-resouce
   data:
-    memory-request: "64Mi"
-    memory-limit: "128Mi"
-    cpu-request: "250m"
-    cpu-limit: "500m"
+    memory_request: "64Mi"
+    memory_limit: "128Mi"
+    cpu_request: "250m"
+    cpu_limit: "500m"
 
 #######################
 # statefull-set 
@@ -21,17 +21,17 @@ StatefulSet:
   spec:
     replicas:
       count: 1
-  container:
-    name: memcached-container
-    image: memcached:1.6.21
-    port:
-      number: 11211
-    volume:
-      name: memcached-storage
-      resources:
-        storage: 1Gi
-      storageclass:
-        name: standard
+    container:
+      name: memcached-container
+      image: memcached:1.6.21
+      port:
+        number: 11211
+      volume:
+        name: memcached-storage
+        resources:
+          storage: 1Gi
+        storageclass:
+          name: standard
 
 #######################
 # service

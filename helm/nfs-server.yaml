@@ -1,0 +1,122 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: storage
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: stage
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: nfs-storage
+provisioner: kubernetes.io/no-provisioner # Indicates that it is manually managed
+volumeBindingMode: Immediate
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nfs-server
+  namespace: storage
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nfs-server
+  template:
+    metadata:
+      labels:
+        app: nfs-server
+    spec:
+      initContainers:
+      - name: create-shared-dir
+        image: busybox:latest
+        command: ["/bin/sh", "-c", "mkdir -p /mnt/disks/nfs_data/exports && chmod 777 /mnt/disks/nfs_data/exports"]
+        volumeMounts:
+        - name: nfs-storage
+          mountPath: /mnt/disks/nfs_data
+      containers:
+      - name: nfs-server
+        image: oz123/nfs-server:0.1
+        ports:
+        - name: nfs
+          containerPort: 2049
+        - name: mountd
+          containerPort: 20048
+        - name: rpcbind
+          containerPort: 111
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: nfs-storage
+          mountPath: /exports # Mount the host directory to /exports inside the container
+        env:
+        - name: MOUNTS
+          value: "exports *(rw,sync,no_subtree_check,no_root_squash)" # Export rule for /exports
+      volumes:
+      - name: nfs-storage
+        hostPath:
+          path: /mnt/disks/nfs_data # Host directory mapped to /exports
+          type: DirectoryOrCreate
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nfs-server
+  namespace: storage
+spec:
+  selector:
+    app: nfs-server
+  ports:
+  - name: nfs
+    port: 2049
+    targetPort: 2049
+  - name: mountd
+    port: 20048
+    targetPort: 20048
+  - name: rpcbind
+    port: 111
+    targetPort: 111
+  clusterIP: None # Headless service for stable DNS within the cluster
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nfs-pv
+  namespace: storage
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes:
+  - ReadWriteMany
+  storageClassName: nfs-storage
+  nfs:
+    path: /exports # Exported shared directory
+    server: nfs-server.storage.svc.cluster.local
+  persistentVolumeReclaimPolicy: Retain
+  mountOptions:
+    - nfsvers=4.2          # Use NFS version 4.2
+    - hard                 # Ensure retries on failure
+    - timeo=600            # Set NFS request timeout to 60 seconds
+    - retrans=5            # Retry failed requests up to 5 times
+    - rsize=1048576        # Set read buffer size to 1MB
+    - wsize=1048576        # Set write buffer size to 1MB
+    - noatime              # Do not update access time on reads
+    - nocto                # Reduce attribute cache validation
+    - actimeo=1800 
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nfs-pvc
+  namespace: stage
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: nfs-storage # Matches the PV's storageClassName

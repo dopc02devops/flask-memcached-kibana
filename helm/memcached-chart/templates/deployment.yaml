@@ -6,7 +6,7 @@ metadata:
     app: memcached
 spec:
   serviceName: "memcached-service" 
-  replicas: {{ .Values.spec.replicas.count }}
+  replicas: {{ .Values.StatefulSet.spec.replicas.count }}
   selector:
     matchLabels:
       app: memcached
@@ -16,10 +16,10 @@ spec:
         app: memcached
     spec:
       containers:
-        - name: {{ .Values.spec.container.name }}
-          image: {{ .Values.spec.container.image }}  # Use a specific version
+        - name: {{ .Values.StatefulSet.spec.container.name }}
+          image: {{ .Values.StatefulSet.spec.container.image }}  # Use a specific version
           ports:
-            - containerPort: {{ .Values.spec.container.port.number }}
+            - containerPort: {{ .Values.StatefulSet.spec.container.port.number }}
           resources:
             requests:
               memory: "64Mi"  # Reduced from 128Mi to 64Mi
@@ -41,16 +41,16 @@ spec:
             initialDelaySeconds: 5
             periodSeconds: 10
           volumeMounts:
-            - name: {{ .Values.spec.container.volume.name }}
+            - name: {{ .Values.StatefulSet.spec.container.volume.name }}
               mountPath: /data
   volumeClaimTemplates:
     - metadata:
-        name: {{ .Values.spec.container.volume.name }}
+        name: {{ .Values.StatefulSet.spec.container.volume.name }}
       spec:
         accessModes:
           - ReadWriteOnce
         resources:
           requests:
-            storage: {{ .Values.spec.container.volume.resources.storage }} 
-        storageClassName: {{ .Values.spec.container.volume.storageclass.name }} # nfs-client  # Uncomment and adjust if necessary
+            storage: {{ .Values.StatefulSet.spec.container.volume.resources.storage }} 
+        storageClassName: {{ .Values.StatefulSet.spec.container.volume.storageclass.name }} # nfs-client  # Uncomment and adjust if necessary
 

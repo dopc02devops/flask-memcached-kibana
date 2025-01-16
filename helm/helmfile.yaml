@@ -1,0 +1,49 @@
+repositories:
+  - name: flask-repo
+    url: "https://dopc02devops.github.io/helms_artifacts/"
+
+hooks:
+  - events: ["prepare"] # Runs before any helmfile operation
+    command: "bash"
+    args:
+      - "-c"
+      - |
+        # Define download folder
+        DOWNLOAD_FOLDER="./download"
+        
+        # Package and index charts
+        for chart in ./memcached-chart  ./flask-memcached-chart; do
+          helm lint $chart
+          helm package $chart -d $DOWNLOAD_FOLDER
+        done
+
+        helm repo index $DOWNLOAD_FOLDER --url https://dopc02devops.github.io/helms_artifacts/
+
+        # Update dependencies
+        for chart in memcached flask-memcached; do
+          helm dependency update $chart -n stage
+        done
+
+  - events: ["postsync"] # send notifications for example slack
+    command: "bash"
+    args:
+      - "-c"
+      - |
+        echo "Release myapp installed successfully in the dev namespace."
+        kubectl get pods -n dev
+        
+
+releases:
+  - name: memcached
+    chart: ./memcached-chart
+    namespace: stage
+    installed: true
+    values:
+      - ./memcached-chart/values.yaml
+
+  - name: flask-memcached
+    chart: ./flask-memcached-chart
+    namespace: stage
+    installed: true
+    values:
+      - ./flask-memcached-chart/values.yaml

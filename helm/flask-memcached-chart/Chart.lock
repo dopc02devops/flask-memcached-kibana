@@ -1,0 +1,6 @@
+dependencies:
+- name: memcached-chart
+  repository: https://dopc02devops.github.io/helms_artifacts
+  version: 0.1.0
+digest: sha256:1f4b105a2e8dab73b1cfb0ffb613986402b27bb1e0d790dcdb154a69194d5dde
+generated: "2025-01-15T06:55:58.003931Z"

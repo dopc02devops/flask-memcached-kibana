@@ -2,24 +2,109 @@
 - helm repo list
 - helm repo list -o json | jq -r '.[].name' | xargs -n1 helm repo remove
 - helm dashboard --port 8087 (default is without port number)
+
 ############
 create chart
 ############
 - cd helm 
 - helm create flask-memcached-chart
 - helm create memcached-chart
+
 ############
 edit chart
 ############
 - remove unecessary files
 - copy paste service.yaml, config.yaml, secret.yaml, deployment.yaml
-############
-package
-############
-- kubectl create namespace stage
+
+##########################
+package and push memcached
+##########################
 - helm package ./memcached-chart
 - helm repo index --url https://dopc02devops.github.io/helms_artifacts/ .
+- open helms_artifacts project, copy index.yaml and .tgz files
+- push to repo 
+
+##################
+add to local repo
+##################
+- helm repo add flask-repo https://dopc02devops.github.io/helms_artifacts/
+- helm repo update
+- helm search repo flask-repo
+
+##################
+update dependency
+##################
 - helm dependency update flask-memcached-chart
 
+##########################
+package and push flask
+##########################
+- helm package ./flask-memcached-chart
+- helm package ./memcached-chart
+- helm repo index --url https://dopc02devops.github.io/helms_artifacts/ .
+- copy files over and push 
 
-- helm uninstall flask-memcached-chart
+##################
+install nfs-server
+##################
+- kubectl apply -f nfs-server.yaml
+- helm list -n storage
+- kubectl get pvc -n storage
+- kubectl get pv -n stage
+- kubectl get pods -n storage
+- kubectl delete -f nfs-server.yaml
+
+##################
+helm install
+##################
+- helm search repo flask-repo
+- helm install flask-app flask-memcached-chart -n stage --set VERSION=latest
+- kubectl get pods -n stage
+- kubectl get all -n <namespace>
+- kubectl delete pods --all -n storage
+
+##################
+uninstall
+##################
+- helm uninstall flask-app -n stage
+
+
+##################
+helmfile
+##################
+- brew install helmfile
+- helmfile sync
+- helmfile diff
+- helmfile apply
+- helmfile delete
+
+########################
+Kubernetes for local env
+########################
+- brew reinstall minikube
+- minikube start --driver=docker
+- minikube delete
+- minikube dashboard
+
+#############################
+Test export dir of nfs-server
+#############################
+- kubectl get pods -n storage
+- kubectl exec -it nfs-server-pod-name -n storage -- exportfs -v
+- kubectl exec -n storage nfs-server-pod-name -- cat /etc/exports
+- kubectl exec -n storage nfs-server-pod-name -- ls -ld /exports
+- kubectl exec -it nfs-server-pod-name -n storage -- /bin/sh (execute in container)
+    - chown -R nobody:nogroup /exports
+      chmod 755 /exports
+      kubectl get pods -n storage -o wide
+      showmount -e <nfs-server-ip>
+      exportfs -va
+
+
+
+#############################
+Test host dir of minikube host
+#############################
+- minikube ssh
+- ls -ld /mnt/disks/nfs_data/exports
+

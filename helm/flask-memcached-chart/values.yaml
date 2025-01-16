@@ -8,10 +8,10 @@ config:
     env:
       name: flask-env
   data:
-    memory-request: "128Mi"
-    memory-limit: "256Mi"
-    cpu-request: "250m"
-    cpu-limit: "500m"
+    memory_request: "128Mi"
+    memory_limit: "256Mi"
+    cpu_request: "250m"
+    cpu_limit: "500m"
     host: "memcached-service"
     port: "11211"
     os: "kubernetes"
@@ -25,29 +25,29 @@ deployment:
   spec:
     replicas:
       count: 2
-  container:
-    name: flask-app-container
-    image: dockerelvis/python-memcached:${VERSION}
-    port: 8095
-    readinessProbe:
+    container:
+      name: flask-app-container
+      image: dockerelvis/python-memcached:${VERSION}
       port: 8095
-      initialDelaySeconds: 10
-      periodSeconds: 15
-    livenessProbe:
-      port: 8095
-      initialDelaySeconds: 20
-      periodSeconds: 300
-    volume:
-      name: flask-app-volume
-      claim: 
-        name: nfs-pvc
-    terminationGracePeriodSeconds:
-      count: 20
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 0
+      readinessProbe:
+        port: 8095
+        initialDelaySeconds: 10
+        periodSeconds: 15
+      livenessProbe:
+        port: 8095
+        initialDelaySeconds: 20
+        periodSeconds: 300
+      volume:
+        name: flask-app-volume
+        claim: 
+          name: nfs-pvc
+      terminationGracePeriodSeconds:
+        count: 20
+    strategy:
+      type: RollingUpdate
+      rollingUpdate:
+        maxSurge: 1
+        maxUnavailable: 0
 
 #######################
 # ingress
@@ -59,8 +59,8 @@ ingress:
     rules: 
       dns:
         host: my-flask-app.com
-      number:
-        port: 8096
+      port:
+        number: 8096
 
 #######################
 # service
