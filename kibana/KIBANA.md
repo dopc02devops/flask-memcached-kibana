@@ -1,4 +1,6 @@
 
+cd kibana
+
 filebeat: collects all logs from pods, sends them to logstash
 logstash: aggregades all logs, sends them to elasticsearch
 elasticsearch: stores and indexes all logs, sends them to kibana
@@ -28,10 +30,19 @@ helm install elasticsearch elastic/elasticsearch -f elasticsearch_values.yaml -n
 helm install logstash elastic/logstash -f logstash_values.yaml -n monitoring
 helm install kibana elastic/kibana -f kibana_values.yml -n monitoring
 helm install filebeat elastic/filebeat -f filebeat_values.yaml -n monitoring
+helm upgrade
+#############
+Uninstall
+#############
+helm uninstall filebeat -n monitoring
+kubectl delete configmap kibana-kibana-helm-scripts -n monitoring
+
 
 kubectl get pods -n monitoring
 kubectl get svc -n monitoring
-kubectl port-forward svc/kibana-kibana 8098:5601 -n monitoring
+kubectl port-forward svc/kibana-kibana 8000:5601 -n monitoring
 kubectl get secrets -n monitoring
 kubectl get secret elasticsearch-master-credentials -n monitoring -o yaml
-echo "NXFxTzIyaHh1bkZiREpydg==" | base64 --decode
+echo "MUh0aUExVnRCNFdjdGh5Wg==" | base64 --decode
+kubectl delete all --all -n monitoring
+
