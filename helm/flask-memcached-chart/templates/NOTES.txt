@@ -1,2 +1,2 @@
 servicename=$(k get service -l "app=flask-app" -o jsonpath="{.items[0].metadata.name}")
-kubectl -n stage port-forward service/{{ .Values.service.metadata.name }} 8096:8095
+kubectl -n stage port-forward service/{{ .Values.service.metadata.name }} 8096:8096

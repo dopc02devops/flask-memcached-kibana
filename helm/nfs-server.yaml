@@ -15,6 +15,12 @@ metadata:
 provisioner: kubernetes.io/no-provisioner # Indicates that it is manually managed
 volumeBindingMode: Immediate
 ---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: nfs-server-sa
+  namespace: storage
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -30,16 +36,17 @@ spec:
       labels:
         app: nfs-server
     spec:
+      serviceAccountName: nfs-server-sa
       initContainers:
       - name: create-shared-dir
         image: busybox:latest
-        command: ["/bin/sh", "-c", "mkdir -p /mnt/disks/nfs_data/exports && chmod 777 /mnt/disks/nfs_data/exports"]
+        command: ["/bin/sh", "-c", "mkdir -p /export/share && chmod 777 /export/share"]
         volumeMounts:
         - name: nfs-storage
-          mountPath: /mnt/disks/nfs_data
+          mountPath: /export
       containers:
       - name: nfs-server
-        image: oz123/nfs-server:0.1
+        image: itsthenetwork/nfs-server-alpine:latest
         ports:
         - name: nfs
           containerPort: 2049
@@ -51,16 +58,33 @@ spec:
           privileged: true
         volumeMounts:
         - name: nfs-storage
-          mountPath: /exports # Mount the host directory to /exports inside the container
+          mountPath: /export
         env:
-        - name: MOUNTS
-          value: "exports *(rw,sync,no_subtree_check,no_root_squash)" # Export rule for /exports
+        - name: SHARED_DIRECTORY
+          value: "/export/share"
+        - name: PERMITTED
+          value: "*"
+        - name: READ_ONLY
+          value: "rw"
+        - name: SYNC
+          value: "sync"
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 2049
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 2049
+          initialDelaySeconds: 10
+          periodSeconds: 20
       volumes:
       - name: nfs-storage
         hostPath:
-          path: /mnt/disks/nfs_data # Host directory mapped to /exports
+          path: /mnt/data/nfs
           type: DirectoryOrCreate
-
 ---
 apiVersion: v1
 kind: Service
@@ -94,19 +118,19 @@ spec:
   - ReadWriteMany
   storageClassName: nfs-storage
   nfs:
-    path: /exports # Exported shared directory
+    path: /export/share  # Exported shared directory
     server: nfs-server.storage.svc.cluster.local
   persistentVolumeReclaimPolicy: Retain
   mountOptions:
-    - nfsvers=4.2          # Use NFS version 4.2
-    - hard                 # Ensure retries on failure
-    - timeo=600            # Set NFS request timeout to 60 seconds
-    - retrans=5            # Retry failed requests up to 5 times
-    - rsize=1048576        # Set read buffer size to 1MB
-    - wsize=1048576        # Set write buffer size to 1MB
-    - noatime              # Do not update access time on reads
-    - nocto                # Reduce attribute cache validation
-    - actimeo=1800 
+    - nfsvers=4.2
+    - hard
+    - timeo=600
+    - retrans=5
+    - rsize=1048576
+    - wsize=1048576
+    - noatime
+    - nocto
+    - actimeo=1800
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim

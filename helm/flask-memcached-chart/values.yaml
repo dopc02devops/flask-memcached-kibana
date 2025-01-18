@@ -27,7 +27,7 @@ deployment:
       count: 2
     container:
       name: flask-app-container
-      image: dockerelvis/python-memcached:${VERSION}
+      image: dockerelvis/python-memcached:latest
       port: 8095
       readinessProbe:
         port: 8095
