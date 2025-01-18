@@ -17,9 +17,9 @@ spec:
     spec:
       containers:
         - name: {{ .Values.container.name }}
-          image: "{{ .Values.container.image.repository }}:{{ .Values.container.image.tag }}"  # Use a specific version
+          image: "{{ .Values.container.image.repository }}:{{ .Values.container.image.image_tag }}"  # Use a specific version
           ports:
-            - containerPort: {{ .Values.container.port.number }}
+            - containerPort: {{ .Values.container.port }}
           resources:
             requests:
               memory: "64Mi"  # Reduced from 128Mi to 64Mi

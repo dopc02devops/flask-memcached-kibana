@@ -1,6 +1,4 @@
-variables:
-  image_tag: "latest"
-  
+
 replicas: 2 
 
 deployment:
@@ -9,7 +7,7 @@ container:
   name: flask-app-container
   image:
     repository: dockerelvis/python-memcached
-    tag: ${image_tag} 
+    image_tag: "latest" 
   port: 8095
 readinessProbe:
   port: 8095

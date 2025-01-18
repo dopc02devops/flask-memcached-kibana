@@ -7,9 +7,8 @@ container:
   name: memcached-container
   image:
     repository: memcached
-    tag: 1.6.21 
-  port:
-    number: 11211
+    image_tag: 1.6.21 
+  port: 11211
 volumeMounts:
   name: memcached-storage
 volume:
@@ -18,8 +17,7 @@ volume:
 
 service:
   name: memcached-service
-  port:
-    number: 11211
+  port: 11211
 
 resource:
   config:

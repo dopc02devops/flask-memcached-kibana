@@ -16,9 +16,9 @@ spec:
     spec:
       containers:
         - name: {{ .Values.container.name }}
-          image: {{ .Values.container.image }}
+          image: "{{ .Values.container.image.repository }}:{{ .Values.container.image.image_tag }}"
           ports:
-            - containerPort: "{{ .Values.container.image.repository }}:{{ .Values.container.image.tag }}"
+            - containerPort: {{ .Values.container.port }}
           envFrom:
             - configMapRef:
                 name: {{ .Values.env.config.name }}

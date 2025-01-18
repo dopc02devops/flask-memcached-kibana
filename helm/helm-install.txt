@@ -45,23 +45,13 @@ package and push flask
 - helm repo index --url https://dopc02devops.github.io/helms_artifacts/ .
 - copy files over and push 
 
-##################
-install nfs-server
-##################
-- helm repo add nfs-ganesha-server-and-external-provisioner https://kubernetes-sigs.github.io/nfs-ganesha-server-and-external-provisioner/
-- helm install nfs-pro nfs-ganesha-server-and-external-provisioner/nfs-server-provisioner
-- kubectl create namespace storage
-- helm list -n storage
-- kubectl get pv -n storage
-- kubectl get pv -n stage
-- kubectl get pods -n storage
-- helm delete nfs-pro
 
 ##################
-helm install
+deploy app
 ##################
 - helm search repo flask-repo
-- helm install flask-app flask-memcached-chart -n stage --set image.tag=latest
+- helm install flask-app flask-memcached-chart -n stage --set image.tag=v-30
+- helm install flask-app flask-repo/flask-memcached-chart --set container.image.image_tag=v-30 -n stage
 - kubectl get pods -n stage
 - kubectl get all -n <namespace>
 - kubectl delete pods --all -n storage
@@ -83,34 +73,5 @@ helmfile
 - helmfile apply
 - helmfile delete
 
-########################
-Kubernetes for local env
-########################
-- brew reinstall minikube
-- minikube start --driver=docker
-- minikube delete
-- minikube dashboard
-
-#############################
-Test export dir of nfs-server
-#############################
-- kubectl get pods -n storage
-- kubectl exec -it nfs-server-pod-name -n storage -- exportfs -v
-- kubectl exec -n storage nfs-server-pod-name -- cat /etc/exports
-- kubectl exec -n storage nfs-server-pod-name -- ls -ld /exports
-- kubectl exec -it nfs-server-pod-name -n storage -- /bin/sh (execute in container)
-    - chown -R nobody:nogroup /exports
-      chmod 755 /exports
-      kubectl get pods -n storage -o wide
-      showmount -e <nfs-server-ip>
-      exportfs -va
 
 
-
-#############################
-Test host dir of minikube host
-#############################
-- minikube ssh
-- ls -ld /mnt/disks/nfs_data/exports
-
- 

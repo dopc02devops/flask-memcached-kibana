@@ -28,19 +28,34 @@
 # ssh
     ssh -i ~/.ssh/id_kube_user_key jenkins@ip
     copy key: pbcopy < ~/.ssh/id_kube_user_key.pub
+# host file
+sudo vim /Users/name/.ssh/known_hosts
 
+#######################
+# Run app in kubernetes
+#######################
 # create cluster
-
 # install nfs-server
-
 # install kibana
-
 # access application
 - kubectl get svc -n stage
 - get the external ip of the service
 - go to ur browser and enter
 - externalip:port to access application
 
-# host file
-sudo vim /Users/name/.ssh/known_hosts
+##########################
+# Kubernetes for local env
+##########################
+# brew reinstall minikube
+# minikube start --driver=docker
+# minikube delete
+# minikube dashboard
 
+##########################
+# push image to docker-hub
+##########################
+- cd src
+- docker build -t dockerelvis/python-memcached:v-30 -f ./Dockerfile.app .
+- docker login
+    - echo "password" | docker login --username dockerelvis --password-stdin
+- docker push dockerelvis/python-memcached:v-30
