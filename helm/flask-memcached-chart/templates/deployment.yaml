@@ -1,11 +1,11 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.deployment.metadata.name }}
+  name: {{ .Values.deployment.name }}
   labels:
     app: flask-app
 spec:
-  replicas: {{ .Values.deployment.spec.replicas.count }}
+  replicas: {{ .Values.replicas }}
   selector:
     matchLabels:
       app: flask-app
@@ -15,15 +15,15 @@ spec:
         app: flask-app
     spec:
       containers:
-        - name: {{ .Values.deployment.spec.container.name }}
-          image: {{ .Values.deployment.spec.container.image }}
+        - name: {{ .Values.container.name }}
+          image: {{ .Values.container.image }}
           ports:
-            - containerPort: {{ .Values.deployment.spec.container.port }}
+            - containerPort: "{{ .Values.container.image.repository }}:{{ .Values.container.image.tag }}"
           envFrom:
             - configMapRef:
-                name: {{ .Values.config.metadata.env.name }}
+                name: {{ .Values.env.config.name }}
             - configMapRef:
-                name: {{ .Values.config.metadata.resource.name }}
+                name: {{ .Values.resource.config.name }}
           resources:
             requests:
               memory: "64Mi"  # Reduced from 128Mi to 64Mi
@@ -34,32 +34,26 @@ spec:
           readinessProbe:
             httpGet:
               path: /
-              port: {{ .Values.deployment.spec.container.readinessProbe.port }}
-            initialDelaySeconds: {{ .Values.deployment.spec.container.readinessProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.deployment.spec.container.readinessProbe.periodSeconds }}
+              port: {{ .Values.readinessProbe.port }}
+            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
           livenessProbe:
             httpGet:
               path: /
-              port: {{ .Values.deployment.spec.container.livenessProbe.port }}
-            initialDelaySeconds: {{ .Values.deployment.spec.container.livenessProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.deployment.spec.container.livenessProbe.periodSeconds }}
+              port: {{ .Values.livenessProbe.port }}
+            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
           volumeMounts:
-            - name: {{ .Values.deployment.spec.container.volume.name }}
+            - name: {{ .Values.volumeMounts.name }}
               mountPath: /app/data
       volumes:
-        - name: {{ .Values.deployment.spec.container.volume.name }}
+        - name: {{ .Values.volumeMounts.name }}
           persistentVolumeClaim:
-            claimName: {{ .Values.deployment.spec.container.volume.claim.name }}
-          # nfs:
-          #   server: "nfs-service.storage.svc.cluster.local"
-          #   path: "/nfs-direct" # "nfs-direct" folder must exist inside "/exports" directory of NFS server
-            # Here, we have mounted /exports/nfs-direct directory of NFS server into /app/data directory. Now, 
-            # if we write anything in /demo/data directory of this pod, it will be written on /exports/nfs-direct 
-            # directory of the NFS server.
-      terminationGracePeriodSeconds: {{ .Values.deployment.spec.container.terminationGracePeriodSeconds.count }}
+            claimName: {{ .Values.volume.claim.name }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
   strategy:
-    type: {{ .Values.deployment.spec.strategy.type }}
+    type: {{ .Values.strategy.type }}
     rollingUpdate:
-      maxSurge: {{ .Values.deployment.spec.strategy.rollingUpdate.maxSurge }}
-      maxUnavailable: {{ .Values.deployment.spec.strategy.rollingUpdate.maxUnavailable }}
+      maxSurge: {{ .Values.strategy.rollingUpdate.maxSurge }}
+      maxUnavailable: {{ .Values.strategy.rollingUpdate.maxUnavailable }}
 

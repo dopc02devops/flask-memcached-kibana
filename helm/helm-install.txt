@@ -48,12 +48,14 @@ package and push flask
 ##################
 install nfs-server
 ##################
-- kubectl apply -f nfs-server.yaml
+- helm repo add nfs-ganesha-server-and-external-provisioner https://kubernetes-sigs.github.io/nfs-ganesha-server-and-external-provisioner/
+- helm install nfs-pro nfs-ganesha-server-and-external-provisioner/nfs-server-provisioner
+- kubectl create namespace storage
 - helm list -n storage
 - kubectl get pv -n storage
 - kubectl get pv -n stage
 - kubectl get pods -n storage
-- kubectl delete -f nfs-server.yaml
+- helm delete nfs-pro
 
 ##################
 helm install
@@ -112,25 +114,3 @@ Test host dir of minikube host
 - ls -ld /mnt/disks/nfs_data/exports
 
  
-
-helm install onedb-nfs-server-provisioner kvaps/nfs-server-provisioner   \ 
---version 1.3.1 
---set persistence.enabled=true 
---set persistence.storageClass="standard” 
---set persistence.size=50Gi   
---set storageClass.create=true
---set storageClass.name=-onedb-nfs-my-ns 
---set storageClass.mountOptions={vers=4.1} 
-
-
-
-
-$ helm repo add nfs-ganesha-server-and-external-provisioner https://kubernetes-sigs.github.io/nfs-ganesha-server-and-external-provisioner/
-$ helm install nfs-pro nfs-ganesha-server-and-external-provisioner/nfs-server-provisioner
-kubectl create namespace storage
-
-helm delete nfs-provisioner
-
-helm show values nfs-ganesha-server-and-external-provisioner/nfs-server-provisioner > nfs_values.yaml
-helm install nfs-provisioner nfs-ganesha-server-and-external-provisioner/nfs-server-provisioner -f nfs_values.yaml
-

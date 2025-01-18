@@ -1,12 +1,12 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ .Values.StatefulSet.metadata.name }}
+  name: {{ .Values.StatefulSet.name }}
   labels:
     app: memcached
 spec:
   serviceName: "memcached-service" 
-  replicas: {{ .Values.StatefulSet.spec.replicas.count }}
+  replicas: {{ .Values.replicas }}
   selector:
     matchLabels:
       app: memcached
@@ -16,10 +16,10 @@ spec:
         app: memcached
     spec:
       containers:
-        - name: {{ .Values.StatefulSet.spec.container.name }}
-          image: {{ .Values.StatefulSet.spec.container.image }}  # Use a specific version
+        - name: {{ .Values.container.name }}
+          image: "{{ .Values.container.image.repository }}:{{ .Values.container.image.tag }}"  # Use a specific version
           ports:
-            - containerPort: {{ .Values.StatefulSet.spec.container.port.number }}
+            - containerPort: {{ .Values.container.port.number }}
           resources:
             requests:
               memory: "64Mi"  # Reduced from 128Mi to 64Mi
@@ -29,7 +29,7 @@ spec:
               cpu: "250m"     # Reduced from 500m to 250m
           envFrom:
             - configMapRef:
-                name: {{ .Values.config.metadata.resource.name }}
+                name: {{ .Values.resource.config.name }}
           readinessProbe:  # Ensure the pod is ready before accepting traffic
             tcpSocket:
               port: 11211
@@ -41,16 +41,10 @@ spec:
             initialDelaySeconds: 5
             periodSeconds: 10
           volumeMounts:
-            - name: {{ .Values.StatefulSet.spec.container.volume.name }}
+            - name: {{ .Values.volumeMounts.name }}
               mountPath: /data
-  volumeClaimTemplates:
-    - metadata:
-        name: {{ .Values.StatefulSet.spec.container.volume.name }}
-      spec:
-        accessModes:
-          - ReadWriteOnce
-        resources:
-          requests:
-            storage: {{ .Values.StatefulSet.spec.container.volume.resources.storage }} 
-        storageClassName: {{ .Values.StatefulSet.spec.container.volume.storageclass.name }} # nfs-client  # Uncomment and adjust if necessary
+  volumes:
+        - name: {{ .Values.volumeMounts.name }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.volume.claim.name }}
 
