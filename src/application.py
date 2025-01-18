@@ -1,6 +1,6 @@
 from flask import Flask, request, render_template, redirect, url_for, flash, session
 from werkzeug.security import generate_password_hash, check_password_hash
-from logger_flask import logger
+from logger import setup_logger as logger
 import os
 from connection import ConnectionManager
 

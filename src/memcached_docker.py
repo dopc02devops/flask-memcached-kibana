@@ -1,5 +1,4 @@
 import subprocess
-from logger_memcached import logger
 
 # Step 1: Check if memcached is running and find its PID
 def check_memcached():

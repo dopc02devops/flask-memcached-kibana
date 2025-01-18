@@ -1,6 +1,6 @@
 import os
 from pymemcache.client import base
-from logger_flask import logger
+from logger import setup_logger as logger
 
 
 class ConnectionManager:

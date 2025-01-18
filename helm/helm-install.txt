@@ -61,7 +61,7 @@ install nfs-server
 helm install
 ##################
 - helm search repo flask-repo
-- helm install flask-app flask-memcached-chart -n stage --set VERSION=latest
+- helm install flask-app flask-memcached-chart -n stage --set image.tag=latest
 - kubectl get pods -n stage
 - kubectl get all -n <namespace>
 - kubectl delete pods --all -n storage

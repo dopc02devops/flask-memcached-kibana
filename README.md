@@ -13,13 +13,17 @@
     install docker-compose
     cd src
     docker build -t image-name:tag -f ./Dockerfile.app .
-        e.g docker build -t flask-image:v-22 -f ./Dockerfile.app .
+        e.g docker build -t dockerelvis/python-memcached:v-24 -f ./Dockerfile.app .
     cd .. to base directory where docker-compose file is located
     run command to start application
         docker volume create flask-app-data
         docker volume create memcached-data
-        Edit docker-compose.env and set image: flask-image:v-22
+        Edit docker-compose.env and set image: dockerelvis/python-memcached:v-24
         docker-compose -f docker-compose.env.yml up -d
+    access app on:  
+        http://localhost:8096/login
+        http://127.0.0.1:8096/login
+
 
 # ssh
     ssh -i ~/.ssh/id_kube_user_key jenkins@ip
@@ -38,5 +42,5 @@
 - externalip:port to access application
 
 # host file
-sudo vim /Users/elvisngwesse/.ssh/known_hosts
+sudo vim /Users/name/.ssh/known_hosts
 
