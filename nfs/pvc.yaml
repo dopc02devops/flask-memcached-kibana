@@ -9,9 +9,9 @@ metadata:
   name: nfs-pvc
   namespace: stage
 spec:
-  storageClassName: "nfs"
+  storageClassName: "nfs" # dynamic provisioning
   accessModes:
     - ReadWriteMany
   resources:
     requests:
-      storage: 1Gi
+      storage: 90Gi

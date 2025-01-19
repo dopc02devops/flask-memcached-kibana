@@ -19,7 +19,7 @@ Configurations
 source: https://medium.com/@davis.angwenyi/how-to-install-elastic-search-using-helm-into-kubernetes-de1fb1011076
 helm show values elastic/filebeat > filebeat_values.yaml
 helm show values elastic/logstash > logstash_values.yaml
-helm show values elastic/elasticsearch > elasticsearch_values.yaml (replicas=1)
+helm show values elastic/elasticsearch > elasticsearch_values.yaml
 helm show values elastic/kibana > kibana_values.yml
 
 #############
@@ -45,4 +45,8 @@ kubectl get secrets -n monitoring
 kubectl get secret elasticsearch-master-credentials -n monitoring -o yaml
 echo "MUh0aUExVnRCNFdjdGh5Wg==" | base64 --decode
 kubectl delete all --all -n monitoring
+kubectl logs elasticsearch-master-0 -n monitoring --previous | grep error
+
+
+
 

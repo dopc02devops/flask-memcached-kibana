@@ -2,6 +2,8 @@
 clusterName: "elasticsearch"
 nodeGroup: "master"
 
+set ingest.geoip.downloader.enabled: false
+
 # The service that non master groups will try to connect to when joining the cluster
 # This should be set to clusterName + "-" + nodeGroup for your master group
 masterService: ""
@@ -93,7 +95,7 @@ resources:
     memory: "2Gi"
   limits:
     cpu: "1000m"
-    memory: "2Gi"
+    memory: "3Gi"
 
 initResources: {}
 # limits:
@@ -109,7 +111,8 @@ volumeClaimTemplate:
   accessModes: ["ReadWriteOnce"]
   resources:
     requests:
-      storage: 30Gi
+      storage: 50Gi
+  storageClassName: "nfs"
 
 rbac:
   create: false
@@ -239,7 +242,7 @@ readinessProbe:
   timeoutSeconds: 5
 
 # https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-health.html#request-params wait_for_status
-clusterHealthCheckParams: "wait_for_status=green&timeout=1s"
+clusterHealthCheckParams: "wait_for_status=green&timeout=10s"
 
 ## Use an alternate scheduler.
 ## ref: https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/

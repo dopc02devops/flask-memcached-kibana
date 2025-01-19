@@ -50,12 +50,22 @@ sudo vim /Users/name/.ssh/known_hosts
 # minikube start --driver=docker
 # minikube delete
 # minikube dashboard
+# minikube delete
+# rm -f -v minikube
 
 ##########################
 # push image to docker-hub
 ##########################
 - cd src
-- docker build -t dockerelvis/python-memcached:v-30 -f ./Dockerfile.app .
 - docker login
     - echo "password" | docker login --username dockerelvis --password-stdin
+- - docker build -t dockerelvis/python-memcached:v-30 -f ./Dockerfile.app .
+- docker buildx build --platform linux/amd64,linux/arm64 -t dockerelvis/python-memcached:v-31 --push -f ./Dockerfile.app .
 - docker push dockerelvis/python-memcached:v-30
+
+######################
+# observability
+######################
+- kubectl top pod <pod-name> -n <namespace>
+- kubectl describe pod <pod-name> -n <namespace>
+- kubectl top pods --all-namespaces

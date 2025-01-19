@@ -1,4 +1,10 @@
-
+* containers are ephemeral, meaning they are designed to be temporary and disposable
+* Storageclassname: If given, pvc will bind to storageclass
+    Static: pvc will bind to a pv 
+    Dynamic: pvc will bind to a storageclass
+* pv and storageclass are just cloud absractions. These r plugins to connect to the actual
+physical storage.
+* pods use pvc's to request amount of volume needed using pv or storageclass.
 cd nfs dir
 
 ##################
