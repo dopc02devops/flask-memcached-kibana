@@ -40,9 +40,13 @@ pipeline {
                 echo "Cloning GitHub repository..."
                 script {
                     withCredentials([usernamePassword(credentialsId: 'github-credentials-id', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
+                        // URL-encode the password
+                        def encodedPassword = sh(script: "echo -n $GIT_PASSWORD | jq -sRr @uri", returnStdout: true).trim()
+
+                        // Clone the repository with the URL-encoded password
                         sh '''
                         set -e
-                        git clone https://$GIT_USERNAME:$GIT_PASSWORD@$GIT_REPO_URL -b $BRANCH
+                        git clone https://$GIT_USERNAME:$encodedPassword@$GIT_REPO_URL -b $BRANCH
                         '''
                     }
                 }
