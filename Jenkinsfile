@@ -35,8 +35,24 @@ pipeline {
             }
         }
 
+         stage('Checkout GitHub Repository') {
+            steps {
+                echo "Cloning GitHub repository..."
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'github-credentials-id', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
+                        sh '''
+                        set -e
+                        git clone https://$GIT_USERNAME:$GIT_PASSWORD@$GIT_REPO_URL -b $BRANCH
+                        '''
+                    }
+                }
+            }
+        }
+
+
         stage('Extract Git Tag') {
             steps {
+                echo "Extracting git tag"
                 script {
                     if (env.GIT_TAG) {
                         currentBuild.displayName = "Build for tag: ${env.GIT_TAG}"
@@ -45,20 +61,6 @@ pipeline {
                     } else {
                         echo "No Git tag detected. Using specified tag or default (latest)."
                         env.DOCKER_TAG = env.DOCKER_TAG ?: 'latest'
-                    }
-                }
-            }
-        }
-
-        stage('Checkout GitHub Repository') {
-            steps {
-                echo "Cloning GitHub repository..."
-                script {
-                    withCredentials([usernamePassword(credentialsId: 'github-credentials-id', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
-                        sh '''
-                        set -e
-                        git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@${GIT_REPO_URL} -b ${params.BRANCH}
-                        '''
                     }
                 }
             }
