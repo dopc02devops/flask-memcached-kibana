@@ -3,24 +3,32 @@ pipeline {
 
     environment {
         AWS_REGION = 'us-west-2'
-        CLUSTER_NAME = 'MyEKSCluster'
-        //DOCKER_BUILDKIT = '1' // Enable BuildKit for this pipeline
+        CLUSTER_NAME = 'my-cluster'
+        GIT_REPO_URL = 'https://github.com/dopc02devops/flask-memcached-kibana.git'
+        // DOCKER_BUILDKIT = '1' // Enable BuildKit for this pipeline
         // Docker versions 19.03 and higher
     }
 
     parameters {
         string(name: 'BRANCH', defaultValue: 'main', description: 'Branch to build from')
         string(name: 'DOCKER_TAG', defaultValue: 'latest', description: 'Docker image tag (defaults to latest if not provided)')
+        booleanParam(name: 'DEPLOY_MANUALLY', defaultValue: false, description: 'Trigger deployment manually')
     }
 
     stages {
         stage('Check Docker is Running') {
             steps {
+                echo "Checking Docker and Docker Compose versions..."
                 script {
                     sh '''
                     set -e
-                    sudo docker ps
+                    if ! sudo docker ps > /dev/null 2>&1; then
+                        echo "Docker is not running. Please start Docker."
+                        exit 1
+                    fi
+                    echo "Docker version:"
                     sudo docker --version
+                    echo "Docker Compose version:"
                     sudo docker-compose --version
                     '''
                 }
@@ -35,45 +43,44 @@ pipeline {
                         echo "Detected Git tag: ${env.GIT_TAG}"
                         env.DOCKER_TAG = env.GIT_TAG
                     } else {
-                        echo "No Git tag detected, using specified tag or default (latest)"
-                        if (!env.DOCKER_TAG) {
-                            env.DOCKER_TAG = 'latest'
-                        }
+                        echo "No Git tag detected. Using specified tag or default (latest)."
+                        env.DOCKER_TAG = env.DOCKER_TAG ?: 'latest'
                     }
                 }
             }
         }
 
-        stage('Checkout Code') {
+        stage('Checkout GitHub Repository') {
             steps {
-                echo "Checking out source code..."
+                echo "Cloning GitHub repository..."
                 script {
-                    checkout([
-                        $class: 'GitSCM',
-                        branches: [[name: "*/${params.BRANCH}"]],
-                        userRemoteConfigs: [[url: 'https://github.com/dopc02devops/flask-memcached-kibana.git']]
-                    ])
+                    withCredentials([usernamePassword(credentialsId: 'github-credentials-id', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
+                        sh '''
+                        set -e
+                        git clone https://${GIT_USERNAME}:${GIT_PASSWORD}@${GIT_REPO_URL} -b ${params.BRANCH}
+                        '''
+                    }
                 }
             }
         }
 
         stage('Scan Dockerfile with Trivy') {
             steps {
-                echo "Scanning Dockerfile with Trivy..."
+                echo "Scanning Dockerfile for vulnerabilities..."
                 script {
                     sh '''
                     set -e
                     if ! command -v trivy > /dev/null; then
-                        echo "Installing Trivy..."
+                        echo "Trivy not found. Installing Trivy..."
                         sudo apt-get update
                         sudo apt-get install -y wget
                         sudo wget https://github.com/aquasecurity/trivy/releases/download/v0.29.1/trivy_0.29.1_Linux-64bit.deb
                         sudo dpkg -i trivy_0.29.1_Linux-64bit.deb
                     fi
 
-                    echo "Scanning Dockerfile..."
+                    echo "Running Trivy scan on Dockerfile..."
                     cd src
-                    sudo trivy config --severity HIGH,CRITICAL ./Dockerfile.app || exit 1
+                    sudo trivy config --severity HIGH,CRITICAL ./Dockerfile.app
                     '''
                 }
             }
@@ -81,7 +88,7 @@ pipeline {
 
         stage('Setup and Run Tests') {
             steps {
-                echo "Setting up and running tests..."
+                echo "Setting up environment and running tests..."
                 script {
                     sh '''
                     set -e
@@ -91,7 +98,7 @@ pipeline {
 
                     export PATH=$HOME/.local/bin:$PATH
 
-                    pytest --junitxml=reports-xml/report.xml --html=reports-html/report.html --self-contained-html || echo "Tests failed but proceeding with the pipeline"
+                    pytest --junitxml=reports-xml/report.xml --html=reports-html/report.html --self-contained-html || echo "Tests completed with errors, continuing..."
                     '''
                 }
             }
@@ -99,54 +106,61 @@ pipeline {
 
         stage('Store Test Reports') {
             steps {
-                echo "Storing test reports..."
+                echo "Archiving test reports..."
                 archiveArtifacts artifacts: 'reports-xml/report.xml', allowEmptyArchive: true
                 archiveArtifacts artifacts: 'reports-html/report.html', allowEmptyArchive: true
             }
         }
 
         stage('Build and Push Docker Image') {
+            when {
+                expression { return env.DOCKER_TAG != null && env.DOCKER_TAG != '' }
+            }
             steps {
-                echo "Building Docker image..."
+                echo "Building and pushing Docker image..."
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-credentials-id', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                        withEnv(["DOCKER_TAG=${env.DOCKER_TAG}"]) {
-                            sh '''
-                            set -e
-                            cd src
-                            echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
-                            docker build -t $DOCKER_USERNAME/python-memcached:$DOCKER_TAG -f ./Dockerfile.app .
-                            docker push $DOCKER_USERNAME/python-memcached:$DOCKER_TAG
-                            docker logout
-                            '''
-                        }
+                        sh '''
+                        set -e
+                        cd src
+                        echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+                        docker build -t $DOCKER_USERNAME/python-memcached:$DOCKER_TAG -f ./Dockerfile.app .
+                        docker push $DOCKER_USERNAME/python-memcached:$DOCKER_TAG
+                        docker logout
+                        '''
                     }
                 }
             }
         }
 
         stage('Setup Docker Volumes and Start Services') {
+            when {
+                expression { return env.DOCKER_TAG != null && env.DOCKER_TAG != '' }
+            }
             steps {
-                echo "Creating Docker volumes and starting services..."
+                echo "Setting up Docker volumes and starting services..."
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-credentials-id', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                        withEnv(["VERSION=${env.DOCKER_TAG}"]) {
-                            sh '''
-                            set -e
-                            sudo docker volume create flask-app-data || true
-                            sudo docker volume create memcached-data || true
-                            sudo VERSION=${VERSION} docker-compose -f docker-compose.env.yml down --remove-orphans
-                            sudo VERSION=${VERSION} docker-compose -f docker-compose.env.yml up -d
-                            '''
-                        }
+                        sh '''
+                        set -e
+                        sudo docker volume create flask-app-data || true
+                        sudo docker volume create memcached-data || true
+                        sudo VERSION=${DOCKER_TAG} docker-compose -f docker-compose.env.yml down --remove-orphans
+                        sudo VERSION=${DOCKER_TAG} docker-compose -f docker-compose.env.yml up -d
+                        '''
                     }
                 }
             }
         }
 
         stage('Install AWS CLI and Kubectl') {
+            when {
+                expression { return env.DOCKER_TAG != null && env.DOCKER_TAG != '' }
+            }
             steps {
+                echo "Installing AWS CLI and kubectl..."
                 sh '''
+                set -e
                 # Install AWS CLI
                 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-2.0.30.zip" -o "awscliv2.zip"
                 unzip awscliv2.zip
@@ -161,17 +175,35 @@ pipeline {
         }
 
         stage('Authenticate with EKS') {
+            when {
+                expression { return env.DOCKER_TAG != null && env.DOCKER_TAG != '' }
+            }
             steps {
+                echo "Authenticating with EKS..."
                 script {
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials-id']]) {
                         sh '''
-                        # Configure AWS CLI
                         aws configure set region $AWS_REGION
-
-                        # Retrieve the EKS cluster credentials
                         aws eks update-kubeconfig --name $CLUSTER_NAME --region $AWS_REGION
                         '''
                     }
+                }
+            }
+        }
+
+        stage('Deploy Helm Chart') {
+            when {
+                expression { return params.DEPLOY_MANUALLY == true && env.DOCKER_TAG != null && env.DOCKER_TAG != '' }
+            }
+            steps {
+                echo "Deploying Helm chart..."
+                script {
+                    sh '''
+                    kubectl get namespace stage || kubectl create namespace stage
+                    helm install flask-app flask-repo/flask-memcached-chart --set container.image.image_tag=$DOCKER_TAG -n stage
+                    kubectl rollout status deployment/flask-app -n stage --timeout=5m
+                    kubectl get pods -n stage
+                    '''
                 }
             }
         }
@@ -179,7 +211,7 @@ pipeline {
 
     post {
         always {
-            echo 'Pipeline completed. Cleaning workspace...'
+            echo "Pipeline completed. Cleaning workspace..."
             cleanWs()
         }
     }

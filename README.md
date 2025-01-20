@@ -37,6 +37,7 @@ sudo vim /Users/name/.ssh/known_hosts
 # create cluster
 # install nfs-server
 # install kibana
+# run jenkins job with deployment tag
 # access application
 - kubectl get svc -n stage
 - get the external ip of the service
