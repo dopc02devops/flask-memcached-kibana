@@ -163,21 +163,37 @@ pipeline {
                 expression { return env.DOCKER_TAG != null && env.DOCKER_TAG != '' }
             }
             steps {
-                echo "Installing or updating AWS CLI and kubectl..."
+                echo "Checking and installing/updating AWS CLI and kubectl..."
                 sh '''
                 set -e
-                # Install or Update AWS CLI
+                
+                # Check and update AWS CLI
+                if command -v aws &> /dev/null; then
+                    echo "AWS CLI is already installed. Checking version..."
+                    CURRENT_AWS_VERSION=$(aws --version 2>&1 | awk '{print $1}' | cut -d/ -f2)
+                    echo "Current AWS CLI version: $CURRENT_AWS_VERSION"
+                else
+                    echo "AWS CLI not found. Installing..."
+                fi
                 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-2.0.30.zip" -o "awscliv2.zip"
                 unzip -o awscliv2.zip
                 sudo ./aws/install --update
 
-                # Install kubectl
+                # Check and install kubectl
+                if command -v kubectl &> /dev/null; then
+                    echo "kubectl is already installed. Checking version..."
+                    CURRENT_KUBECTL_VERSION=$(kubectl version --client --short | awk '{print $3}')
+                    echo "Current kubectl version: $CURRENT_KUBECTL_VERSION"
+                else
+                    echo "kubectl not found. Installing..."
+                fi
                 curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
                 chmod +x kubectl
                 sudo mv kubectl /usr/local/bin/
                 '''
             }
         }
+
 
 
         stage('Authenticate with EKS') {
