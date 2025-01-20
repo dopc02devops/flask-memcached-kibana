@@ -48,5 +48,3 @@ kubectl delete all --all -n monitoring
 kubectl logs elasticsearch-master-0 -n monitoring --previous | grep error
 
 
-
-

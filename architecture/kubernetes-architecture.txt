@@ -1,0 +1,90 @@
+Kubernetes architecture is designed to provide a robust and scalable framework for managing containerized 
+applications. It is built around a master-worker paradigm and consists of multiple components, categorized 
+into Control Plane and Node Components
+
+###############
+1 Control Plane
+###############
+    The control plane is responsible for managing the overall cluster, ensuring the desired state of the 
+    system, scheduling workloads, and monitoring cluster events
+
+#############
+a. API Server
+#############
+- Acts as the front end for the Kubernetes control plane
+- Handles RESTful API requests from users, CLI (kubectl), or other components
+- Serves as the gateway for interaction with the cluster
+- Validates and processes requests and interacts with the etcd database to persist cluster state
+#############
+b. etcd
+#############
+- A distributed key-value store that serves as Kubernetes' backend database
+- Stores all cluster data (e.g., nodes, pods, configurations)
+- Provides consistency and reliability for cluster state and configuration
+######################
+c. Controller Manager
+######################
+- Ensures that the cluster's desired state matches the actual state
+Types of Controllers:
+Node Controller: Monitors node health and reacts to node failures
+Replication Controller: Ensures the correct number of pod replicas are running
+Endpoint Controller: Manages endpoints for services
+Others: Handle tasks like namespace creation and garbage collection
+#############
+d. Scheduler
+#############
+- Assigns workloads (pods) to suitable nodes
+- Evaluates factors like resource requirements, policies, and affinity/anti-affinity rules
+- Ensures efficient workload distribution and cluster resource optimization.
+
+###################
+2. Node Components
+###################
+Nodes are the worker machines (physical or virtual) that run containerized applications
+#############
+a. Kubelet
+#############
+- An agent running on each node to manage container lifecycle
+- Communicates with the API server
+- Ensures that containers specified in a pod definition are running as expected
+#############
+b. Kube Proxy
+#############
+- Manages network rules and enables communication within the cluster
+- Handles traffic routing to ensure pods can reach each other and external clients
+- Maintains network abstraction via service objects
+#####################
+c. Container Runtime
+#####################
+- Runs and manages containers
+Examples: Docker, containerd, CRI-O.
+- Executes the containers defined in pod specifications
+- Manages pulling images, starting/stopping containers, and related tasks
+
+#######################
+3. Additional Concepts
+#######################
+#############
+a. Pods
+#############
+The smallest deployable unit in Kubernetes
+Represents a single instance of a running application or a group of tightly coupled containers
+#############
+b. Services
+#############
+Abstraction that defines a logical set of pods and a policy for accessing them
+Provides stable IPs and DNS names for communication
+#############
+c. Namespaces
+#############
+Logical separation within the cluster to isolate resources and workloads
+#############
+d. Ingress
+#############
+Manages external HTTP/S access to services
+Provides routing, load balancing, and SSL termination
+#############
+e. Volumes
+#############
+Provides persistent storage for containers.
+Supports different storage backends (e.g., NFS, EBS, local storage)

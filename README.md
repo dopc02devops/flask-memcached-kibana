@@ -59,9 +59,9 @@ sudo vim /Users/name/.ssh/known_hosts
 - cd src
 - docker login
     - echo "password" | docker login --username dockerelvis --password-stdin
-- - docker build -t dockerelvis/python-memcached:v-30 -f ./Dockerfile.app .
+- docker build -t dockerelvis/python-memcached:v-31 -f ./Dockerfile.app .
 - docker buildx build --platform linux/amd64,linux/arm64 -t dockerelvis/python-memcached:v-31 --push -f ./Dockerfile.app .
-- docker push dockerelvis/python-memcached:v-30
+- docker push dockerelvis/python-memcached:v-31
 
 ######################
 # observability

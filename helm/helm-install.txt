@@ -51,7 +51,7 @@ deploy app
 ##################
 - helm search repo flask-repo
 - helm install flask-app flask-memcached-chart -n stage --set image.tag=v-30
-- helm install flask-app flask-repo/flask-memcached-chart --set container.image.image_tag=v-30 -n stage
+- helm install flask-app flask-repo/flask-memcached-chart --set container.image.image_tag=v-31 -n stage
 - kubectl get pods -n stage
 - kubectl get all -n <namespace>
 - kubectl delete pods --all -n storage

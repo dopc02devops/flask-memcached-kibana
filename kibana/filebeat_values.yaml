@@ -45,6 +45,24 @@ daemonset:
             matchers:
             - logs_path:
                 logs_path: "/var/log/containers/"
+                
+      filebeat.modules:
+      - module: system
+        syslog:
+          enabled: true
+          var.paths: ["/var/log/syslog*"] 
+        auth:
+          enabled: true
+          var.paths: ["/var/log/auth.log*"] 
+      - module: iptables
+        log:
+          enabled: true
+          var.paths: ["/var/log/iptables.log"]
+          var.input: "file"
+      - module: traefik
+        access:
+          enabled: true
+          var.paths: ["/usr/local/traefik/access.log*"]
 
       output.logstash:
         hosts: ["logstash-logstash:5044"]

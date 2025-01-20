@@ -1,0 +1,20 @@
+                 +-----------------------+
+                 |     Control Plane     |
+                 +-----------------------+
+                         | API Server
+                         | Scheduler
+                         | Controller Manager
+                         | etcd (Cluster State)
+                         |
+          -----------------------------------------
+          |                                       |
++--------------------+                  +--------------------+
+|      Node 1        |                  |      Node 2        |
++--------------------+                  +--------------------+
+|  Kubelet           |                  |  Kubelet           |
+|  Kube Proxy        |                  |  Kube Proxy        |
+|  Container Runtime |                  |  Container Runtime |
+|  Pods              |                  |  Pods              |
++--------------------+                  +--------------------+
+
+                         Cluster Networking
