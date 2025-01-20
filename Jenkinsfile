@@ -4,7 +4,7 @@ pipeline {
     environment {
         AWS_REGION = 'us-west-2'
         CLUSTER_NAME = 'my-cluster'
-        GIT_REPO_URL = 'https://github.com/dopc02devops/flask-memcached-kibana.git'
+        GIT_REPO_URL = 'github.com/dopc02devops/flask-memcached-kibana.git'
         // DOCKER_BUILDKIT = '1' // Enable BuildKit for this pipeline
         // Docker versions 19.03 and higher
     }
