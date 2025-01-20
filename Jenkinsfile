@@ -163,13 +163,13 @@ pipeline {
                 expression { return env.DOCKER_TAG != null && env.DOCKER_TAG != '' }
             }
             steps {
-                echo "Installing AWS CLI and kubectl..."
+                echo "Installing or updating AWS CLI and kubectl..."
                 sh '''
                 set -e
-                # Install AWS CLI
+                # Install or Update AWS CLI
                 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-2.0.30.zip" -o "awscliv2.zip"
-                unzip awscliv2.zip
-                sudo ./aws/install
+                unzip -o awscliv2.zip
+                sudo ./aws/install --update
 
                 # Install kubectl
                 curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
@@ -178,6 +178,7 @@ pipeline {
                 '''
             }
         }
+
 
         stage('Authenticate with EKS') {
             when {
