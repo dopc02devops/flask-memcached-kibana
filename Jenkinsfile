@@ -35,20 +35,22 @@ pipeline {
             }
         }
 
-         stage('Checkout GitHub Repository') {
+        stage('Checkout Code') {
             steps {
-                echo "Cloning GitHub repository..."
+                echo "Checking out source code..."
                 script {
-                    withCredentials([usernamePassword(credentialsId: 'github-credentials-id', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
-                    
-                        sh '''
-                        set -e
-                        git clone https://$GIT_USERNAME:$GIT_PASSWORD@$GIT_REPO_URL -b $BRANCH
-                        '''
-                    }
+                    checkout([
+                        $class: 'GitSCM',
+                        branches: [[name: "*/${params.BRANCH}"]],
+                        userRemoteConfigs: [[
+                            url: 'https://github.com/dopc02devops/flask-memcached-kibana.git',
+                            credentialsId: 'github-credentials-id'
+                        ]]
+                    ])
                 }
             }
         }
+
 
 
         stage('Extract Git Tag') {
