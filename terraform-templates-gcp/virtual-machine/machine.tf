@@ -99,7 +99,7 @@ resource "google_compute_firewall" "ssh" {
 
 # Enable 8096
 resource "google_compute_firewall" "http_8096_tcp" {
-  name    = "allow-flask-app_tcp"
+  name    = "allow-flask-app-tcp"
   network = "default"
   provider = google
   allow {
@@ -114,7 +114,7 @@ resource "google_compute_firewall" "http_8096_tcp" {
 }
 
 resource "google_compute_firewall" "http_8096_udp" {
-  name    = "allow-flask-app_udp"
+  name    = "allow-flask-app-udp"
   network = "default"
   provider = google
   allow {
