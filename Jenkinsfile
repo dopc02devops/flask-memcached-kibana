@@ -155,42 +155,43 @@ pipeline {
             }
         }
 
-        stage('Install AWS CLI and Kubectl') {
-            when {
-                expression { return env.DOCKER_TAG != null && env.DOCKER_TAG != '' }
+            stage('Install AWS CLI and Kubectl') {
+                when {
+                    expression { return env.DOCKER_TAG != null && env.DOCKER_TAG != '' }
+                }
+                steps {
+                    echo "Installing or updating AWS CLI v2 and kubectl..."
+                    sh '''
+                    set -e
+
+                    TMP_DIR=$(mktemp -d)
+                    cd $TMP_DIR
+
+                    # Install/Update AWS CLI v2
+                    echo "Installing or updating AWS CLI v2..."
+                    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+                    unzip -o awscliv2.zip
+                    sudo ./aws/install --update
+
+                    # Verify AWS CLI installation
+                    aws --version || { echo "AWS CLI installation failed"; exit 1; }
+
+                    # Install kubectl
+                    echo "Installing kubectl..."
+                    curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+                    chmod +x kubectl
+                    sudo mv kubectl /usr/local/bin/
+
+                    # Verify kubectl installation
+                    kubectl version --client || { echo "kubectl installation failed"; exit 1; }
+
+                    # Clean up temporary directory
+                    cd -
+                    rm -rf $TMP_DIR
+                    '''
+                }
             }
-            steps {
-                echo "Installing or updating AWS CLI v2 and kubectl..."
-                sh '''
-                set -e
 
-                TMP_DIR=$(mktemp -d)
-                cd $TMP_DIR
-
-                # Install/Update AWS CLI v2
-                echo "Installing or updating AWS CLI v2..."
-                curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-                unzip -o awscliv2.zip
-                sudo ./aws/install --update
-
-                # Verify AWS CLI installation
-                aws --version || { echo "AWS CLI installation failed"; exit 1; }
-
-                # Install kubectl
-                echo "Installing kubectl..."
-                curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-                chmod +x kubectl
-                sudo mv kubectl /usr/local/bin/
-
-                # Verify kubectl installation
-                kubectl version --client --short || { echo "kubectl installation failed"; exit 1; }
-
-                # Clean up temporary directory
-                cd -
-                rm -rf $TMP_DIR
-                '''
-            }
-        }
 
 
 
