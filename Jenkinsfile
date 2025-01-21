@@ -160,18 +160,18 @@ pipeline {
                 expression { return env.DOCKER_TAG != null && env.DOCKER_TAG != '' }
             }
             steps {
-                echo "Installing AWS CLI v2 and kubectl..."
+                echo "Installing or updating AWS CLI v2 and kubectl..."
                 sh '''
                 set -e
 
                 TMP_DIR=$(mktemp -d)
                 cd $TMP_DIR
 
-                # Install AWS CLI v2
-                echo "Installing AWS CLI v2..."
+                # Install/Update AWS CLI v2
+                echo "Installing or updating AWS CLI v2..."
                 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
                 unzip -o awscliv2.zip
-                sudo ./aws/install
+                sudo ./aws/install --update
 
                 # Verify AWS CLI installation
                 aws --version || { echo "AWS CLI installation failed"; exit 1; }
@@ -191,6 +191,7 @@ pipeline {
                 '''
             }
         }
+
 
 
 
