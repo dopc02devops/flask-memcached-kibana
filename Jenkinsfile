@@ -215,7 +215,7 @@ pipeline {
                         helm repo add flask-repo https://dopc02devops.github.io/helms_artifacts/
                         helm repo update
                         helm install flask-app flask-repo/flask-memcached-chart --set container.image.image_tag=${DOCKER_TAG} -n stage
-                        kubectl rollout status deployment/flask-app -n stage --timeout=5m
+                        kubectl rollout status deployment/flask-app-deployment -n stage --timeout=5m
                         kubectl get pods -n stage
                         '''
                     }
