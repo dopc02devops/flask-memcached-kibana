@@ -4,7 +4,7 @@ pipeline {
     environment {
         AWS_REGION = 'eu-west-2'
         CLUSTER_NAME = 'my-cluster'
-        GIT_REPO_URL = '@github.com/dopc02devops/flask-memcached-kibana.git'
+        GIT_REPO_URL = 'https://github.com/dopc02devops/flask-memcached-kibana.git'
     }
 
     parameters {
@@ -41,7 +41,7 @@ pipeline {
                         $class: 'GitSCM',
                         branches: [[name: "*/${params.BRANCH}"]],
                         userRemoteConfigs: [[
-                            url: 'https://github.com/dopc02devops/flask-memcached-kibana.git',
+                            url: env.GIT_REPO_URL,
                             credentialsId: 'github-credentials-id'
                         ]]
                     ])
@@ -49,18 +49,18 @@ pipeline {
             }
         }
 
-
-
         stage('Extract Git Tag') {
             steps {
-                echo "Extracting git tag"
+                echo "Extracting git tag..."
                 script {
-                    if (env.GIT_TAG) {
-                        currentBuild.displayName = "Build for tag: ${env.GIT_TAG}"
-                        echo "Detected Git tag: ${env.GIT_TAG}"
-                        env.DOCKER_TAG = env.GIT_TAG
+                    def gitTag = sh(script: 'git describe --tags --exact-match || echo ""', returnStdout: true).trim()
+                    if (gitTag) {
+                        currentBuild.displayName = "Build for tag: ${gitTag}"
+                        echo "Detected Git tag: ${gitTag}"
+                        env.DOCKER_TAG = gitTag
                     } else {
-                        echo "No Git tag detected"
+                        echo "No Git tag detected. Using default tag: ${params.DOCKER_TAG}"
+                        env.DOCKER_TAG = params.DOCKER_TAG
                     }
                 }
             }
@@ -76,13 +76,13 @@ pipeline {
                         echo "Trivy not found. Installing Trivy..."
                         sudo apt-get update
                         sudo apt-get install -y wget
-                        sudo wget https://github.com/aquasecurity/trivy/releases/download/v0.29.1/trivy_0.29.1_Linux-64bit.deb
+                        wget https://github.com/aquasecurity/trivy/releases/download/v0.29.1/trivy_0.29.1_Linux-64bit.deb
                         sudo dpkg -i trivy_0.29.1_Linux-64bit.deb
                     fi
 
                     echo "Running Trivy scan on Dockerfile..."
                     cd src
-                    sudo trivy config --severity HIGH,CRITICAL ./Dockerfile.app
+                    trivy config --severity HIGH,CRITICAL ./Dockerfile.app
                     '''
                 }
             }
@@ -97,7 +97,6 @@ pipeline {
                     mkdir -p reports-xml reports-html
 
                     pip install --user pytest pytest-html
-
                     export PATH=$HOME/.local/bin:$PATH
 
                     pytest --junitxml=reports-xml/report.xml --html=reports-html/report.html --self-contained-html || echo "Tests completed with errors, continuing..."
@@ -126,8 +125,8 @@ pipeline {
                         set -e
                         cd src
                         echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
-                        docker build -t $DOCKER_USERNAME/python-memcached:$DOCKER_TAG -f ./Dockerfile.app .
-                        docker push $DOCKER_USERNAME/python-memcached:$DOCKER_TAG
+                        docker build -t $DOCKER_USERNAME/python-memcached:${DOCKER_TAG} -f ./Dockerfile.app .
+                        docker push $DOCKER_USERNAME/python-memcached:${DOCKER_TAG}
                         docker logout
                         '''
                     }
@@ -142,74 +141,61 @@ pipeline {
             steps {
                 echo "Setting up Docker volumes and starting services..."
                 script {
-                    withCredentials([usernamePassword(credentialsId: 'docker-credentials-id', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                        sh '''
-                        set -e
-                        sudo docker volume create flask-app-data || true
-                        sudo docker volume create memcached-data || true
-                        sudo VERSION=${DOCKER_TAG} docker-compose -f docker-compose.env.yml down --remove-orphans
-                        sudo VERSION=${DOCKER_TAG} docker-compose -f docker-compose.env.yml up -d
-                        '''
-                    }
+                    sh '''
+                    set -e
+                    sudo docker volume create flask-app-data || true
+                    sudo docker volume create memcached-data || true
+                    sudo VERSION=${DOCKER_TAG} docker-compose -f docker-compose.env.yml down --remove-orphans
+                    sudo VERSION=${DOCKER_TAG} docker-compose -f docker-compose.env.yml up -d
+                    '''
                 }
             }
         }
 
-            stage('Install AWS CLI and Kubectl') {
-                when {
-                    expression { return env.DOCKER_TAG != null && env.DOCKER_TAG != '' }
-                }
-                steps {
-                    echo "Installing or updating AWS CLI v2 and kubectl..."
+        stage('Install AWS CLI and Kubectl') {
+            when {
+                expression { return env.DOCKER_TAG != null && env.DOCKER_TAG != '' }
+            }
+            steps {
+                echo "Installing or updating AWS CLI v2 and kubectl..."
+                script {
                     sh '''
                     set -e
-
                     TMP_DIR=$(mktemp -d)
                     cd $TMP_DIR
 
-                    # Install/Update AWS CLI v2
                     echo "Installing or updating AWS CLI v2..."
                     curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
                     unzip -o awscliv2.zip
                     sudo ./aws/install --update
-
-                    # Verify AWS CLI installation
                     aws --version || { echo "AWS CLI installation failed"; exit 1; }
 
-                    # Install kubectl
                     echo "Installing kubectl..."
                     curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
                     chmod +x kubectl
                     sudo mv kubectl /usr/local/bin/
-
-                    # Verify kubectl installation
                     kubectl version --client || { echo "kubectl installation failed"; exit 1; }
 
-                    # Clean up temporary directory
                     cd -
                     rm -rf $TMP_DIR
                     '''
                 }
             }
-
-
-
-
+        }
 
         stage('Deploy Helm Chart') {
             when {
-                expression { return params.DEPLOY_MANUALLY == true && env.DOCKER_TAG != null && env.DOCKER_TAG != ''  }
+                expression { return params.DEPLOY_MANUALLY == true && env.DOCKER_TAG != null && env.DOCKER_TAG != '' }
             }
             steps {
-                echo "Authenticating with EKS..."
-                echo "Deploying Helm chart..."
+                echo "Authenticating with EKS and deploying Helm chart..."
                 script {
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials-id']]) {
                         sh '''
-                        aws configure set region $AWS_REGION
-                        aws eks update-kubeconfig --name $CLUSTER_NAME --region $AWS_REGION
+                        aws configure set region ${AWS_REGION}
+                        aws eks update-kubeconfig --name ${CLUSTER_NAME} --region ${AWS_REGION}
                         kubectl get namespace stage || kubectl create namespace stage
-                        helm install flask-app flask-repo/flask-memcached-chart --set container.image.image_tag=$DOCKER_TAG -n stage
+                        helm install flask-app flask-repo/flask-memcached-chart --set container.image.image_tag=${DOCKER_TAG} -n stage
                         kubectl rollout status deployment/flask-app -n stage --timeout=5m
                         kubectl get pods -n stage
                         '''
@@ -217,8 +203,7 @@ pipeline {
                 }
             }
         }
-
-        
+    }
 
     post {
         always {
