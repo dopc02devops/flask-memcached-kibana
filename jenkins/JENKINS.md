@@ -75,6 +75,7 @@
 
 # tag and push
 git add .
+git commit --allow-empty -m "empty"
 git commit -m "updated jenkins file"
 git tag v1.0.0
 git push origin main

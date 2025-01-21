@@ -9,11 +9,6 @@ container:
     repository: memcached
     image_tag: 1.6.21 
   port: 11211
-volumeMounts:
-  name: memcached-storage
-volume:
-  claim: 
-    name: nfs-pvc
 
 service:
   name: memcached-service
@@ -22,8 +17,8 @@ service:
 resource:
   config:
     name: memcached-resouce
-data:
-  memory_request: "64Mi"
-  memory_limit: "128Mi"
-  cpu_request: "250m"
-  cpu_limit: "500m"
+  data:
+    memory_request: "64Mi"
+    memory_limit: "128Mi"
+    cpu_request: "250m"
+    cpu_limit: "500m"
