@@ -40,6 +40,7 @@ update dependency
 ##########################
 package and push flask
 ##########################
+- helm dependency update flask-memcached-chart
 - helm package ./flask-memcached-chart
 - helm package ./memcached-chart
 - helm repo index --url https://dopc02devops.github.io/helms_artifacts/ .

@@ -5,7 +5,7 @@ metadata:
   labels:
     app: memcached
 data:
-  memory-request: "{{ .Values.data.memory_request }}"
-  memory-limit: "{{ .Values.data.memory_limit }}"
-  cpu-request: "{{ .Values.data.cpu_request }}"
-  cpu-limit: "{{ .Values.data.cpu_limit }}"
+  memory-request: "{{ .Values.resource.data.memory_request }}"
+  memory-limit: "{{ .Values.resource.data.memory_limit }}"
+  cpu-request: "{{ .Values.resource.data.cpu_request }}"
+  cpu-limit: "{{ .Values.resource.data.cpu_limit }}"

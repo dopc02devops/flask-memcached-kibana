@@ -1,10 +1,10 @@
 
 cd kibana
 
-filebeat: collects all logs from pods, sends them to logstash
-logstash: aggregades all logs, sends them to elasticsearch
-elasticsearch: stores and indexes all logs, sends them to kibana
-kibana; visualize logs in ui
+- filebeat: collects all logs from pods, sends them to logstash
+- logstash: aggregades all logs, sends them to elasticsearch
+- elasticsearch: stores and indexes all logs, sends them to kibana
+- kibana; visualize logs in ui
 
 #############
 Add repo
@@ -31,12 +31,12 @@ helm install logstash elastic/logstash -f logstash_values.yaml -n monitoring
 helm install kibana elastic/kibana -f kibana_values.yml -n monitoring
 helm install filebeat elastic/filebeat -f filebeat_values.yaml -n monitoring
 helm upgrade
+
 #############
 Uninstall
 #############
 helm uninstall filebeat -n monitoring
 kubectl delete configmap kibana-kibana-helm-scripts -n monitoring
-
 
 kubectl get pods -n monitoring
 kubectl get svc -n monitoring

@@ -12,14 +12,14 @@ install nfs-server
 ##################
 - kubectl create namespace storage
 - helm repo add nfs-ganesha-server-and-external-provisioner https://kubernetes-sigs.github.io/nfs-ganesha-server-and-external-provisioner/
-- helm install nfs-pro nfs-ganesha-server-and-external-provisioner/nfs-server-provisioner -n storage
+- helm install nfs-storage nfs-ganesha-server-and-external-provisioner/nfs-server-provisioner -n storage
 - helm list -n storage
-- kubectl apply -f pvc.yaml -n stage
+- kubectl apply -f volume.yaml -n stage
 - kubectl get pv -n storage
 - kubectl get pv -n stage
 - kubectl get pods -n storage
-- helm delete nfs-pro
-
+- helm uninstall nfs-storage -n storage
+- kubectl delete all --all -n storage
 #############################
 Test export dir of nfs-server
 #############################

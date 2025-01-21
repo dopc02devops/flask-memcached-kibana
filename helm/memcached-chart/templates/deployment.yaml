@@ -40,11 +40,4 @@ spec:
               port: 11211
             initialDelaySeconds: 5
             periodSeconds: 10
-          volumeMounts:
-            - name: {{ .Values.volumeMounts.name }}
-              mountPath: /data
-  volumes:
-        - name: {{ .Values.volumeMounts.name }}
-          persistentVolumeClaim:
-            claimName: {{ .Values.volume.claim.name }}
 
