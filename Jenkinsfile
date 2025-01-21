@@ -204,6 +204,10 @@ pipeline {
                         sh '''
                         aws configure set region $AWS_REGION
                         aws eks update-kubeconfig --name $CLUSTER_NAME --region $AWS_REGION
+                        kubectl get namespace stage || kubectl create namespace stage
+                        helm install flask-app flask-repo/flask-memcached-chart --set container.image.image_tag=$DOCKER_TAG -n stage
+                        kubectl rollout status deployment/flask-app -n stage --timeout=5m
+                        kubectl get pods -n stage
                         '''
                     }
                 }
