@@ -196,40 +196,29 @@ pipeline {
 
 
 
-        stage('Authenticate with EKS') {
+        stage('Deploy Helm Chart') {
             when {
-                expression { return env.DOCKER_TAG != null && env.DOCKER_TAG != '' }
+                expression { return params.DEPLOY_MANUALLY == true && env.DOCKER_TAG != null && env.DOCKER_TAG != ''  }
             }
             steps {
                 echo "Authenticating with EKS..."
+                echo "Deploying Helm chart..."
                 script {
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials-id']]) {
                         sh '''
                         aws configure set region $AWS_REGION
                         aws eks update-kubeconfig --name $CLUSTER_NAME --region $AWS_REGION
+                        kubectl get namespace stage || kubectl create namespace stage
+                        helm install flask-app flask-repo/flask-memcached-chart --set container.image.image_tag=$DOCKER_TAG -n stage
+                        kubectl rollout status deployment/flask-app -n stage --timeout=5m
+                        kubectl get pods -n stage
                         '''
                     }
                 }
             }
         }
 
-        stage('Deploy Helm Chart') {
-            when {
-                expression { return params.DEPLOY_MANUALLY == true && env.DOCKER_TAG != null && env.DOCKER_TAG != '' }
-            }
-            steps {
-                echo "Deploying Helm chart..."
-                script {
-                    sh '''
-                    kubectl get namespace stage || kubectl create namespace stage
-                    helm install flask-app flask-repo/flask-memcached-chart --set container.image.image_tag=$DOCKER_TAG -n stage
-                    kubectl rollout status deployment/flask-app -n stage --timeout=5m
-                    kubectl get pods -n stage
-                    '''
-                }
-            }
-        }
-    }
+        
 
     post {
         always {
