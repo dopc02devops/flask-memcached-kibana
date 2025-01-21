@@ -152,36 +152,52 @@ pipeline {
             }
         }
 
-        stage('Install AWS CLI and Kubectl') {
+        stage('Install AWS CLI, Kubectl, and Helm') {
             when {
                 expression { return env.DOCKER_TAG != null && env.DOCKER_TAG != '' }
             }
             steps {
-                echo "Installing or updating AWS CLI v2 and kubectl..."
+                echo "Installing or updating AWS CLI v2, kubectl, and Helm..."
                 script {
                     sh '''
                     set -e
+
                     TMP_DIR=$(mktemp -d)
                     cd $TMP_DIR
 
+                    # Install/Update AWS CLI v2
                     echo "Installing or updating AWS CLI v2..."
                     curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
                     unzip -o awscliv2.zip
                     sudo ./aws/install --update
+
+                    # Verify AWS CLI installation
                     aws --version || { echo "AWS CLI installation failed"; exit 1; }
 
+                    # Install kubectl
                     echo "Installing kubectl..."
                     curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
                     chmod +x kubectl
                     sudo mv kubectl /usr/local/bin/
+
+                    # Verify kubectl installation
                     kubectl version --client || { echo "kubectl installation failed"; exit 1; }
 
+                    # Install Helm
+                    echo "Installing Helm..."
+                    curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+                    # Verify Helm installation
+                    helm version || { echo "Helm installation failed"; exit 1; }
+
+                    # Clean up temporary directory
                     cd -
                     rm -rf $TMP_DIR
                     '''
                 }
             }
         }
+
 
         stage('Deploy Helm Chart') {
             when {
