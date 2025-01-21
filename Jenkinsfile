@@ -160,33 +160,34 @@ pipeline {
                 expression { return env.DOCKER_TAG != null && env.DOCKER_TAG != '' }
             }
             steps {
-                echo "Checking and installing/updating AWS CLI and kubectl..."
+                echo "Installing AWS CLI v2 and kubectl..."
                 sh '''
                 set -e
-                
-                # Check and update AWS CLI
-                if command -v aws &> /dev/null; then
-                    echo "AWS CLI is already installed. Checking version..."
-                    CURRENT_AWS_VERSION=$(aws --version 2>&1 | awk '{print $1}' | cut -d/ -f2)
-                    echo "Current AWS CLI version: $CURRENT_AWS_VERSION"
-                else
-                    echo "AWS CLI not found. Installing..."
-                fi
-                curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-2.0.30.zip" -o "awscliv2.zip"
-                unzip -o awscliv2.zip
-                sudo ./aws/install --update
 
-                # Check and install kubectl
-                if command -v kubectl &> /dev/null; then
-                    echo "kubectl is already installed. Checking version..."
-                    CURRENT_KUBECTL_VERSION=$(kubectl version --client --short | awk '{print $3}')
-                    echo "Current kubectl version: $CURRENT_KUBECTL_VERSION"
-                else
-                    echo "kubectl not found. Installing..."
-                fi
+                TMP_DIR=$(mktemp -d)
+                cd $TMP_DIR
+
+                # Install AWS CLI v2
+                echo "Installing AWS CLI v2..."
+                curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+                unzip -o awscliv2.zip
+                sudo ./aws/install
+
+                # Verify AWS CLI installation
+                aws --version || { echo "AWS CLI installation failed"; exit 1; }
+
+                # Install kubectl
+                echo "Installing kubectl..."
                 curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
                 chmod +x kubectl
                 sudo mv kubectl /usr/local/bin/
+
+                # Verify kubectl installation
+                kubectl version --client --short || { echo "kubectl installation failed"; exit 1; }
+
+                # Clean up temporary directory
+                cd -
+                rm -rf $TMP_DIR
                 '''
             }
         }
@@ -204,10 +205,6 @@ pipeline {
                         sh '''
                         aws configure set region $AWS_REGION
                         aws eks update-kubeconfig --name $CLUSTER_NAME --region $AWS_REGION
-                        kubectl get namespace stage || kubectl create namespace stage
-                        helm install flask-app flask-repo/flask-memcached-chart --set container.image.image_tag=$DOCKER_TAG -n stage
-                        kubectl rollout status deployment/flask-app -n stage --timeout=5m
-                        kubectl get pods -n stage
                         '''
                     }
                 }
